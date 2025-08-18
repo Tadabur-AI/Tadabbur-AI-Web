@@ -1,0 +1,15 @@
+@font-face {
+  font-family: 'Google Sans';
+  src: url('/public/fonts/GoogleSansCode-VariableFont_wght.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Quran';
+  src: url('/public/fonts/AmiriQuran-Regular.ttf') format('truetype');
+}
+html, body, #root {
+  height: 100%;
+  background: url(/public/images/background.svg) no-repeat center center fixed;
+  background-size: cover;
+  margin: 0;
+  font-family: 'Google Sans', sans-serif;
+}

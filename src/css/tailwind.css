@@ -1,0 +1,182 @@
+/*! tailwindcss v4.1.11 | MIT License | https://tailwindcss.com */
+@layer properties;
+@layer theme, base, components, utilities;
+
+@layer theme {
+  :root, :host {
+    /* Color variables */
+    --color-primary: #1f620a; /* primary */
+    --color-secondary: #3c6382; /* Complementary blue */
+    --color-accent: #fad02e; /* Golden accent */
+    --color-background: #f8f9fa; /* Light background */
+    --color-text: #2d3436; /* Dark text */
+    --color-muted: #636e72; /* Muted text */
+
+    /* Font variables */
+    --font-sans: "Google Sans", ui-sans-serif, system-ui, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    --font-weight-bold: 700;
+
+    /* Typography variables */
+    --text-3xl: 1.875rem;
+    --text-3xl--line-height: calc(2.25 / 1.875);
+    --default-font-family: var(--font-sans);
+    --default-mono-font-family: var(--font-mono);
+  }
+}
+
+@layer base {
+  *, ::after, ::before, ::backdrop, ::file-selector-button {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    border: 0 solid;
+  }
+
+  html, :host {
+    line-height: 1.5;
+    -webkit-text-size-adjust: 100%;
+    tab-size: 4;
+    font-family: var(--default-font-family);
+    font-feature-settings: normal;
+    font-variation-settings: normal;
+    background-color: var(--color-background);
+    color: var(--color-text);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    font-family: var(--default-font-family);
+    background-color: var(--color-background);
+    color: var(--color-text);
+    line-height: 1.6;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--default-font-family);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-primary);
+  }
+
+  a {
+    color: var(--color-secondary);
+    text-decoration: none;
+    transition: color 0.3s;
+  }
+
+  a:hover {
+    color: var(--color-accent);
+  }
+
+  button {
+    background-color: var(--color-primary);
+    color: #fff;
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    font-family: var(--default-font-family);
+    font-weight: var(--font-weight-bold);
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+
+  button:hover {
+    background-color: var(--color-secondary);
+  }
+
+  blockquote {
+    border-left: 4px solid var(--color-accent);
+    padding-left: 1rem;
+    color: var(--color-muted);
+    font-style: italic;
+  }
+
+  code, pre {
+    font-family: var(--default-mono-font-family);
+    background-color: #f1f1f1;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+  }
+
+  input, textarea, select {
+    border: 1px solid var(--color-muted);
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+    font-family: var(--default-font-family);
+  }
+
+  input:focus, textarea:focus, select:focus {
+    outline: none;
+    border-color: var(--color-primary);
+  }
+}
+
+@layer components {
+  .card {
+    background-color: #fff;
+    border: 1px solid var(--color-muted);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+    font-weight: var(--font-weight-bold);
+    background-color: var(--color-accent);
+    color: #fff;
+  }
+}
+
+@layer utilities {
+  .text-primary {
+    color: var(--color-primary);
+  }
+
+  .text-secondary {
+    color: var(--color-secondary);
+  }
+
+  .bg-primary {
+    background-color: var(--color-primary);
+  }
+
+  .bg-secondary {
+    background-color: var(--color-secondary);
+  }
+
+  .border-primary {
+    border-color: var(--color-primary);
+  }
+
+  .border-secondary {
+    border-color: var(--color-secondary);
+  }
+
+  .underline {
+    text-decoration-line: underline;
+  }
+}
+@layer properties {
+  @supports ((-webkit-hyphens: none) and (not (margin-trim: inline))) or ((-moz-orient: inline) and (not (color:rgb(from red r g b)))) {
+    *, ::before, ::after, ::backdrop {
+      --tw-font-weight: initial;
+    }
+  }
+}
+  .underline {
+    text-decoration-line: underline;
+  }
+@property --tw-font-weight {
+  syntax: "*";
+  inherits: false;
+}
+@layer properties {
+  @supports ((-webkit-hyphens: none) and (not (margin-trim: inline))) or ((-moz-orient: inline) and (not (color:rgb(from red r g b)))) {
+    *, ::before, ::after, ::backdrop {
+      --tw-font-weight: initial;
+    }
+  }
+}
