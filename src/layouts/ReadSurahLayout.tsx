@@ -224,92 +224,92 @@ export default function ReadSurahLayout({
                                 <h3 className="text-lg font-medium text-secondary mb-2">Translation:</h3>
                                 <p className="text-lg leading-relaxed">{currentVerse.translation}</p>
                             </div>
+                        </div>
 
-                            {/* Tafsir Section */}
-                            <div className="mb-6">
-                                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-3">
-                                    <h3 className="text-lg font-medium text-secondary">Classical Tafsir:</h3>
-                                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3 w-full sm:w-auto">
-                                        <label htmlFor="tafsir-edition" className="text-sm font-medium text-gray-600">
-                                            Edition
-                                        </label>
-                                        <select
-                                            id="tafsir-edition"
-                                            className="w-full sm:min-w-[220px] rounded border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none"
-                                            value={selectedEdition}
-                                            onChange={(event) => onEditionChange(event.target.value)}
-                                            disabled={isEditionLoading || !!editionError || editionOptions.length === 0}
-                                        >
-                                            {editionOptions.map((edition) => (
-                                                <option key={edition.slug} value={edition.slug}>
-                                                    {edition.name} ({formatLanguage(edition.languageName)})
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div>
+                        {/* Simplified Tafsir */}
+                        <div className="mb-6">
+                            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-3">
+                                <h3 className="text-lg font-medium text-secondary">Easy Explanation:</h3>
+                                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3 w-full sm:w-auto">
+                                    <label htmlFor="tafsir-edition" className="text-sm font-medium text-gray-600">
+                                        Edition
+                                    </label>
+                                    <select
+                                        id="tafsir-edition"
+                                        className="w-full sm:min-w-[220px] rounded border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none"
+                                        value={selectedEdition}
+                                        onChange={(event) => onEditionChange(event.target.value)}
+                                        disabled={isEditionLoading || !!editionError || editionOptions.length === 0}
+                                    >
+                                        {editionOptions.map((edition) => (
+                                            <option key={edition.slug} value={edition.slug}>
+                                                {edition.name} ({formatLanguage(edition.languageName)})
+                                            </option>
+                                        ))}
+                                    </select>
                                 </div>
-                                {isEditionLoading && (
-                                    <p className="text-sm text-gray-500 mb-2">Loading editions…</p>
-                                )}
-                                {editionError && (
-                                    <p className="text-sm text-red-500 mb-2">{editionError}</p>
-                                )}
-                                {(() => {
-                                    console.log('🔍 Rendering Classical Tafsir - tafsirState:', tafsirState);
-                                    if (!tafsirState || tafsirState.status === 'loading') {
-                                        console.log('📊 Showing skeleton for Classical Tafsir');
-                                        return (
-                                            <div className="space-y-2 animate-pulse">
-                                                <div className="h-3 bg-gray-200 rounded" />
-                                                <div className="h-3 bg-gray-200 rounded" />
-                                                <div className="h-3 bg-gray-200 rounded w-2/3" />
-                                            </div>
-                                        );
-                                    }
-                                    if (tafsirState.status === 'ready' && tafsirState.raw) {
-                                        console.log('✅ Showing Classical Tafsir content, length:', tafsirState.raw.length);
-                                        return (
-                                            <p className="text-base leading-relaxed text-gray-700 whitespace-pre-line">
-                                                {tafsirState.raw}
-                                            </p>
-                                        );
-                                    }
-                                    if (tafsirState.status === 'ready' && !tafsirState.raw) {
-                                        console.log('⚠️ Classical Tafsir ready but no content');
-                                        return <p className="text-sm text-gray-500">Classical tafsir is not available for this verse.</p>;
-                                    }
-                                    if (tafsirState.status === 'error') {
-                                        console.log('❌ Classical Tafsir error:', tafsirState.errorMessage);
-                                        return <p className="text-sm text-red-500">{tafsirState.errorMessage}</p>;
-                                    }
-                                    return null;
-                                })()}
                             </div>
+                            {isEditionLoading && (
+                                <p className="text-sm text-gray-500 mb-2">Loading editions…</p>
+                            )}
+                            {editionError && (
+                                <p className="text-sm text-red-500 mb-2">{editionError}</p>
+                            )}
+                            {(!tafsirState?.simplifiedStatus || tafsirState.simplifiedStatus === 'idle' || tafsirState.simplifiedStatus === 'loading') && (
+                                <div className="space-y-2 animate-pulse">
+                                    <div className="h-3 bg-gray-200 rounded" />
+                                    <div className="h-3 bg-gray-200 rounded" />
+                                    <div className="h-3 bg-gray-200 rounded w-4/5" />
+                                </div>
+                            )}
+                            {tafsirState?.simplifiedStatus === 'ready' && tafsirState.simplified && (
+                                <div className="p-4 bg-blue-50 border border-blue-100 rounded-lg prose prose-sm max-w-none">
+                                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{tafsirState.simplified}</ReactMarkdown>
+                                </div>
+                            )}
+                            {tafsirState?.status === 'error' && (
+                                <p className="text-sm text-red-500">{tafsirState.errorMessage}</p>
+                            )}
+                            {tafsirState?.simplifiedStatus === 'error' && (
+                                <p className="text-sm text-red-500">
+                                    {tafsirState.simplifiedErrorMessage ?? 'Unable to generate explanation right now.'}
+                                </p>
+                            )}
+                        </div>
 
-                            {/* Simplified Tafsir */}
-                            <div className="mb-6">
-                                <h3 className="text-lg font-medium text-secondary mb-3">Easy Explanation:</h3>
-                                {(!tafsirState?.simplifiedStatus || tafsirState.simplifiedStatus === 'idle' || tafsirState.simplifiedStatus === 'loading') && (
-                                    <div className="space-y-2 animate-pulse">
-                                        <div className="h-3 bg-gray-200 rounded" />
-                                        <div className="h-3 bg-gray-200 rounded" />
-                                        <div className="h-3 bg-gray-200 rounded w-4/5" />
-                                    </div>
-                                )}
-                                {tafsirState?.simplifiedStatus === 'ready' && tafsirState.simplified && (
-                                    <div className="p-4 bg-blue-50 border border-blue-100 rounded-lg prose prose-sm max-w-none">
-                                        <ReactMarkdown remarkPlugins={[remarkGfm]}>{tafsirState.simplified}</ReactMarkdown>
-                                    </div>
-                                )}
-                                {tafsirState?.status === 'error' && (
-                                    <p className="text-sm text-red-500">{tafsirState.errorMessage}</p>
-                                )}
-                                {tafsirState?.simplifiedStatus === 'error' && (
-                                    <p className="text-sm text-red-500">
-                                        {tafsirState.simplifiedErrorMessage ?? 'Unable to generate explanation right now.'}
-                                    </p>
-                                )}
-                            </div>
+                        {/* Original Tafsir */}
+                        <div className="mb-6">
+                            <h3 className="text-lg font-medium text-secondary mb-3">Original Tafsir:</h3>
+                            {(() => {
+                                console.log('🔍 Rendering Original Tafsir - tafsirState:', tafsirState);
+                                if (!tafsirState || tafsirState.status === 'loading') {
+                                    console.log('📊 Showing skeleton for Original Tafsir');
+                                    return (
+                                        <div className="space-y-2 animate-pulse">
+                                            <div className="h-3 bg-gray-200 rounded" />
+                                            <div className="h-3 bg-gray-200 rounded" />
+                                            <div className="h-3 bg-gray-200 rounded w-2/3" />
+                                        </div>
+                                    );
+                                }
+                                if (tafsirState.status === 'ready' && tafsirState.raw) {
+                                    console.log('✅ Showing Original Tafsir content, length:', tafsirState.raw.length);
+                                    return (
+                                        <p className="text-base leading-relaxed text-gray-700 whitespace-pre-line">
+                                            {tafsirState.raw}
+                                        </p>
+                                    );
+                                }
+                                if (tafsirState.status === 'ready' && !tafsirState.raw) {
+                                    console.log('⚠️ Original Tafsir ready but no content');
+                                    return <p className="text-sm text-gray-500">Original tafsir is not available for this verse.</p>;
+                                }
+                                if (tafsirState.status === 'error') {
+                                    console.log('❌ Original Tafsir error:', tafsirState.errorMessage);
+                                    return <p className="text-sm text-red-500">{tafsirState.errorMessage}</p>;
+                                }
+                                return null;
+                            })()}
                         </div>
                     </div>
                 </div>

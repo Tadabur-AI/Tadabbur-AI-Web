@@ -68,10 +68,11 @@ const buildSimplifyChain = () => {
         'Classical tafsir excerpt: {tafsirText}',
         '',
         'Requirements:',
-        '- Highlight the main message in everyday language without diluting the meaning.',
+        '- Highlight the main message of the classical tafsir in everyday language without diluting the meaning.',
+        '- If classical tafsir is in language other than English, try to respond in that language, otherwise respond in English if you cannot.',
         '- Mention relevant contextual insights from the tafsir when helpful.',
         '- Keep the tone encouraging and reflective for a reader who is studying alone.',
-        '- Stay under 200 words and avoid complex terminology unless needed.',
+        '- Divide in headings and each paragraph under a heading should stay under 200 words and avoid complex terminology unless needed.',
       ].join('\n'),
     ],
   ]);
