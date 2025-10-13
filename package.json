@@ -10,8 +10,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@langchain/core": "^0.3.78",
+    "@langchain/groq": "^0.2.4",
     "@tailwindcss/cli": "^4.1.11",
     "@tailwindcss/vite": "^4.1.11",
+    "langchain": "^0.3.35",
     "quran-english": "^2.0.14",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",

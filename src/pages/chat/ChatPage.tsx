@@ -13,8 +13,8 @@ interface Message {
 
 // Constants for API configuration
 const API_CONFIG = {
-    BASE_URL: '',
-    MODEL: 'llama3.2:1b'
+    BASE_URL: 'https://ace-crane-central.ngrok-free.app/api/generate',
+    MODEL: 'groq/compound'
 };
 
 // Custom components for markdown rendering
