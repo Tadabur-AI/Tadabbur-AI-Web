@@ -19,18 +19,18 @@ export default function DashboardLayout(props: DashboardLayoutProps) {
   const navigate = useNavigate();
 
   return (
-    <div className="flex h-screen w-full">
+    <div className="flex h-screen min-w-[50px] w-full overflow-hidden">
       {/* Sidebar */}
-      <div className={`sm:block ${isSidebarOpen ? "block" : "hidden"} w-64`}>
-        <div className="h-full flex flex-col">
-          <div className="p-4 text-center font-bold">
+      <div className={`sm:block ${isSidebarOpen ? "block" : "hidden"} w-[min(16rem,100vw)] sm:w-64`}>
+        <div className="flex h-full flex-col">
+          <div className="p-3 text-center text-base font-bold sm:p-4">
             <LogoPotrait />
           </div>
           <div className="flex-1 overflow-y-auto">
             {props.sidebarItems?.map((item, index) => (
               <div
                 key={index}
-                className="flex items-center p-4 cursor-pointer"
+                className="flex cursor-pointer items-center gap-2 p-3 text-sm sm:p-4 sm:text-base"
                 onClick={() => navigate(item?.path)}
               >
                 {item?.icon && <span className="mr-2">{item?.icon}</span>}
@@ -42,12 +42,12 @@ export default function DashboardLayout(props: DashboardLayoutProps) {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex flex-1 min-w-0 flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b p-3 sm:flex-nowrap sm:p-4">
           <button
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="sm:hidden"
+            className="flex items-center justify-center rounded border border-transparent p-2 text-lg sm:hidden"
           >
             {isSidebarOpen ? (
               <FiMenu className="text-2xl" />
@@ -55,12 +55,16 @@ export default function DashboardLayout(props: DashboardLayoutProps) {
               <FiMenu className="text-2xl rotate-180" />
             )}
           </button>
-          <div className="font-bold">{props.screenTitle}</div>
-          <div>{props.userProfile}</div>
+          <div className="min-w-0 flex-1 text-sm font-bold sm:text-base">
+            <div className="truncate">{props.screenTitle}</div>
+          </div>
+          <div className="flex min-w-0 shrink-0 justify-end text-xs sm:text-sm">
+            {props.userProfile}
+          </div>
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-4">{props.children}</div>
+        <div className="flex-1 overflow-y-auto p-3 sm:p-4">{props.children}</div>
       </div>
     </div>
   );

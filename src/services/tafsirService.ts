@@ -51,6 +51,7 @@ const buildSimplifyChain = () => {
     model: 'groq/compound',
     temperature: 0.2,
     maxTokens: 512,
+    streaming: true
   });
 
   const prompt = ChatPromptTemplate.fromMessages([
