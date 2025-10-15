@@ -292,8 +292,7 @@ export default function ReadSurahLayout({
                             </button>
                         </div>
 
-{/* Images will be used later InshaAllah */}
-                        {/* <div 
+                        <div 
                         style={{
                             position: 'relative',
                             width: '100%',
@@ -323,7 +322,7 @@ export default function ReadSurahLayout({
                             {verseImagePromptError && (
                                 <p className="mt-2 text-xs text-amber-600">{verseImagePromptError}</p>
                             )}
-                        </div> */}
+                        </div>
 
                         {/* Verse Card */}
                         <div className="card relative mb-6 overflow-hidden">
