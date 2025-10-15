@@ -262,35 +262,36 @@ export default function ReadSurahLayout({
                     <h1 className="min-w-0 flex-1 truncate text-base font-bold text-primary sm:text-xl">
                         {surah.name_english} ({surah.name_arabic})
                     </h1>
+
+                    {/* Desktop Navigation in Header */}
+                    <div className="hidden sm:flex items-center gap-3">
+                        <button
+                            onClick={goToPreviousVerse}
+                            disabled={currentVerseIndex === 0}
+                            className="flex items-center justify-center gap-2 rounded border border-gray-300 px-3 py-1.5 text-sm font-medium transition-colors hover:border-primary hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                            <FiChevronLeft className="h-4 w-4 shrink-0" />
+                            <span>Previous</span>
+                        </button>
+
+                        <span className="text-sm font-medium text-gray-600">
+                            {currentVerseIndex + 1}/{verses.length}
+                        </span>
+
+                        <button
+                            onClick={goToNextVerse}
+                            disabled={currentVerseIndex === verses.length - 1}
+                            className="flex items-center justify-center gap-2 rounded border border-gray-300 px-3 py-1.5 text-sm font-medium transition-colors hover:border-primary hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                            <span>Next</span>
+                            <FiChevronRight className="h-4 w-4 shrink-0" />
+                        </button>
+                    </div>
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 min-h-0 overflow-y-auto p-3 sm:p-6">
+                <div className="flex-1 min-h-0 overflow-y-auto p-3 pb-20 sm:p-6 sm:pb-6">
                     <div className="mx-auto w-full max-w-4xl min-w-0">
-                        {/* Navigation Controls */}
-                        <div className="mb-6 flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
-                            <button
-                                onClick={goToPreviousVerse}
-                                disabled={currentVerseIndex === 0}
-                                className="flex w-full items-center justify-center gap-1 rounded px-2 py-1 text-xs font-medium disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:gap-2 sm:px-4 sm:py-2 sm:text-sm"
-                            >
-                                <FiChevronLeft className="h-4 w-4 shrink-0" />
-                                <span className="button-label">Previous</span>
-                            </button>
-
-                            <span className="block text-center text-xs font-medium sm:inline sm:text-sm">
-                                Verse {currentVerseIndex + 1} of {verses.length}
-                            </span>
-
-                            <button
-                                onClick={goToNextVerse}
-                                disabled={currentVerseIndex === verses.length - 1}
-                                className="flex w-full items-center justify-center gap-1 rounded px-2 py-1 text-xs font-medium disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:gap-2 sm:px-4 sm:py-2 sm:text-sm"
-                            >
-                                <span className="button-label">Next</span>
-                                <FiChevronRight className="h-4 w-4 shrink-0" />
-                            </button>
-                        </div>
 
                         <div 
                         style={{
@@ -311,7 +312,7 @@ export default function ReadSurahLayout({
                                     width:'100%',
                                     objectFit: 'cover',
                                     objectPosition: 'center',
-                                    filter: 'blur(5px) brightness(150%)',
+                                    filter: 'blur(3.5px) brightness(185%)',
                                     zIndex: 1,
                                     borderRadius: '0.5rem' // rounded-lg
                                     
@@ -437,6 +438,31 @@ export default function ReadSurahLayout({
                             })()}
                         </div>
                     </div>
+                </div>
+
+                {/* Mobile Navigation - Fixed Bottom Bar */}
+                <div className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-between gap-3 border-t border-gray-200 bg-white px-4 py-3 shadow-lg sm:hidden">
+                    <button
+                        onClick={goToPreviousVerse}
+                        disabled={currentVerseIndex === 0}
+                        className="flex flex-1 items-center justify-center gap-2 rounded bg-primary px-4 py-2.5 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                        <FiChevronLeft className="h-5 w-5 shrink-0" />
+                        <span>Previous</span>
+                    </button>
+
+                    <span className="flex-shrink-0 text-sm font-medium">
+                        {currentVerseIndex + 1}/{verses.length}
+                    </span>
+
+                    <button
+                        onClick={goToNextVerse}
+                        disabled={currentVerseIndex === verses.length - 1}
+                        className="flex flex-1 items-center justify-center gap-2 rounded bg-primary px-4 py-2.5 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                        <span>Next</span>
+                        <FiChevronRight className="h-5 w-5 shrink-0" />
+                    </button>
                 </div>
             </div>
         </div>
