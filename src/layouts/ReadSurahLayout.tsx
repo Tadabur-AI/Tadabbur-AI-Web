@@ -352,6 +352,7 @@ export default function ReadSurahLayout({
                         <div className="mb-6">
                             <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                                 <h3 className="text-base font-medium text-secondary sm:text-lg">Easy Explanation:</h3>
+                                {/* Small AI-generated intro with a bot logo */}
                                 <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:gap-3">
                                     <label htmlFor="tafsir-edition" className="text-xs font-medium text-gray-600 sm:text-sm">
                                         Edition
@@ -371,6 +372,7 @@ export default function ReadSurahLayout({
                                     </select>
                                 </div>
                             </div>
+                                
                             {isEditionLoading && (
                                 <p className="text-sm text-gray-500 mb-2">Loading editions…</p>
                             )}
@@ -386,6 +388,17 @@ export default function ReadSurahLayout({
                             )}
                             {tafsirState?.simplifiedStatus === 'ready' && tafsirState.simplified && (
                                 <div className="prose prose-sm max-w-none break-words rounded-lg border border-blue-100 bg-blue-50 p-3 text-sm leading-relaxed sm:p-4">
+                                    <div className="mt-2 flex items-center gap-3 rounded-lg border border-blue-100 bg-blue-50 p-3 sm:mt-0">
+                                    <img
+                                        src="/images/bot-logo.svg"
+                                        alt="AI bot logo"
+                                        className="h-8 w-8 flex-shrink-0"
+                                    />
+                                    <p className="text-sm text-blue-800">
+                                        AI Generated - Simplified explanation to help you understand the verse better.
+                                    </p>
+                                </div>
+                                <br />
                                     <ReactMarkdown
                                         remarkPlugins={[remarkGfm]}
                                     >

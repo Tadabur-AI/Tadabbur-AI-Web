@@ -10,6 +10,7 @@ interface VerseImagePromptInput {
 }
 
 const MAX_CONTEXT_CHARS = 800;
+const GROQ_MODEL = 'mixtral-8x7b-32768';
 const parser = new StringOutputParser();
 let promptChain:
   | ((input: {
@@ -34,16 +35,21 @@ const sanitizeForPrompt = (value: string | undefined): string => {
 };
 
 const buildPromptChain = () => {
-  const apiKey = import.meta.env.VITE_GROQ_API;
+  const apiKey =
+    import.meta.env.VITE_GROQ_API ??
+    import.meta.env.VITE_GROQ_API_KEY ??
+    import.meta.env.GROQ_API_KEY ??
+    import.meta.env.GROQ_API;
   if (!apiKey) {
-    throw new Error('Missing GROQ API key. Please set VITE_GROQ_API in your environment.');
+    throw new Error('Missing Groq API key. Please set VITE_GROQ_API in your environment.');
   }
 
   const model = new ChatGroq({
     apiKey,
-    model: 'groq/compound',
+    model: GROQ_MODEL,
     temperature: 0.35,
     maxTokens: 256,
+    maxRetries: 3,
   });
 
   const prompt = ChatPromptTemplate.fromMessages([

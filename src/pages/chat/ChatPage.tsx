@@ -14,7 +14,7 @@ interface Message {
 // Constants for API configuration
 const API_CONFIG = {
     BASE_URL: 'https://ace-crane-central.ngrok-free.app/api/generate',
-    MODEL: 'groq/compound'
+    MODEL: 'mixtral-8x7b-32768'
 };
 
 // Custom components for markdown rendering
