@@ -130,6 +130,16 @@ export default function ReadSurahLayout({
             <div className="flex flex-1 min-w-0 flex-col">
                 {/* Header */}
                 <div className="flex w-full flex-wrap items-center gap-2 border-b border-gray-200 p-2 sm:flex-nowrap sm:gap-3 sm:p-4">
+                    {/* Back to Chapters Button */}
+                    <button
+                        type="button"
+                        onClick={() => navigate('/surahs')}
+                        className="flex items-center justify-center gap-2 rounded border border-gray-300 px-2 py-2 text-sm font-medium transition-colors hover:border-primary hover:bg-gray-50"
+                        title="Go back to chapters list"
+                    >
+                        <FiArrowLeft className="h-4 w-4 shrink-0" />
+                        <span className="hidden sm:inline">Back</span>
+                    </button>
                     {/* Logo - Hidden on mobile, visible on tablet/desktop */}
                     <div className="hidden sm:flex items-center text-primary font-semibold">
                         <LogoLandscape />
@@ -144,16 +154,7 @@ export default function ReadSurahLayout({
                         <FiMenu />
                     </button>
                     
-                    {/* Back to Chapters Button */}
-                    <button
-                        type="button"
-                        onClick={() => navigate('/surahs')}
-                        className="flex items-center justify-center gap-2 rounded border border-gray-300 px-2 py-2 text-sm font-medium transition-colors hover:border-primary hover:bg-gray-50"
-                        title="Go back to chapters list"
-                    >
-                        <FiArrowLeft className="h-4 w-4 shrink-0" />
-                        <span className="hidden sm:inline">Back</span>
-                    </button>
+                    
                     
                     <h1 className="min-w-0 flex-1 truncate text-base font-bold text-primary sm:text-xl">
                         {surah.name_english} ({surah.name_arabic})

@@ -20,10 +20,12 @@ export default function ReadSurahPage() {
     const saved = localStorage.getItem('tadabbur_recitation');
     return saved ? Number(saved) : null;
   });
-  const [selectedTranslation, setSelectedTranslation] = useState<number | null>(() => {
-    const saved = localStorage.getItem('tadabbur_translation');
-    return saved ? Number(saved) : null;
-  });
+  // const [
+  //   // selectedTranslation,
+  //    setSelectedTranslation] = useState<number | null>(() => {
+  //   const saved = localStorage.getItem('tadabbur_translation');
+  //   return saved ? Number(saved) : null;
+  // });
   const [selectedTafsir, setSelectedTafsir] = useState<number | null>(() => {
     const saved = localStorage.getItem('tadabbur_tafsir');
     return saved ? Number(saved) : 169; // Default to Ibn Kathir if not saved
@@ -248,10 +250,10 @@ export default function ReadSurahPage() {
   };
 
   // Handler for translation change - saves to localStorage
-  const handleTranslationChange = (id: number) => {
-    setSelectedTranslation(id);
-    localStorage.setItem('tadabbur_translation', String(id));
-  };
+  // const handleTranslationChange = (id: number) => {
+  //   setSelectedTranslation(id);
+  //   localStorage.setItem('tadabbur_translation', String(id));
+  // };
 
   // Handler for tafsir change - saves to localStorage
   const handleTafsirChange = (id: number) => {
@@ -268,10 +270,10 @@ export default function ReadSurahPage() {
       goToPreviousVerse={goToPreviousVerse}
       goToNextVerse={goToNextVerse}
       selectedRecitation={selectedRecitation}
-      selectedTranslation={selectedTranslation}
+      // selectedTranslation={selectedTranslation}
       selectedTafsir={selectedTafsir}
       onRecitationChange={handleRecitationChange}
-      onTranslationChange={handleTranslationChange}
+      // onTranslationChange={handleTranslationChange}
       onTafsirChange={handleTafsirChange}
       isExplainerOpen={isExplainerOpen}
       onExplainerToggle={() => setIsExplainerOpen(!isExplainerOpen)}
