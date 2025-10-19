@@ -119,43 +119,127 @@ export default function TafsirExplainerModal({
               {/* Explained Content */}
               <div className="prose prose-sm max-w-none">
                 <ReactMarkdown
-                  components={{
-                    // Style code blocks as explanation boxes
-                    code({ className, children, ...props }: any) {
-                      const inline = !className;
-                      if (inline) {
-                        return <code className="bg-gray-100 px-1 py-0.5 rounded text-sm" {...props}>{children}</code>;
-                      }
-                      
-                      const isExplanation = className?.includes('language-explanation');
-                      
-                      if (isExplanation) {
-                        return (
-                          <div className="my-4 rounded-lg border-l-4 border-primary bg-blue-50 p-4 not-prose">
-                            <div className="text-sm font-medium text-blue-900 mb-2">📖 Explanation:</div>
-                            <div className="text-sm text-blue-800 italic whitespace-pre-wrap">{children}</div>
-                          </div>
-                        );
-                      }
-                      
-                      return (
-                        <code className="block bg-gray-100 p-4 rounded-lg overflow-x-auto text-sm" {...props}>
-                          {children}
-                        </code>
-                      );
-                    },
-                    // Style blockquotes as narrations
-                    blockquote({ children, ...props }: any) {
-                      return (
-                        <blockquote className="border-l-4 border-gray-300 pl-4 italic text-gray-700 my-4" {...props}>
-                          {children}
-                        </blockquote>
-                      );
-                    },
-                  }}
+    components={{
+        code: ({ node, inline, className, children, ...props }) => {
+            if (inline) {
+                return (
+                    <code
+                        style={{
+                            background: '#f0f0f0',
+                            padding: '2px 5px',
+                            borderRadius: '4px',
+                            fontSize: '0.9em',
+                            wordBreak: 'break-word',
+                        }}
+                        {...props}
+                    >
+                        {children}
+                    </code>
+                );
+            }
+            return (
+                <pre
+                    style={{
+                        background: '#1e1e1e',
+                        color: '#f8f8f2',
+                        padding: '10px',
+                        borderRadius: '8px',
+                        overflowX: 'auto',
+                        maxWidth: '100%',
+                        boxSizing: 'border-box',
+                        fontSize: '0.9em',
+                    }}
                 >
-                  {explanation.explained_tafsir}
-                </ReactMarkdown>
+                    <code
+                        style={{
+                            fontFamily: 'monospace',
+                            whiteSpace: 'pre-wrap',
+                            wordWrap: 'break-word',
+                        }}
+                        {...props}
+                    >
+                        {children}
+                    </code>
+                </pre>
+            );
+        },
+        p: ({ children }) => (
+            <p
+                style={{
+                    marginBottom: '10px',
+                    lineHeight: '1.6',
+                    fontSize: '1em',
+                    wordBreak: 'break-word',
+                }}
+            >
+                {children}
+            </p>
+        ),
+        a: ({ href, children }) => (
+            <a
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                    color: '#1e90ff',
+                    textDecoration: 'underline',
+                    wordBreak: 'break-all',
+                }}
+            >
+                {children}
+            </a>
+        ),
+        h1: ({ children }) => (
+            <h1
+                style={{
+                    fontSize: '1.8em',
+                    margin: '16px 0 8px',
+                    fontWeight: '700',
+                    wordBreak: 'break-word',
+                }}
+            >
+                {children}
+            </h1>
+        ),
+        h2: ({ children }) => (
+            <h2
+                style={{
+                    fontSize: '1.5em',
+                    margin: '14px 0 6px',
+                    fontWeight: '600',
+                    wordBreak: 'break-word',
+                }}
+            >
+                {children}
+            </h2>
+        ),
+        ul: ({ children }) => (
+            <ul
+                style={{
+                    paddingLeft: '20px',
+                    marginBottom: '10px',
+                    wordBreak: 'break-word',
+                }}
+            >
+                {children}
+            </ul>
+        ),
+        ol: ({ children }) => (
+            <ol
+                style={{
+                    paddingLeft: '20px',
+                    marginBottom: '10px',
+                    wordBreak: 'break-word',
+                }}
+            >
+                {children}
+            </ol>
+        ),
+    }}
+>
+    {explanation?.explained_tafsir}
+</ReactMarkdown>
+
               </div>
 
               {/* Original Tafsir (Collapsible) */}

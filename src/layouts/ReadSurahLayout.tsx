@@ -280,7 +280,20 @@ export default function ReadSurahLayout({
                                 {/* AI Explanation Content - Rendered as Markdown */}
                                 {aiExplanation && !isExplanationLoading &&  (
                                     <div className="prose prose-sm max-w-none text-gray-700">
-                                        <ReactMarkdown>{(aiExplanation)}</ReactMarkdown>
+                                        <ReactMarkdown
+                                        components={{
+                                            'pre': ({children, ...props}) => (
+                                                <p
+                                                style={{
+                                                    color: '#1999'
+                                                }}
+                                                >
+                                                    {children}
+                                                </p>
+                                            ),
+                                        }}
+
+                                        >{(aiExplanation)}</ReactMarkdown>
                                     </div>
                                 )}
                                 
