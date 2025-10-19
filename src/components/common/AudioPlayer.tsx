@@ -1,12 +1,20 @@
 import { useState, useRef, useEffect } from 'react';
 import { FiPlay, FiPause } from 'react-icons/fi';
 
+interface Recitation {
+  id: number;
+  reciter_name: string;
+  style: string;
+}
+
 interface AudioPlayerProps {
   surahNumber: number;
   ayahNumber: number;
   recitationId: number;
   recitationName?: string;
   className?: string;
+  recitations?: Recitation[];
+  onRecitationChange?: (id: number) => void;
 }
 
 /**
@@ -19,7 +27,9 @@ export default function AudioPlayer({
   ayahNumber, 
   recitationId, 
   recitationName = 'Current Reciter',
-  className = '' 
+  className = '',
+  recitations = [],
+  onRecitationChange,
 }: AudioPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -172,11 +182,30 @@ export default function AudioPlayer({
       {audioUrl && <audio ref={audioRef} src={audioUrl ?? undefined} preload="metadata" />}
       
       <div className="rounded-lg bg-gradient-to-r from-green-50 to-blue-50 p-4 border border-green-100">
+        {/* Reciter Selector - Inside the player box */}
+        {recitations && recitations.length > 0 && onRecitationChange && (
+          <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            {/* <label htmlFor="reciter-select" className="text-sm font-medium text-gray-700">
+              Reciter
+            </label> */}
+            <select
+              id="reciter-select"
+              value={recitationId || ''}
+              onChange={(e) => onRecitationChange(Number(e.target.value))}
+              className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none sm:min-w-[220px]"
+            >
+              {recitations.map((recitation) => (
+                <option key={recitation.id} value={recitation.id}>
+                  {recitation.reciter_name} ({recitation.style})
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+        
         {/* Reciter Name */}
         <div className="mb-3 flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white text-sm font-bold">
-            ▶
-          </div>
+
           <p className="text-sm font-medium text-gray-700">{recitationName}</p>
         </div>
 
@@ -209,13 +238,23 @@ export default function AudioPlayer({
                 value={currentTime}
                 onChange={handleSeek}
                 disabled={!audioUrl || isLoading}
-                className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{
                   background: audioUrl && duration > 0 
                     ? `linear-gradient(to right, rgb(31, 98, 10) 0%, rgb(31, 98, 10) ${(currentTime / duration) * 100}%, rgb(229, 231, 235) ${(currentTime / duration) * 100}%, rgb(229, 231, 235) 100%)`
-                    : undefined
+                    : undefined,
+                  WebkitAppearance: 'none',
+                  appearance: 'none',
                 }}
               />
+              <style>{`
+                input[type="range"]::-webkit-slider-thumb {
+                  display: none;
+                }
+                input[type="range"]::-moz-range-thumb {
+                  display: none;
+                }
+              `}</style>
             </div>
 
             {/* Time Display */}

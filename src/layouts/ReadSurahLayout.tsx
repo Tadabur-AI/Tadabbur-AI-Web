@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { FiChevronLeft, FiChevronRight, FiMenu, FiX } from 'react-icons/fi';
+import { useNavigate } from 'react-router-dom';
+import { FiChevronLeft, FiChevronRight, FiMenu, FiX, FiArrowLeft } from 'react-icons/fi';
 import ReactMarkdown from 'react-markdown';
-import QuranSettings from '../components/common/QuranSettings';
+import LogoLandscape from '../components/common/LogoLandscape';
 import AudioPlayer from '../components/common/AudioPlayer';
 import TafsirExplainerModal from '../components/common/TafsirExplainerModal';
 
@@ -34,10 +35,8 @@ interface Props {
     goToPreviousVerse: () => void;
     goToNextVerse: () => void;
     selectedRecitation?: number | null;
-    selectedTranslation?: number | null;
-    selectedTafsir?: number | null;
     onRecitationChange?: (id: number) => void;
-    onTranslationChange?: (id: number) => void;
+    selectedTafsir?: number | null;
     onTafsirChange?: (id: number) => void;
     isExplainerOpen?: boolean;
     onExplainerToggle?: () => void;
@@ -57,10 +56,8 @@ export default function ReadSurahLayout({
     goToPreviousVerse,
     goToNextVerse,
     selectedRecitation,
-    selectedTranslation,
     selectedTafsir,
     onRecitationChange,
-    onTranslationChange,
     onTafsirChange,
     isExplainerOpen,
     onExplainerToggle,
@@ -71,6 +68,7 @@ export default function ReadSurahLayout({
     isExplanationLoading,
     recitations = [],
 }: Props) {
+    const navigate = useNavigate();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const isValidVerseIndex = currentVerseIndex >= 0 && currentVerseIndex < verses.length;
 
@@ -132,6 +130,11 @@ export default function ReadSurahLayout({
             <div className="flex flex-1 min-w-0 flex-col">
                 {/* Header */}
                 <div className="flex w-full flex-wrap items-center gap-2 border-b border-gray-200 p-2 sm:flex-nowrap sm:gap-3 sm:p-4">
+                    {/* Logo - Hidden on mobile, visible on tablet/desktop */}
+                    <div className="hidden sm:flex items-center text-primary font-semibold">
+                        <LogoLandscape />
+                    </div>
+                    
                     <button
                         type="button"
                         aria-label="Show verse list"
@@ -140,6 +143,18 @@ export default function ReadSurahLayout({
                     >
                         <FiMenu />
                     </button>
+                    
+                    {/* Back to Chapters Button */}
+                    <button
+                        type="button"
+                        onClick={() => navigate('/surahs')}
+                        className="flex items-center justify-center gap-2 rounded border border-gray-300 px-2 py-2 text-sm font-medium transition-colors hover:border-primary hover:bg-gray-50"
+                        title="Go back to chapters list"
+                    >
+                        <FiArrowLeft className="h-4 w-4 shrink-0" />
+                        <span className="hidden sm:inline">Back</span>
+                    </button>
+                    
                     <h1 className="min-w-0 flex-1 truncate text-base font-bold text-primary sm:text-xl">
                         {surah.name_english} ({surah.name_arabic})
                     </h1>
@@ -174,19 +189,6 @@ export default function ReadSurahLayout({
                 <div className="flex-1 min-h-0 overflow-y-auto p-3 pb-20 sm:p-6 sm:pb-6">
                     <div className="mx-auto w-full max-w-4xl min-w-0">
 
-                        {/* Quran Settings Panel */}
-                        {onRecitationChange && onTranslationChange && (
-                            <div className="mb-6 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-                                {/* <h3 className="text-sm font-semibold text-gray-700 mb-3">Quran Settings</h3> */}
-                                <QuranSettings
-                                    selectedRecitation={selectedRecitation ?? null}
-                                    selectedTranslation={selectedTranslation ?? null}
-                                    onRecitationChange={onRecitationChange}
-                                    onTranslationChange={onTranslationChange}
-                                />
-                            </div>
-                        )}
-
                         {/* Verse Card */}
                         <div className="card relative mb-6 overflow-hidden">
 
@@ -220,6 +222,8 @@ export default function ReadSurahLayout({
                                                 ayahNumber={currentVerseIndex + 1}
                                                 recitationId={selectedRecitation}
                                                 recitationName={reciter?.reciter_name || 'Current Reciter'}
+                                                recitations={recitations}
+                                                onRecitationChange={onRecitationChange}
                                             />
                                         );
                                     })()}
@@ -235,9 +239,9 @@ export default function ReadSurahLayout({
                                 {/* Tafsir Dropdown - Moved here from Quran Settings */}
                                 {onTafsirChange && (
                                     <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:gap-3">
-                                        <label htmlFor="tafsir-select" className="text-xs font-medium text-gray-600 sm:text-sm">
+                                        {/* <label htmlFor="tafsir-select" className="text-xs font-medium text-gray-600 sm:text-sm">
                                             Tafsir
-                                        </label>
+                                        </label> */}
                                         <select
                                             id="tafsir-select"
                                             className="w-full rounded border border-gray-300 px-3 py-2 text-xs focus:border-primary focus:outline-none sm:min-w-[220px] sm:text-sm"
