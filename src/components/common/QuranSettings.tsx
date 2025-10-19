@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { 
   fetchRecitations, 
-  fetchTranslations,
+  // fetchTranslations,
   type Recitation,
   type Translation
 } from '../../services/quranResourcesService';
@@ -20,7 +20,7 @@ export default function QuranSettings({
   onTranslationChange,
 }: QuranSettingsProps) {
   const [recitations, setRecitations] = useState<Recitation[]>([]);
-  const [translations, setTranslations] = useState<Translation[]>([]);
+  // const [translations, setTranslations] = useState<Translation[]>([]);
   const [loading, setLoading] = useState(true);
   const hasSetDefaults = useRef(false);
 
@@ -49,7 +49,7 @@ export default function QuranSettings({
 
         // Try to load from localStorage first
         const cachedRecitations = localStorage.getItem('tadabbur_recitations_cache');
-        const cachedTranslations = localStorage.getItem('tadabbur_translations_cache');
+        // const cachedTranslations = localStorage.getItem('tadabbur_translations_cache');
 
         let recitationsData: Recitation[] = [];
         let translationsData: Translation[] = [];
@@ -65,17 +65,17 @@ export default function QuranSettings({
         }
 
         // Load translations - from cache or API
-        if (cachedTranslations) {
-          translationsData = JSON.parse(cachedTranslations);
-          console.log('Loaded translations from localStorage cache');
-        } else {
-          translationsData = await fetchWithRetry(() => fetchTranslations('en'), 'Translations');
-          localStorage.setItem('tadabbur_translations_cache', JSON.stringify(translationsData));
-          console.log('Fetched translations from API and cached to localStorage');
-        }
+        // if (cachedTranslations) {
+        //   translationsData = JSON.parse(cachedTranslations);
+        //   console.log('Loaded translations from localStorage cache');
+        // } else {
+        //   translationsData = await fetchWithRetry(() => fetchTranslations('en'), 'Translations');
+        //   localStorage.setItem('tadabbur_translations_cache', JSON.stringify(translationsData));
+        //   console.log('Fetched translations from API and cached to localStorage');
+        // }
         
         setRecitations(recitationsData);
-        setTranslations(translationsData);
+        // setTranslations(translationsData);
         
         // Set defaults only once if not selected and not already set in localStorage
         if (!hasSetDefaults.current) {
@@ -142,7 +142,7 @@ export default function QuranSettings({
       </div>
 
       {/* Translation Selection */}
-      <div>
+      {/* <div>
         <label htmlFor="translation" className="block text-sm font-medium text-gray-700 mb-1">
           Translation
         </label>
@@ -158,7 +158,7 @@ export default function QuranSettings({
             </option>
           ))}
         </select>
-      </div>
+      </div> */}
     </div>
   );
 }

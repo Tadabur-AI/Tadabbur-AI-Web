@@ -177,7 +177,7 @@ export default function ReadSurahLayout({
                         {/* Quran Settings Panel */}
                         {onRecitationChange && onTranslationChange && (
                             <div className="mb-6 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-                                <h3 className="text-sm font-semibold text-gray-700 mb-3">Quran Settings</h3>
+                                {/* <h3 className="text-sm font-semibold text-gray-700 mb-3">Quran Settings</h3> */}
                                 <QuranSettings
                                     selectedRecitation={selectedRecitation ?? null}
                                     selectedTranslation={selectedTranslation ?? null}
@@ -283,13 +283,28 @@ export default function ReadSurahLayout({
                                         <ReactMarkdown
                                         components={{
                                             'pre': ({children, ...props}) => (
-                                                <p
+                                                <pre
                                                 style={{
-                                                    color: '#1999'
+                                                    color: '#1999',
+                                                    display: 'flex',
+                                                    flexDirection: 'column',
+                                                    background: '#f6f8fa',
+                                                    padding: '10px',
+                                                    borderRadius: '8px',
+                                                    overflowX: 'auto',
+                                                    maxWidth: '100%',
+                                                    boxSizing: 'border-box',
+                                                    fontSize: '1em',
+                                                    whiteSpace: 'pre-wrap',
+                                                    wordWrap: 'normal',
+                                                    wordBreak: 'keep-all',
+
+
                                                 }}
+                                                {...props}
                                                 >
                                                     {children}
-                                                </p>
+                                                </pre>
                                             ),
                                         }}
 

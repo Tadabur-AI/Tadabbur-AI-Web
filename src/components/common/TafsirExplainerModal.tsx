@@ -120,23 +120,7 @@ export default function TafsirExplainerModal({
               <div className="prose prose-sm max-w-none">
                 <ReactMarkdown
     components={{
-        code: ({ node, inline, className, children, ...props }) => {
-            if (inline) {
-                return (
-                    <code
-                        style={{
-                            background: '#f0f0f0',
-                            padding: '2px 5px',
-                            borderRadius: '4px',
-                            fontSize: '0.9em',
-                            wordBreak: 'break-word',
-                        }}
-                        {...props}
-                    >
-                        {children}
-                    </code>
-                );
-            }
+        code: ({ node, className, children, ...props }) => {
             return (
                 <pre
                     style={{
