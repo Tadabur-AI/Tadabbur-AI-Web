@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import supabase from '../../utils/supabase';
+import supabase from '../utils/supabase';
 import type { User } from '@supabase/supabase-js';
 
 export const useUser = () => {
@@ -16,14 +16,15 @@ export const useUser = () => {
     };
 
     fetchUser();
-
+    //@ts-ignore
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user || null);
       setLoading(false);
     });
 
     return () => {
-      authListener?.unsubscribe();
+      //@ts-ignore
+      authListener?.unsubscribe(); 
     };
   }, []);
 

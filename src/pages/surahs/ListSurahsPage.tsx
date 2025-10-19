@@ -1,66 +1,43 @@
 import { useEffect, useState } from 'react';
-import { getSurahById } from 'quran-english';
-import type { Surah } from 'quran-english';
 import { Link } from 'react-router-dom';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { BiBook, BiSearch } from 'react-icons/bi';
 import LogoLandscape from '../../components/common/LogoLandscape';
-
-// Manual mapping for surahs without English names
-const arabicToEnglishNames: Record<string, string> = {
-    'يونس': 'Yunus',
-    'هود': 'Hud',
-    'يوسف': 'Yusuf',
-    'ابراهيم': 'Ibrahim',
-    'مريم': 'Maryam',
-    'طه': 'Ta-Ha',
-    'لقمان': 'Luqman',
-    'سبإ': 'Saba',
-    'فاطر': 'Fatir',
-    'ص': 'Sad',
-    'غافر': 'Ghafir',
-    'فصلت': 'Fussilat',
-    'محمد': 'Muhammad',
-    'ق': 'Qaf',
-    'نوح': 'Nuh',
-    'عبس': 'Abasa',
-    'قريش': 'Quraysh',
-};
-
-const getSurahDisplayName = (surah: Surah): string => {
-    if (surah.name_english) {
-        return surah.name_english;
-    }
-    
-    const arabicName = surah.name_arabic?.trim() || '';
-    if (arabicToEnglishNames[arabicName]) {
-        return arabicToEnglishNames[arabicName];
-    }
-    
-    return `Surah ${surah.id}`;
-};
+import { fetchChapters, type Chapter } from '../../services/quranResourcesService';
 
 export default function ListSurahsPage() {
-    const [surahs, setSurahs] = useState<Surah[]>([]);
+    const [chapters, setChapters] = useState<Chapter[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
 
     useEffect(() => {
-        const surahList: Surah[] = [];
-        for (let i = 1; i <= 114; i++) {
-            const surah = getSurahById(i);
-            if (surah) surahList.push(surah);
+        async function loadChapters() {
+            try {
+                setLoading(true);
+                setError(null);
+                const data = await fetchChapters();
+                setChapters(data);
+            } catch (err) {
+                console.error('Failed to load chapters:', err);
+                setError(err instanceof Error ? err.message : 'Failed to load chapters');
+            } finally {
+                setLoading(false);
+            }
         }
-        setSurahs(surahList);
+        
+        loadChapters();
     }, []);
 
-    const filteredSurahs = surahs.filter((surah) => {
+    const filteredChapters = chapters.filter((chapter) => {
         const query = searchQuery.toLowerCase().trim();
         if (!query) return true;
         
         return (
-            surah.name_english?.toLowerCase().includes(query) ||
-            surah.name_arabic?.includes(query) ||
-            surah.id?.toString() === query
+            chapter.name_simple.toLowerCase().includes(query) ||
+            chapter.name_arabic.includes(query) ||
+            chapter.translated_name.name.toLowerCase().includes(query) ||
+            chapter.id.toString() === query
         );
     });
 
@@ -92,42 +69,63 @@ export default function ListSurahsPage() {
                     </div>
                     {searchQuery && (
                         <p className="mt-2 text-sm text-gray-600">
-                            Found {filteredSurahs.length} surah{filteredSurahs.length !== 1 ? 's' : ''}
+                            Found {filteredChapters.length} surah{filteredChapters.length !== 1 ? 's' : ''}
                         </p>
                     )}
                 </div>
 
-                {/* Surahs List */}
-                <ul className="space-y-2">
-                    {filteredSurahs.length > 0 ? (
-                        filteredSurahs.map((surah) => {
-                            const displayName = getSurahDisplayName(surah);
-                            
-                            return (
-                                <li key={surah.id} className="border border-gray-200 rounded-lg p-3 hover:border-primary hover:bg-gray-50 transition-colors">
-                                    <Link to={`/surah/${surah.id}`} className="flex items-center justify-between gap-3">
+                {/* Loading State */}
+                {loading && (
+                    <div className="text-center py-12">
+                        <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent"></div>
+                        <p className="mt-2 text-gray-600">Loading surahs...</p>
+                    </div>
+                )}
+
+                {/* Error State */}
+                {error && (
+                    <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-center">
+                        <p className="text-red-800">{error}</p>
+                        <button
+                            onClick={() => window.location.reload()}
+                            className="mt-2 text-sm text-red-600 hover:text-red-700 underline"
+                        >
+                            Try again
+                        </button>
+                    </div>
+                )}
+
+                {/* Chapters List */}
+                {!loading && !error && (
+                    <ul className="space-y-2">
+                        {filteredChapters.length > 0 ? (
+                            filteredChapters.map((chapter) => (
+                                <li key={chapter.id} className="border border-gray-200 rounded-lg p-3 hover:border-primary hover:bg-gray-50 transition-colors">
+                                    <Link to={`/surah/${chapter.id}`} className="flex items-center justify-between gap-3">
                                         <div className="flex items-center gap-3">
                                             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
-                                                {surah.id}
+                                                {chapter.id}
                                             </span>
                                             <div className="min-w-0 flex-1">
                                                 <p className="font-medium text-gray-900">
-                                                    {displayName}
+                                                    {chapter.name_simple}
                                                 </p>
-                                                <p className="text-sm text-gray-600">{surah.verses_count} verses</p>
+                                                <p className="text-sm text-gray-600">
+                                                    {chapter.verses_count} verses • {chapter.revelation_place === 'makkah' ? 'Meccan' : 'Medinan'}
+                                                </p>
                                             </div>
                                         </div>
-                                        <p className="text-xl text-primary font-arabic shrink-0">{surah.name_arabic}</p>
+                                        <p className="text-xl text-primary font-arabic shrink-0">{chapter.name_arabic}</p>
                                     </Link>
                                 </li>
-                            );
-                        })
-                    ) : (
-                        <li className="text-center py-8 text-gray-500">
-                            No surahs found matching "{searchQuery}"
-                        </li>
-                    )}
-                </ul>
+                            ))
+                        ) : (
+                            <li className="text-center py-8 text-gray-500">
+                                No surahs found matching "{searchQuery}"
+                            </li>
+                        )}
+                    </ul>
+                )}
             </div>
         </div>
         </DashboardLayout>

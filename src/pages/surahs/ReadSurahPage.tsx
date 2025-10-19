@@ -1,94 +1,126 @@
 import { useParams } from 'react-router-dom';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { getSurahById } from 'quran-english';
 import { getVerse, getTranslation } from 'quran-english/dist/index';
 import ReadSurahLayout from '../../layouts/ReadSurahLayout';
-import { fetchTafsirForVerse, generateSimplifiedTafsir } from '../../services/tafsirService';
+import { fetchTafsirs, fetchRecitations, type Recitation } from '../../services/quranResourcesService';
+import { fetchTafsirText, explainTafsir } from '../../services/tafsirExplainerService';
 
 interface Verse { id: number; verse_key: string; text: string; translation: string; surah_id: number }
 interface Surah { id: number; name_english: string; name_arabic: string; verses_count: number }
-interface TafsirEdition {
-  slug: string;
-  name: string;
-  language?: string;
-  language_name?: string;
-  languageName: string;
-  author_name?: string;
-  id?: number;
-  source?: string;
-}
-
-interface TafsirStatus {
-  status: 'idle' | 'loading' | 'ready' | 'error';
-  raw?: string;
-  simplified?: string;
-  errorMessage?: string;
-  simplifiedStatus?: 'idle' | 'loading' | 'ready' | 'error';
-  simplifiedErrorMessage?: string;
-}
 
 export default function ReadSurahPage() {
   const { id } = useParams();
   const [surah, setSurah] = useState<Surah | null>(null);
   const [verses, setVerses] = useState<Verse[]>([]);
   const [currentVerseIndex, setCurrentVerseIndex] = useState(0);
-  const [tafsirByVerse, setTafsirByVerse] = useState<Record<string, TafsirStatus>>({});
-  const [editionOptions, setEditionOptions] = useState<TafsirEdition[]>([]);
-  const [isEditionLoading, setIsEditionLoading] = useState(false);
-  const [editionError, setEditionError] = useState<string | null>(null);
-  const [selectedEdition, setSelectedEdition] = useState<string>('en-tafisr-ibn-kathir');
-  const isMountedRef = useRef(false);
+  
+  // Quran settings state - load from localStorage or use defaults
+  const [selectedRecitation, setSelectedRecitation] = useState<number | null>(() => {
+    const saved = localStorage.getItem('tadabbur_recitation');
+    return saved ? Number(saved) : null;
+  });
+  const [selectedTranslation, setSelectedTranslation] = useState<number | null>(() => {
+    const saved = localStorage.getItem('tadabbur_translation');
+    return saved ? Number(saved) : null;
+  });
+  const [selectedTafsir, setSelectedTafsir] = useState<number | null>(() => {
+    const saved = localStorage.getItem('tadabbur_tafsir');
+    return saved ? Number(saved) : 169; // Default to Ibn Kathir if not saved
+  });
+  const [isExplainerOpen, setIsExplainerOpen] = useState(false);
+  
+  // Tafsir data state
+  const [tafsirOptions, setTafsirOptions] = useState<Array<{ id: number; name: string; languageName: string }>>([]);
+  const [tafsirText, setTafsirText] = useState<string | null>(null);
+  const [isTafsirLoading, setIsTafsirLoading] = useState(false);
+  
+  // Recitations data state
+  const [recitations, setRecitations] = useState<Recitation[]>([]);
+  
+  // AI explanation state
+  const [aiExplanation, setAiExplanation] = useState<string | null>(null);
+  const [isExplanationLoading, setIsExplanationLoading] = useState(false);
 
+  // Load tafsir options from backend - with retry logic and localStorage caching
   useEffect(() => {
-    isMountedRef.current = true; // reset after Strict Mode remounts
-    return () => {
-      isMountedRef.current = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    const loadEditions = async () => {
-      setIsEditionLoading(true);
-      setEditionError(null);
-
-      try {
-        const response = await fetch('https://cdn.jsdelivr.net/gh/spa5k/tafsir_api@main/tafsir/editions.json');
-        if (!response.ok) {
-          throw new Error('Unable to load tafsir editions.');
+    const loadTafsirOptions = async () => {
+      // Try localStorage cache first
+      const cachedTafsirs = localStorage.getItem('tadabbur_tafsirs_cache');
+      if (cachedTafsirs) {
+        try {
+          const tafsirs = JSON.parse(cachedTafsirs);
+          setTafsirOptions(tafsirs);
+          console.log('Loaded tafsir options from localStorage cache');
+          return;
+        } catch (err) {
+          console.error('Failed to parse cached tafsirs, fetching from API:', err);
         }
+      }
 
-        const editionsRaw = (await response.json()) as Array<Partial<TafsirEdition>>;
-        if (!Array.isArray(editionsRaw) || editionsRaw.length === 0) {
-          throw new Error('No tafsir editions available.');
+      // If not in cache, fetch from API with retry logic
+      const maxRetries = 3;
+      for (let attempt = 0; attempt < maxRetries; attempt++) {
+        try {
+          const tafsirs = await fetchTafsirs('en'); // English only
+          const tafsirData = tafsirs.map(t => ({
+            id: t.id,
+            name: t.name,
+            languageName: t.language_name
+          }));
+          setTafsirOptions(tafsirData);
+          // Cache to localStorage
+          localStorage.setItem('tadabbur_tafsirs_cache', JSON.stringify(tafsirData));
+          console.log('Fetched tafsir options from API and cached to localStorage');
+          return; // Success - exit early
+        } catch (error) {
+          console.error(`Tafsir options fetch attempt ${attempt + 1}/${maxRetries} failed:`, error);
+          if (attempt < maxRetries - 1) {
+            await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+          }
         }
-
-        const editions = editionsRaw
-          .filter((edition): edition is Partial<TafsirEdition> & { slug: string; name: string } => {
-            return Boolean(edition?.slug && edition?.name);
-          })
-          .map((edition) => {
-            const languageValue = edition.language_name ?? edition.language ?? '';
-            return {
-              ...edition,
-              languageName: languageValue,
-            } as TafsirEdition;
-          });
-
-        setEditionOptions(editions);
-        if (!editions.some((edition) => edition.slug === selectedEdition)) {
-          setSelectedEdition(editions[0].slug);
-        }
-      } catch (error) {
-        const message = error instanceof Error ? error.message : 'Unable to load tafsir editions.';
-        setEditionError(message);
-      } finally {
-        setIsEditionLoading(false);
       }
     };
 
-    void loadEditions();
+    // Load recitations - with retry logic and localStorage caching
+    const loadRecitations = async () => {
+      // Try localStorage cache first
+      const cachedRecitations = localStorage.getItem('tadabbur_recitations_cache');
+      if (cachedRecitations) {
+        try {
+          const recitationsData = JSON.parse(cachedRecitations);
+          setRecitations(recitationsData);
+          console.log('Loaded recitations from localStorage cache');
+          return;
+        } catch (err) {
+          console.error('Failed to parse cached recitations, fetching from API:', err);
+        }
+      }
+
+      // If not in cache, fetch from API with retry logic
+      const maxRetries = 3;
+      for (let attempt = 0; attempt < maxRetries; attempt++) {
+        try {
+          const recitationsData = await fetchRecitations();
+          setRecitations(recitationsData);
+          // Cache to localStorage
+          localStorage.setItem('tadabbur_recitations_cache', JSON.stringify(recitationsData));
+          console.log('Fetched recitations from API and cached to localStorage');
+          return; // Success - exit early
+        } catch (error) {
+          console.error(`Recitations fetch attempt ${attempt + 1}/${maxRetries} failed:`, error);
+          if (attempt < maxRetries - 1) {
+            await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+          }
+        }
+      }
+    };
+
+    void loadTafsirOptions();
+    void loadRecitations();
   }, []);
 
+  // Load surah and verses
   useEffect(() => {
     if (!id) return;
     const surahData = getSurahById(Number(id));
@@ -108,146 +140,123 @@ export default function ReadSurahPage() {
     setVerses(v);
   }, [id]);
 
-  const currentVerse = verses[currentVerseIndex];
-  const verseKey = currentVerse?.verse_key;
-  const verseId = currentVerse?.id;
-  const surahId = currentVerse?.surah_id;
-  const verseText = currentVerse?.text;
-  const verseTranslation = currentVerse?.translation;
-
-  const tafsirState = useMemo(() => {
-    const state = verseKey ? tafsirByVerse[verseKey] : undefined;
-    console.log('Tafsir State for', verseKey, ':', state);
-    return state;
-  }, [
-    verseKey,
-    tafsirByVerse,
-  ]);
-
+  // Load tafsir text when verse or tafsir selection changes - with retry logic
   useEffect(() => {
-    setTafsirByVerse({});
-  }, [selectedEdition]);
+    const loadTafsirText = async () => {
+      if (!selectedTafsir || !verses[currentVerseIndex]) {
+        setTafsirText(null);
+        return;
+      }
 
-  useEffect(() => {
-    if (!verseKey || !verseId || !surahId || !verseText || !verseTranslation || !selectedEdition) {
-      console.log('Tafsir useEffect skipped - missing data:', { verseKey, verseId, surahId, hasText: !!verseText, hasTranslation: !!verseTranslation });
-      return;
-    }
+      setIsTafsirLoading(true);
+      setTafsirText(null);
 
-    console.log('=== Starting tafsir fetch for', verseKey, '===');
+      const maxRetries = 3;
+      let lastError: Error | null = null;
 
-    const loadTafsir = async () => {
-      // Check if already loading or loaded
-      let shouldSkip = false;
-      setTafsirByVerse((prev) => {
-        const existing = prev[verseKey];
-        if (existing && (existing.status === 'loading' || existing.status === 'ready')) {
-          console.log('Skipping tafsir fetch for', verseKey, '- already exists:', existing);
-          shouldSkip = true;
-          return prev;
-        }
-        console.log('Setting loading state for', verseKey);
-        return {
-          ...prev,
-          [verseKey]: { status: 'loading' as const, simplifiedStatus: 'idle' as const },
-        };
-      });
-
-      if (shouldSkip) return;
-
-      try {
-    console.log('Fetching raw tafsir for', surahId, verseId);
-    const raw = await fetchTafsirForVerse(surahId, verseId, selectedEdition);
-        console.log('Raw tafsir received:', raw.substring(0, 100));
-        if (!isMountedRef.current) return;
-
-        console.log('Setting raw tafsir in state for', verseKey);
-        setTafsirByVerse((prev) => {
-          const previous = prev[verseKey];
-          const newState = {
-            ...prev,
-            [verseKey]: {
-              ...previous,
-              status: 'ready' as const,
-              raw,
-              errorMessage: undefined,
-              simplifiedStatus: 'loading' as const,
-              simplifiedErrorMessage: undefined,
-            },
-          };
-          console.log('✅ New tafsir state set:', newState[verseKey]);
-          return newState;
-        });
-
-        console.log('⏳ Waiting a moment before checking state...');
-        await new Promise(resolve => setTimeout(resolve, 100));
-
+      for (let attempt = 0; attempt < maxRetries; attempt++) {
         try {
-          console.log('Generating simplified tafsir for', verseKey);
-          const simplified = await generateSimplifiedTafsir({
-            verseText,
-            translation: verseTranslation,
-            tafsirText: raw,
-          });
+          const currentVerse = verses[currentVerseIndex];
+          const result = await fetchTafsirText(
+            currentVerse.surah_id,
+            currentVerseIndex + 1,
+            selectedTafsir
+          );
+          setTafsirText(result.text);
+          setIsTafsirLoading(false);
+          return; // Success - exit early
+        } catch (error) {
+          lastError = error instanceof Error ? error : new Error('Unknown error');
+          console.error(`Tafsir fetch attempt ${attempt + 1}/${maxRetries} failed:`, lastError);
 
-          if (!isMountedRef.current) return;
-
-          console.log('Simplified tafsir generated:', simplified.substring(0, 100));
-          setTafsirByVerse((prev) => {
-            const previous = prev[verseKey];
-            return {
-              ...prev,
-              [verseKey]: {
-                ...previous,
-                status: 'ready' as const,
-                raw,
-                simplified,
-                simplifiedStatus: 'ready' as const,
-                simplifiedErrorMessage: undefined,
-              },
-            };
-          });
-        } catch (simplifiedError) {
-          if (!isMountedRef.current) return;
-          const message =
-            simplifiedError instanceof Error
-              ? simplifiedError.message
-              : 'Unable to generate explanation.';
-
-          console.error('Error generating simplified tafsir:', simplifiedError);
-          setTafsirByVerse((prev) => {
-            const previous = prev[verseKey];
-            return {
-              ...prev,
-              [verseKey]: {
-                ...previous,
-                status: 'ready' as const,
-                raw,
-                simplifiedStatus: 'error' as const,
-                simplifiedErrorMessage: message,
-              },
-            };
-          });
-        }
-      } catch (error) {
-        const message = error instanceof Error ? error.message : 'Unable to load tafsir.';
-        if (isMountedRef.current) {
-          setTafsirByVerse((prev) => ({
-            ...prev,
-            [verseKey]: { status: 'error', errorMessage: message },
-          }));
+          if (attempt === maxRetries - 1) {
+            // All retries failed - silently fail without showing error
+            setTafsirText(null);
+            setIsTafsirLoading(false);
+          } else {
+            // Exponential backoff: 1s, 2s, 4s
+            await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+          }
         }
       }
     };
 
-    void loadTafsir();
-  }, [verseKey, verseId, surahId, verseText, verseTranslation, selectedEdition]);
+    void loadTafsirText();
+  }, [selectedTafsir, currentVerseIndex, verses]);
+
+  // Auto-generate AI explanation when verse or tafsir changes - ONLY AFTER tafsir is loaded
+  useEffect(() => {
+    const generateExplanation = async () => {
+      if (!selectedTafsir || !verses[currentVerseIndex] || !tafsirText) {
+        setAiExplanation(null);
+        return;
+      }
+
+      // Skip if tafsir is still loading
+      if (isTafsirLoading) {
+        return;
+      }
+
+      setIsExplanationLoading(true);
+      setAiExplanation(null);
+
+      const maxRetries = 3;
+      let lastError: Error | null = null;
+
+      for (let attempt = 0; attempt < maxRetries; attempt++) {
+        try {
+          const currentVerse = verses[currentVerseIndex];
+          const result = await explainTafsir({
+            surah: currentVerse.surah_id,
+            ayah: currentVerseIndex + 1,
+            tafsir_id: selectedTafsir,
+          });
+          setAiExplanation(result.explained_tafsir);
+          setIsExplanationLoading(false);
+          return; // Success - exit early
+        } catch (error) {
+          lastError = error instanceof Error ? error : new Error('Unknown error');
+          console.error(`AI explanation attempt ${attempt + 1}/${maxRetries} failed:`, lastError);
+
+          if (attempt === maxRetries - 1) {
+            // All retries failed - silently fail without showing error
+            setAiExplanation(null);
+            setIsExplanationLoading(false);
+          } else {
+            // Exponential backoff: 1s, 2s, 4s
+            await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+          }
+        }
+      }
+    };
+
+    void generateExplanation();
+  }, [selectedTafsir, currentVerseIndex, verses, tafsirText, isTafsirLoading]);
 
   const goToPreviousVerse = () => {
     setCurrentVerseIndex((i) => Math.max(0, i - 1));
   };
+  
   const goToNextVerse = () => {
     setCurrentVerseIndex((i) => Math.min(verses.length - 1, i + 1));
+  };
+
+  // Handler for recitation change - saves to localStorage
+  const handleRecitationChange = (id: number) => {
+    setSelectedRecitation(id);
+    localStorage.setItem('tadabbur_recitation', String(id));
+  };
+
+  // Handler for translation change - saves to localStorage
+  const handleTranslationChange = (id: number) => {
+    setSelectedTranslation(id);
+    localStorage.setItem('tadabbur_translation', String(id));
+  };
+
+  // Handler for tafsir change - saves to localStorage
+  const handleTafsirChange = (id: number) => {
+    setSelectedTafsir(id);
+    localStorage.setItem('tadabbur_tafsir', String(id));
   };
 
   return (
@@ -258,13 +267,20 @@ export default function ReadSurahPage() {
       setCurrentVerseIndex={setCurrentVerseIndex}
       goToPreviousVerse={goToPreviousVerse}
       goToNextVerse={goToNextVerse}
-      tafsirState={tafsirState}
-      tafsirByVerse={tafsirByVerse}
-      editionOptions={editionOptions}
-      selectedEdition={selectedEdition}
-      onEditionChange={setSelectedEdition}
-      isEditionLoading={isEditionLoading}
-      editionError={editionError}
+      selectedRecitation={selectedRecitation}
+      selectedTranslation={selectedTranslation}
+      selectedTafsir={selectedTafsir}
+      onRecitationChange={handleRecitationChange}
+      onTranslationChange={handleTranslationChange}
+      onTafsirChange={handleTafsirChange}
+      isExplainerOpen={isExplainerOpen}
+      onExplainerToggle={() => setIsExplainerOpen(!isExplainerOpen)}
+      tafsirText={tafsirText}
+      isTafsirLoading={isTafsirLoading}
+      tafsirOptions={tafsirOptions}
+      aiExplanation={aiExplanation}
+      isExplanationLoading={isExplanationLoading}
+      recitations={recitations}
     />
   );
 }
