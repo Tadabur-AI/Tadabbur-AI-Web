@@ -1,10 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
-import { 
-  fetchRecitations, 
-  // fetchTranslations,
+import {
+  fetchRecitations,
   type Recitation,
-  type Translation
 } from '../../services/quranResourcesService';
+import { listTranslations, type TranslationSummary } from '../../services/apis';
 
 interface QuranSettingsProps {
   selectedRecitation: number | null;
@@ -20,7 +19,7 @@ export default function QuranSettings({
   onTranslationChange,
 }: QuranSettingsProps) {
   const [recitations, setRecitations] = useState<Recitation[]>([]);
-  // const [translations, setTranslations] = useState<Translation[]>([]);
+  const [translations, setTranslations] = useState<TranslationSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const hasSetDefaults = useRef(false);
 
@@ -48,11 +47,11 @@ export default function QuranSettings({
         };
 
         // Try to load from localStorage first
-        const cachedRecitations = localStorage.getItem('tadabbur_recitations_cache');
-        // const cachedTranslations = localStorage.getItem('tadabbur_translations_cache');
+  const cachedRecitations = localStorage.getItem('tadabbur_recitations_cache');
+  const cachedTranslations = localStorage.getItem('tadabbur_translations_cache');
 
         let recitationsData: Recitation[] = [];
-        let translationsData: Translation[] = [];
+  let translationsData: TranslationSummary[] = [];
 
         // Load recitations - from cache or API
         if (cachedRecitations) {
@@ -64,18 +63,18 @@ export default function QuranSettings({
           console.log('Fetched recitations from API and cached to localStorage');
         }
 
-        // Load translations - from cache or API
-        // if (cachedTranslations) {
-        //   translationsData = JSON.parse(cachedTranslations);
-        //   console.log('Loaded translations from localStorage cache');
-        // } else {
-        //   translationsData = await fetchWithRetry(() => fetchTranslations('en'), 'Translations');
-        //   localStorage.setItem('tadabbur_translations_cache', JSON.stringify(translationsData));
-        //   console.log('Fetched translations from API and cached to localStorage');
-        // }
+        // Load translations - from cache or Worker API
+        if (cachedTranslations) {
+          translationsData = JSON.parse(cachedTranslations);
+          console.log('Loaded translations from localStorage cache');
+        } else {
+          translationsData = await fetchWithRetry(() => listTranslations(), 'Translations');
+          localStorage.setItem('tadabbur_translations_cache', JSON.stringify(translationsData));
+          console.log('Fetched translations from API and cached to localStorage');
+        }
         
         setRecitations(recitationsData);
-        // setTranslations(translationsData);
+        setTranslations(translationsData);
         
         // Set defaults only once if not selected and not already set in localStorage
         if (!hasSetDefaults.current) {
@@ -92,8 +91,9 @@ export default function QuranSettings({
           if (!selectedTranslation && translationsData.length > 0) {
             const saved = localStorage.getItem('tadabbur_translation');
             if (!saved) {
-              onTranslationChange(translationsData[0].id);
-              localStorage.setItem('tadabbur_translation', String(translationsData[0].id));
+              const preferred = translationsData.find((item) => item.languageName?.toLowerCase() === 'english') ?? translationsData[0];
+              onTranslationChange(preferred.id);
+              localStorage.setItem('tadabbur_translation', String(preferred.id));
             } else {
               onTranslationChange(Number(saved));
             }
@@ -142,7 +142,7 @@ export default function QuranSettings({
       </div>
 
       {/* Translation Selection */}
-      {/* <div>
+      <div>
         <label htmlFor="translation" className="block text-sm font-medium text-gray-700 mb-1">
           Translation
         </label>
@@ -154,11 +154,11 @@ export default function QuranSettings({
         >
           {translations.map((translation) => (
             <option key={translation.id} value={translation.id}>
-              {translation.name} - {translation.author_name}
+              {translation.name} {translation.languageName ? `(${translation.languageName})` : ''}
             </option>
           ))}
         </select>
-      </div> */}
+      </div>
     </div>
   );
 }

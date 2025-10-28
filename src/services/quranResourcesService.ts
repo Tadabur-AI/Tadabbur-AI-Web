@@ -3,16 +3,16 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000
 
 export interface Chapter {
   id: number;
-  revelation_place: string;
-  revelation_order: number;
-  bismillah_pre: boolean;
-  name_simple: string;
-  name_complex: string;
-  name_arabic: string;
-  verses_count: number;
+  revelationPlace: string;
+  revelationOrder: number;
+  bismillahPre: boolean;
+  nameSimple: string;
+  nameComplex: string;
+  nameArabic: string;
+  versesCount: number;
   pages: [number, number];
-  translated_name: {
-    language_name: string;
+  translatedName: {
+    languageName: string;
     name: string;
   };
 }
@@ -39,18 +39,6 @@ export interface Translation {
   };
 }
 
-export interface Tafsir {
-  id: number;
-  name: string;
-  author_name: string | null;
-  slug: string;
-  language_name: string;
-  translated_name: {
-    name: string;
-    language_name: string;
-  };
-}
-
 export interface Language {
   id: number;
   name: string;
@@ -63,25 +51,6 @@ export interface Language {
 const defaultHeaders = {
   Authorization: `Bearer ${import.meta.env.VITE_VERCEL_ACCESS_TOKEN}`,
 };
-
-/**
- * Fetch all chapters/surahs
- */
-export async function fetchChapters(): Promise<Chapter[]> {
-  try {
-    const response = await fetch(`${API_BASE_URL}/api/chapters`, {
-      headers: defaultHeaders,
-    });
-    if (!response.ok) {
-      throw new Error(`Failed to fetch chapters: ${response.statusText}`);
-    }
-    const data = await response.json();
-    return data.chapters || [];
-  } catch (error) {
-    console.error('Error fetching chapters:', error);
-    throw error;
-  }
-}
 
 /**
  * Fetch a specific chapter by ID
@@ -137,27 +106,6 @@ export async function fetchTranslations(language?: string): Promise<Translation[
     return data.translations || [];
   } catch (error) {
     console.error('Error fetching translations:', error);
-    throw error;
-  }
-}
-
-/**
- * Fetch all available tafsirs
- */
-export async function fetchTafsirs(language?: string): Promise<Tafsir[]> {
-  try {
-    const url = language 
-      ? `${API_BASE_URL}/api/tafsirs?language=${language}`
-      : `${API_BASE_URL}/api/tafsirs`;
-    
-    const response = await fetch(url, { headers: defaultHeaders });
-    if (!response.ok) {
-      throw new Error(`Failed to fetch tafsirs: ${response.statusText}`);
-    }
-    const data = await response.json();
-    return data.tafsirs || [];
-  } catch (error) {
-    console.error('Error fetching tafsirs:', error);
     throw error;
   }
 }

@@ -1,10 +1,2 @@
-declare module 'quran-english' {
-    export interface Surah {
-        id: number;
-        name_english: string;
-        name_arabic: string;
-        verses_count: number;
-    }
-
-    export function getSurahById(chapterId: number): Surah | undefined;
-}
+// This module declaration is intentionally left empty.
+// The quran-english package has been removed from the project.

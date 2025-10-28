@@ -1,17 +1,21 @@
 import { FiBookOpen, FiHome, FiMessageCircle } from "react-icons/fi";
 import DashboardLayout, { type sidebarItems } from "../../layouts/DashboardLayout";
-import {getSurahById} from 'quran-english/dist/index';
 import { useEffect, useState } from "react";
+import { listSurahs, type SurahSummary } from "../../services/apis";
 
 export default function Homepage() {
-    const [surahs, setSurahs] = useState([]);
+    const [surahs, setSurahs] = useState<SurahSummary[]>([]);
     useEffect(() => {
-            const surahList = [];
-            for (let i = 1; i <= 114; i++) {
-                const surah = getSurahById(i);
-                surahList.push(surah);
+        const loadSurahs = async () => {
+            try {
+                const data = await listSurahs();
+                setSurahs(data);
+            } catch (error) {
+                console.error("Failed to load surahs:", error);
             }
-            setSurahs(surahList as any);
+        };
+
+        void loadSurahs();
     }, []);
     const sidebarItems:sidebarItems[] = [
         {
@@ -39,11 +43,11 @@ export default function Homepage() {
         <div className="p-4">
             <h1 className="text-2xl font-bold">Welcome to the Homepage</h1>
             <p className="mt-2">This is the main content area.</p>
-            {surahs.map((surah:any, index) => (
+            {surahs.map((surah, index) => (
                 <div key={index} className="mt-4 p-4 border rounded">
-                    <h2 className="text-xl font-semibold">{surah?.name_arabic}</h2>
-                    <p className="text-primary">{surah.name_english}</p>
-                    <p className="mt-2 text-secondary">{surah.verses_count}</p>
+                    <h2 className="text-xl font-semibold">{surah.nameArabic}</h2>
+                    <p className="text-primary">{surah.nameSimple}</p>
+                    <p className="mt-2 text-secondary">{surah.versesCount} verses</p>
                 </div>
             ))}
         </div>

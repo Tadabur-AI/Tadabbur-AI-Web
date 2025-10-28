@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { FiPlay, FiPause } from 'react-icons/fi';
+import { retrieveRecitation, type RetrieveRecitationVerse } from '../../services/apis';
 
 interface Recitation {
   id: number;
@@ -15,6 +16,7 @@ interface AudioPlayerProps {
   className?: string;
   recitations?: Recitation[];
   onRecitationChange?: (id: number) => void;
+  isEffectEnabled?: boolean;
 }
 
 /**
@@ -30,6 +32,7 @@ export default function AudioPlayer({
   className = '',
   recitations = [],
   onRecitationChange,
+  isEffectEnabled,
 }: AudioPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -38,59 +41,55 @@ export default function AudioPlayer({
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const recitationCache = useRef<Map<string, RetrieveRecitationVerse[]>>(new Map());
 
   // Fetch audio URL from backend with retry logic
   useEffect(() => {
     const fetchAudioUrl = async () => {
+      const cacheKey = `${surahNumber}-${recitationId}`;
+      const verseKey = `${surahNumber}:${ayahNumber}`;
+
+      const applyAudio = (entries: RetrieveRecitationVerse[]) => {
+        const match = entries.find((entry) => entry.verseKey === verseKey);
+        if (match && match.audioUrl) {
+          setAudioUrl(match.audioUrl);
+          setError(null);
+        } else {
+          setAudioUrl(null);
+          setError('Audio not available for this verse');
+        }
+        setIsLoading(false);
+      };
+
+      const cached = recitationCache.current.get(cacheKey);
+      if (cached) {
+        applyAudio(cached);
+        return;
+      }
+
       setIsLoading(true);
       setError(null);
-      
+      setAudioUrl(null);
+
       const maxRetries = 3;
       let lastError: Error | null = null;
-      
+
       for (let attempt = 0; attempt < maxRetries; attempt++) {
         try {
-          const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
-          const response = await fetch(`${API_BASE_URL}/api/verse`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              surah_id: surahNumber,
-              from: ayahNumber,
-              to: ayahNumber,
-              recitation_id: recitationId,
-            }),
-          });
-
-          if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
-          }
-
-          const data = await response.json();
-          const recitations = data.verses?.[0]?.recitations;
-          
-          if (recitations && recitations.length > 0) {
-            // The API returns a relative URL like "Alafasy/mp3/001001.mp3"
-            // We need to prepend the Quran Foundation CDN base URL
-            const relativeUrl = recitations[0].url;
-            const fullUrl = `https://verses.quran.foundation/${relativeUrl}`;
-            setAudioUrl(fullUrl);
-            setIsLoading(false);
-            return; // Success - exit early
-          } else {
-            throw new Error('No audio found for this verse');
-          }
+          const verses = await retrieveRecitation({ surahNumber, recitationId });
+          recitationCache.current.set(cacheKey, verses);
+          applyAudio(verses);
+          return;
         } catch (err) {
           lastError = err instanceof Error ? err : new Error('Unknown error');
           console.error(`Audio fetch attempt ${attempt + 1}/${maxRetries} failed:`, lastError);
-          
-          // If it's the last attempt, set error; otherwise wait before retrying
+
           if (attempt === maxRetries - 1) {
-            setError(null); // Don't show error to user, just silently fail after retries
+            setAudioUrl(null);
+            setError('Failed to load audio');
             setIsLoading(false);
           } else {
-            // Exponential backoff: 1s, 2s, 4s
-            await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+            await new Promise((resolve) => setTimeout(resolve, Math.pow(2, attempt) * 1000));
           }
         }
       }
@@ -181,7 +180,13 @@ export default function AudioPlayer({
     <div className={`w-full ${className}`}>
       {audioUrl && <audio ref={audioRef} src={audioUrl ?? undefined} preload="metadata" />}
       
-      <div className="rounded-lg bg-gradient-to-r from-green-50 to-blue-50 p-4 border border-green-100">
+      <div
+        className={
+          isEffectEnabled
+            ? 'rounded-lg border border-white/40 bg-white/50 p-4 shadow-sm backdrop-blur-md transition-colors'
+            : 'rounded-lg bg-gradient-to-r from-green-50 to-blue-50 p-4 border border-green-100 transition-colors'
+        }
+      >
         {/* Reciter Selector - Inside the player box */}
         {recitations && recitations.length > 0 && onRecitationChange && (
           <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -192,7 +197,9 @@ export default function AudioPlayer({
               id="reciter-select"
               value={recitationId || ''}
               onChange={(e) => onRecitationChange(Number(e.target.value))}
-              className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none sm:min-w-[220px]"
+              className={`w-full rounded px-3 py-2 text-sm focus:border-primary focus:outline-none sm:min-w-[220px] ${
+                isEffectEnabled ? 'border-white/50 bg-white/70 text-gray-800' : 'border border-gray-300'
+              }`}
             >
               {recitations.map((recitation) => (
                 <option key={recitation.id} value={recitation.id}>
@@ -215,7 +222,9 @@ export default function AudioPlayer({
           <button
             onClick={togglePlay}
             disabled={!!error || isLoading || !audioUrl}
-            className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-primary text-white hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-md hover:shadow-lg active:shadow-sm"
+            className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-md hover:shadow-lg active:shadow-sm ${
+              isEffectEnabled ? 'bg-primary/80 hover:bg-primary/70' : 'bg-primary hover:bg-primary/90'
+            }`}
             title={isPlaying ? 'Pause' : isLoading ? 'Loading...' : 'Play recitation'}
           >
             {isLoading ? (
@@ -238,7 +247,9 @@ export default function AudioPlayer({
                 value={currentTime}
                 onChange={handleSeek}
                 disabled={!audioUrl || isLoading}
-                className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                className={`flex-1 h-2 rounded-lg appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+                  isEffectEnabled ? 'bg-white/40' : 'bg-gray-200'
+                }`}
                 style={{
                   background: audioUrl && duration > 0 
                     ? `linear-gradient(to right, rgb(31, 98, 10) 0%, rgb(31, 98, 10) ${(currentTime / duration) * 100}%, rgb(229, 231, 235) ${(currentTime / duration) * 100}%, rgb(229, 231, 235) 100%)`
@@ -258,7 +269,7 @@ export default function AudioPlayer({
             </div>
 
             {/* Time Display */}
-            <div className="flex justify-between text-xs text-gray-600">
+            <div className={`flex justify-between text-xs ${isEffectEnabled ? 'text-gray-100 drop-shadow' : 'text-gray-600'}`}>
               <span className="font-mono">{formatTime(currentTime)}</span>
               <span className="font-mono">{formatTime(duration)}</span>
             </div>
@@ -274,7 +285,9 @@ export default function AudioPlayer({
 
         {/* Loading State Message */}
         {isLoading && !error && (
-          <p className="mt-2 text-xs text-gray-600 text-center">Loading audio...</p>
+          <p className={`mt-2 text-xs text-center ${isEffectEnabled ? 'text-gray-100 drop-shadow' : 'text-gray-600'}`}>
+            Loading audio...
+          </p>
         )}
       </div>
     </div>

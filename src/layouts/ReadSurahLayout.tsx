@@ -1,16 +1,18 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiChevronLeft, FiChevronRight, FiMenu, FiX, FiArrowLeft } from 'react-icons/fi';
 import ReactMarkdown from 'react-markdown';
 import LogoLandscape from '../components/common/LogoLandscape';
 import AudioPlayer from '../components/common/AudioPlayer';
 import TafsirExplainerModal from '../components/common/TafsirExplainerModal';
+import { type ExplainTafsirResponse } from '../services/tafsirExplainerService';
 
 interface Verse {
     id: number;
     verse_key: string;
     text: string;
     translation: string;
+    translationHtml?: string;
     surah_id: number;
 }
 
@@ -36,6 +38,9 @@ interface Props {
     goToNextVerse: () => void;
     selectedRecitation?: number | null;
     onRecitationChange?: (id: number) => void;
+    selectedTranslation?: number | null;
+    onTranslationChange?: (id: number) => void;
+    translationOptions?: Array<{ id: number; name: string; languageName: string }>;
     selectedTafsir?: number | null;
     onTafsirChange?: (id: number) => void;
     isExplainerOpen?: boolean;
@@ -43,7 +48,7 @@ interface Props {
     tafsirText?: string | null;
     isTafsirLoading?: boolean;
     tafsirOptions?: Array<{ id: number; name: string; languageName: string }>;
-    aiExplanation?: string | null;
+    aiExplanation?: ExplainTafsirResponse | null;
     isExplanationLoading?: boolean;
     recitations?: Recitation[];
 }
@@ -56,8 +61,11 @@ export default function ReadSurahLayout({
     goToPreviousVerse,
     goToNextVerse,
     selectedRecitation,
+    selectedTranslation,
     selectedTafsir,
     onRecitationChange,
+    onTranslationChange,
+    translationOptions = [],
     onTafsirChange,
     isExplainerOpen,
     onExplainerToggle,
@@ -70,12 +78,96 @@ export default function ReadSurahLayout({
 }: Props) {
     const navigate = useNavigate();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [isEffectEnabled, setIsEffectEnabled] = useState(false);
+    const ambientAudioRef = useRef<HTMLAudioElement | null>(null);
     const isValidVerseIndex = currentVerseIndex >= 0 && currentVerseIndex < verses.length;
+
+    useEffect(() => {
+        if (typeof window === 'undefined') {
+            return;
+        }
+        const storedPreference = localStorage.getItem('tadabbur_surah_effect');
+        setIsEffectEnabled(storedPreference === 'true');
+    }, []);
+
+    useEffect(() => {
+        if (typeof window === 'undefined') {
+            return;
+        }
+        localStorage.setItem('tadabbur_surah_effect', String(isEffectEnabled));
+    }, [isEffectEnabled]);
+
+    useEffect(() => {
+        if (typeof window === 'undefined') {
+            return;
+        }
+
+        let audio = ambientAudioRef.current;
+
+        if (isEffectEnabled) {
+            if (!audio) {
+                audio = new Audio('/sounds/rain.mp3');
+                audio.loop = true;
+                audio.volume = 0.15;
+                audio.preload = 'auto';
+                ambientAudioRef.current = audio;
+            }
+
+            const tryPlay = async () => {
+                try {
+                    if (audio && audio.paused) {
+                        await audio.play();
+                    }
+                } catch (err) {
+                    console.warn('Ambient audio playback blocked:', err);
+                }
+            };
+
+            void tryPlay();
+
+            const resumeOnInteraction = () => {
+                void tryPlay();
+                window.removeEventListener('touchstart', resumeOnInteraction);
+                window.removeEventListener('click', resumeOnInteraction);
+            };
+
+            window.addEventListener('touchstart', resumeOnInteraction, { once: true });
+            window.addEventListener('click', resumeOnInteraction, { once: true });
+
+            return () => {
+                window.removeEventListener('touchstart', resumeOnInteraction);
+                window.removeEventListener('click', resumeOnInteraction);
+            };
+        }
+
+        if (audio && !audio.paused) {
+            audio.pause();
+            audio.currentTime = 0;
+        }
+
+        return undefined;
+    }, [isEffectEnabled]);
+
+    useEffect(() => () => {
+        const audio = ambientAudioRef.current;
+        if (audio) {
+            audio.pause();
+            audio.currentTime = 0;
+        }
+    }, []);
 
     if (!surah || verses.length === 0 || !isValidVerseIndex) {
         return <div className="flex h-screen min-w-[50px] items-center justify-center">Loading...</div>;
     }
     const currentVerse = verses[currentVerseIndex];
+    const cardBackgroundStyle = isEffectEnabled
+        ? {
+              backgroundImage: "url('/images/rain.gif')",
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat',
+          }
+        : undefined;
 
 
     return (
@@ -119,7 +211,9 @@ export default function ReadSurahLayout({
                         >
                             <p className="font-medium text-sm">Verse {verse.verse_key.split(':')[1]}</p>
                             <p className="text-xs text-gray-600 mt-1 line-clamp-2">
-                                {verse.translation.substring(0, 60)}...
+                                {verse.translation
+                                    ? `${verse.translation.slice(0, 60)}${verse.translation.length > 60 ? '...' : ''}`
+                                    : 'No translation available.'}
                             </p>
                         </div>
                     ))}
@@ -189,9 +283,30 @@ export default function ReadSurahLayout({
                 {/* Content */}
                 <div className="flex-1 min-h-0 overflow-y-auto p-3 pb-20 sm:p-6 sm:pb-6">
                     <div className="mx-auto w-full max-w-4xl min-w-0">
+                        <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
+                            <label className="inline-flex cursor-pointer items-center gap-3 text-sm font-medium text-gray-700">
+                                <span className="select-none">Enable effect</span>
+                                <span className="relative inline-flex h-6 w-11 flex-shrink-0">
+                                    <input
+                                        type="checkbox"
+                                        className="peer sr-only"
+                                        checked={isEffectEnabled}
+                                        onChange={() => setIsEffectEnabled((prev) => !prev)}
+                                        aria-label="Toggle animated verse background"
+                                    />
+                                    <span
+                                        className="absolute inset-0 rounded-full bg-gray-300 transition-colors duration-200 ease-in-out peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/40 peer-focus:ring-offset-2 peer-checked:bg-primary"
+                                    />
+                                    <span
+                                        className="absolute top-[2px] left-[2px] h-5 w-5 rounded-full bg-primary shadow transition-all duration-200 ease-in-out peer-checked:left-[calc(100%-1.375rem)]"
+                                    />
+                                </span>
+                            </label>
+                        </div>
 
                         {/* Verse Card */}
-                        <div className="card relative mb-6 overflow-hidden">
+                        <div className="card relative mb-6 overflow-hidden rounded-xl border border-gray-100 shadow-sm" style={cardBackgroundStyle}>
+                            {isEffectEnabled && <div className="absolute inset-0 z-[1] bg-black/40" aria-hidden />}
 
                             <div className="relative z-[2] mb-4 text-center">
                                 <h2 className="mb-2 text-base font-medium text-primary sm:text-lg">
@@ -200,7 +315,11 @@ export default function ReadSurahLayout({
                             </div>
 
                             {/* Arabic Text */}
-                            <div className="relative z-[2] mb-6 rounded-lg bg-gray-50 p-3 text-right sm:p-4">
+                            <div
+                                className={`relative z-[2] mb-6 rounded-lg p-3 text-right sm:p-4 ${
+                                    isEffectEnabled ? 'bg-white/50 backdrop-blur-sm' : 'bg-gray-50'
+                                }`}
+                            >
                                 <p className="text-xl leading-relaxed text-primary font-[Quran] sm:text-2xl">
                                     {currentVerse.text}
                                 </p>
@@ -209,7 +328,20 @@ export default function ReadSurahLayout({
                             {/* Translation */}
                             <div className="relative z-[2] mb-6">
                                 <h3 className="mb-2 text-base font-medium text-secondary sm:text-lg">Translation:</h3>
-                                <p className="break-words text-base leading-relaxed sm:text-lg">{currentVerse.translation}</p>
+                                <div
+                                    className={
+                                        isEffectEnabled ? 'rounded-lg bg-white/60 p-3 backdrop-blur-sm sm:p-4' : ''
+                                    }
+                                >
+                                    {currentVerse.translationHtml ? (
+                                        <div
+                                            className="break-words text-base leading-relaxed sm:text-lg"
+                                            dangerouslySetInnerHTML={{ __html: currentVerse.translationHtml }}
+                                        />
+                                    ) : (
+                                        <p className="break-words text-base leading-relaxed sm:text-lg">{currentVerse.translation}</p>
+                                    )}
+                                </div>
                             </div>
 
                             {/* Audio Player - positioned below verse card, above explanation */}
@@ -225,6 +357,7 @@ export default function ReadSurahLayout({
                                                 recitationName={reciter?.reciter_name || 'Current Reciter'}
                                                 recitations={recitations}
                                                 onRecitationChange={onRecitationChange}
+                                                isEffectEnabled={isEffectEnabled}
                                             />
                                         );
                                     })()}
@@ -235,27 +368,51 @@ export default function ReadSurahLayout({
                         {/* AI-Generated Simplified Explanation */}
                         <div className="mb-6">
                             <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                                <h3 className="text-base font-medium text-secondary sm:text-lg">Easy Explanation:</h3>
                                 
-                                {/* Tafsir Dropdown - Moved here from Quran Settings */}
-                                {onTafsirChange && (
+                                
+                                {(onTranslationChange || onTafsirChange) && (
                                     <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:gap-3">
-                                        {/* <label htmlFor="tafsir-select" className="text-xs font-medium text-gray-600 sm:text-sm">
-                                            Tafsir
-                                        </label> */}
-                                        <select
-                                            id="tafsir-select"
-                                            className="w-full rounded border border-gray-300 px-3 py-2 text-xs focus:border-primary focus:outline-none sm:min-w-[220px] sm:text-sm"
-                                            value={selectedTafsir ?? ''}
-                                            onChange={(e) => onTafsirChange(Number(e.target.value))}
-                                        >
-                                            <option value="">Select Tafsir...</option>
-                                            {tafsirOptions.map((tafsir) => (
-                                                <option key={tafsir.id} value={tafsir.id}>
-                                                    {tafsir.name} ({tafsir.languageName})
-                                                </option>
-                                            ))}
-                                        </select>
+                                        {onTranslationChange && translationOptions.length > 0 && (
+                                            <div className="relative w-full sm:w-auto">
+                                                <span className="font-semibold text-primary">
+                                                    Translation
+                                                </span>
+                                                <select
+                                                    id="translation-select"
+                                                    className="w-full rounded border border-gray-300 px-3 py-2 pt-3 text-xs focus:border-primary focus:outline-none sm:min-w-[220px] sm:text-sm"
+                                                    value={selectedTranslation ?? ''}
+                                                    onChange={(e) => onTranslationChange(Number(e.target.value))}
+                                                >
+                                                    <option value="">Select Translation...</option>
+                                                    {translationOptions.map((translation) => (
+                                                        <option key={translation.id} value={translation.id}>
+                                                            {translation.name} {translation.languageName ? `(${translation.languageName})` : ''}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        )}
+
+                                        {onTafsirChange && (
+                                            <div className="relative w-full sm:w-auto">
+                                                <span className="font-semibold text-primary">
+                                                    Tafsir
+                                                </span>
+                                                <select
+                                                    id="tafsir-select"
+                                                    className="w-full rounded border border-gray-300 px-3 py-2 pt-3 text-xs focus:border-primary focus:outline-none sm:min-w-[220px] sm:text-sm"
+                                                    value={selectedTafsir ?? ''}
+                                                    onChange={(e) => onTafsirChange(Number(e.target.value))}
+                                                >
+                                                    <option value="">Select Tafsir...</option>
+                                                    {tafsirOptions.map((tafsir) => (
+                                                        <option key={tafsir.id} value={tafsir.id}>
+                                                            {tafsir.name} ({tafsir.languageName})
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>
@@ -313,7 +470,20 @@ export default function ReadSurahLayout({
                                             ),
                                         }}
 
-                                        >{(aiExplanation)}</ReactMarkdown>
+                                        >{aiExplanation.explanation}</ReactMarkdown>
+                                    </div>
+                                )}
+
+                                {aiExplanation?.keyTerms && aiExplanation.keyTerms.length > 0 && !isExplanationLoading && (
+                                    <div className="mt-4 rounded-lg border border-blue-200 bg-white/60 p-4">
+                                        <h4 className="text-sm font-semibold text-blue-900">Key Terms</h4>
+                                        <ul className="mt-3 space-y-2 text-sm text-blue-900">
+                                            {aiExplanation.keyTerms.map((item) => (
+                                                <li key={item.term}>
+                                                    <span className="font-semibold">{item.term}:</span> {item.definition || 'No definition provided.'}
+                                                </li>
+                                            ))}
+                                        </ul>
                                     </div>
                                 )}
                                 

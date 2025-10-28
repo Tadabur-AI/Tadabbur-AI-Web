@@ -1,68 +1,87 @@
-// Tafsir Explainer Service
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
-
-export interface ExplainTafsirRequest {
-  surah: number;
-  ayah: number;
-  tafsir_id?: number; // Default: 169 (Ibn Kathir)
-  additional_context?: string;
+export interface ExplainTafsirResponse {
+  explanation: string;
+  keyTerms?: ExplainTafsirKeyTerm[];
 }
 
-export interface ExplainTafsirResponse {
-  surah: number;
-  ayah: number;
-  tafsir_id: number;
-  tafsir_name: string;
-  original_tafsir: string;
-  explained_tafsir: string;
-  language: string;
+interface ExplainTafsirKeyTerm {
+  term: string;
+  definition: string;
+}
+
+type ExplainTafsirRawKeyTerm =
+  | { term?: string; definition?: string; meaning?: string }
+  | string;
+
+interface ExplainTafsirRawResponse {
+  explanation: string;
+  keyTerms?: ExplainTafsirRawKeyTerm[] | Record<string, string>;
+  key_terms?: ExplainTafsirRawKeyTerm[] | Record<string, string>;
 }
 
 /**
- * Explain tafsir for a specific verse in modern, easy-to-understand English
+ * Explain tafsir for a specific verse in modern, easy-to-understand English.
  */
-export async function explainTafsir(
-  request: ExplainTafsirRequest
-): Promise<ExplainTafsirResponse> {
+export async function explainTafsir(tafseerText: string): Promise<ExplainTafsirResponse> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/tafsir/explain-verse`, {
+    const response = await fetch('https://tadabbur-be.eng-sharjeel-baig.workers.dev/generate-explanation', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(request),
+      body: JSON.stringify({ tafseerText }),
     });
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({ detail: response.statusText }));
-      throw new Error(error.detail || `Failed to explain tafsir: ${response.statusText}`);
+      throw new Error(error.detail || `Failed to generate explanation: ${response.statusText}`);
     }
 
-    return response.json();
-  } catch (error) {
-    console.error('Error explaining tafsir:', error);
-    throw error;
-  }
-}
+    const payload = (await response.json()) as ExplainTafsirRawResponse;
 
-/**
- * Fetch tafsir text for a specific verse
- */
-export async function fetchTafsirText(
-  surah: number,
-  ayah: number,
-  tafsirId: number = 169
-): Promise<{ surah: number; ayah: number; text: string; edition: number }> {
-  try {
-    const response = await fetch(`${API_BASE_URL}/api/tafsir/${surah}/${ayah}/${tafsirId}`);
-    
-    if (!response.ok) {
-      throw new Error(`Failed to fetch tafsir: ${response.statusText}`);
+    const rawKeyTerms = payload.keyTerms ?? payload.key_terms;
+
+    let keyTerms: ExplainTafsirKeyTerm[] | undefined;
+    if (Array.isArray(rawKeyTerms)) {
+      keyTerms = rawKeyTerms
+        .map<ExplainTafsirKeyTerm | undefined>((item) => {
+          if (typeof item === 'string') {
+            return { term: item, definition: '' };
+          }
+
+          const term = item.term ?? item.definition ?? item.meaning ?? '';
+          const definition = item.definition ?? item.meaning ?? '';
+
+          if (!term && !definition) {
+            return undefined;
+          }
+
+          return {
+            term: term || definition,
+            definition,
+          };
+        })
+        .filter((value): value is ExplainTafsirKeyTerm => Boolean(value));
+    } else if (rawKeyTerms && typeof rawKeyTerms === 'object') {
+      keyTerms = Object.entries(rawKeyTerms)
+        .map(([term, definition]) => {
+          if (!term?.trim() && !String(definition).trim()) {
+            return undefined;
+          }
+
+          return {
+            term: term.trim() || String(definition).trim(),
+            definition: String(definition ?? '').trim(),
+          } as ExplainTafsirKeyTerm;
+        })
+        .filter((value): value is ExplainTafsirKeyTerm => Boolean(value));
     }
 
-    return response.json();
+    return {
+      explanation: payload.explanation,
+      keyTerms: keyTerms && keyTerms.length > 0 ? keyTerms : undefined,
+    };
   } catch (error) {
-    console.error('Error fetching tafsir text:', error);
+    console.error('Error generating tafsir explanation:', error);
     throw error;
   }
 }
