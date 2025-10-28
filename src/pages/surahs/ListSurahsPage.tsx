@@ -251,7 +251,7 @@ export default function ListSurahsPage() {
                                         <li key={juz.number} className="border border-gray-200 rounded-lg p-4">
                                             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                                                 <div>
-                                                    <p className="text-sm font-semibold text-primary">Juz {juz.number}</p>
+                                                    {/* <p className="text-sm font-semibold text-primary">Juz {juz.number}</p> */}
                                                     <p className="text-lg font-semibold text-gray-900">{juz.name}</p>
                                                     <p className="text-sm text-gray-600">{juz.summary}</p>
                                                 </div>
