@@ -5,6 +5,8 @@ import { BiBook, BiSearch } from 'react-icons/bi';
 import LogoLandscape from '../../components/common/LogoLandscape';
 import { listSurahs, type SurahSummary } from '../../services/apis';
 import { JUZ_METADATA } from '../../data/juz';
+import PlayPleasentlyButton from '../../components/PleasentPlay/PlayPleasentlyButton';
+import { usePlayPleasantly } from '../../components/PleasentPlay/PlayPleasantlyProvider';
 
 export default function ListSurahsPage() {
     const [chapters, setChapters] = useState<SurahSummary[]>([]);
@@ -13,6 +15,7 @@ export default function ListSurahsPage() {
     const [searchQuery, setSearchQuery] = useState('');
     const [revelationFilter, setRevelationFilter] = useState<'all' | 'makkah' | 'madinah'>('all');
     const [activeTab, setActiveTab] = useState<'surahs' | 'juz'>('surahs');
+    const { startExperience, isLoading: isPleasantlyLoading, isActive: isPleasantlyActive } = usePlayPleasantly();
 
     useEffect(() => {
         async function loadChapters() {
@@ -219,23 +222,47 @@ export default function ListSurahsPage() {
                             <ul className="space-y-2">
                                 {filteredChapters.length > 0 ? (
                                     filteredChapters.map((chapter) => (
-                                        <li key={chapter.id} className="border border-gray-200 rounded-lg p-3 hover:border-primary hover:bg-gray-50 transition-colors">
-                                            <Link to={`/surah/${chapter.id}`} className="flex items-center justify-between gap-3">
-                                                <div className="flex items-center gap-3">
-                                                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
-                                                        {chapter.id}
-                                                    </span>
-                                                    <div className="min-w-0 flex-1">
-                                                        <p className="font-medium text-gray-900">
-                                                            {chapter.nameSimple}
-                                                        </p>
-                                                        <p className="text-sm text-gray-600">
-                                                            {chapter.versesCount} verses - {chapter.revelationPlace === 'makkah' ? 'Meccan' : 'Medinan'}
-                                                        </p>
+                                        <li
+                                            key={chapter.id}
+                                            className="border border-gray-200 rounded-lg p-4 hover:border-primary hover:bg-gray-50 transition-colors"
+                                        >
+                                            <div className="flex flex-col gap-4">
+                                                <Link
+                                                    to={`/surah/${chapter.id}`}
+                                                    className="flex items-center justify-between gap-3"
+                                                >
+                                                    <div className="flex items-center gap-3">
+                                                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
+                                                            {chapter.id}
+                                                        </span>
+                                                        <div className="min-w-0 flex-1">
+                                                            <p className="font-medium text-gray-900">
+                                                                {chapter.nameSimple}
+                                                            </p>
+                                                            <p className="text-sm text-gray-600">
+                                                                {chapter.versesCount} verses - {chapter.revelationPlace === 'makkah' ? 'Meccan' : 'Medinan'}
+                                                            </p>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                                <p className="text-xl text-primary font-arabic shrink-0">{chapter.nameArabic}</p>
-                                            </Link>
+                                                    <p className="text-xl text-primary font-arabic shrink-0">{chapter.nameArabic}</p>
+                                                </Link>
+
+                                                <PlayPleasentlyButton
+                                                    disabled={isPleasantlyLoading || isPleasantlyActive}
+                                                    onClick={() => {
+                                                        startExperience({
+                                                            title: `Surah ${chapter.nameSimple}`,
+                                                            subtitle: `${chapter.nameArabic} - ${chapter.translatedName?.name ?? 'Translation unavailable'}`,
+                                                            segments: [
+                                                                {
+                                                                    surahId: chapter.id,
+                                                                    label: `Surah ${chapter.nameSimple}`,
+                                                                },
+                                                            ],
+                                                        });
+                                                    }}
+                                                />
+                                            </div>
                                         </li>
                                     ))
                                 ) : (
@@ -282,6 +309,28 @@ export default function ListSurahsPage() {
                                                         </Link>
                                                     );
                                                 })}
+                                            </div>
+                                            <div className="mt-4">
+                                                <PlayPleasentlyButton
+                                                    disabled={isPleasantlyLoading || isPleasantlyActive}
+                                                    onClick={() => {
+                                                        const segments = juz.sections.map((section) => {
+                                                            const chapter = chaptersById.get(section.surahId);
+                                                            return {
+                                                                surahId: section.surahId,
+                                                                startAyah: section.startAyah,
+                                                                endAyah: section.endAyah,
+                                                                label: `${chapter?.nameSimple ?? `Surah ${section.surahId}`} - Ayat ${section.startAyah}-${section.endAyah}`,
+                                                            };
+                                                        });
+
+                                                        startExperience({
+                                                            title: `Juz ${juz.number} - ${juz.name}`,
+                                                            subtitle: juz.summary,
+                                                            segments,
+                                                        });
+                                                    }}
+                                                />
                                             </div>
                                         </li>
                                     ))
