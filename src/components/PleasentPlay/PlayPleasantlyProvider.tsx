@@ -37,8 +37,11 @@ export interface PlayPleasantlySlide {
 interface PlayPleasantlyContextValue {
   startExperience: (request: PlayPleasantlyRequest) => void;
   closeExperience: () => void;
+  minimizeExperience: () => void;
+  expandExperience: () => void;
   isActive: boolean;
   isLoading: boolean;
+  isMinimized: boolean;
 }
 
 const PlayPleasantlyContext = createContext<PlayPleasantlyContextValue | undefined>(undefined);
@@ -56,6 +59,7 @@ interface ProviderState {
   selectedTranslationId: number | null;
   currentIndex: number;
   preservePosition: boolean;
+  isMinimized: boolean;
 }
 
 export function PlayPleasantlyProvider({ children }: { children: React.ReactNode }) {
@@ -68,6 +72,7 @@ export function PlayPleasantlyProvider({ children }: { children: React.ReactNode
     selectedTranslationId: null,
     currentIndex: 0,
     preservePosition: false,
+    isMinimized: false,
   });
   const [reciters, setReciters] = useState<ReciterSummary[]>([]);
   const [translations, setTranslations] = useState<TranslationSummary[]>([]);
@@ -383,6 +388,21 @@ export function PlayPleasantlyProvider({ children }: { children: React.ReactNode
       currentIndex: 0,
       slides: [],
       preservePosition: false,
+      isMinimized: false,
+    }));
+  }, []);
+
+  const minimizeExperience = useCallback(() => {
+    setState((prev) => ({
+      ...prev,
+      isMinimized: true,
+    }));
+  }, []);
+
+  const expandExperience = useCallback(() => {
+    setState((prev) => ({
+      ...prev,
+      isMinimized: false,
     }));
   }, []);
 
@@ -396,6 +416,7 @@ export function PlayPleasantlyProvider({ children }: { children: React.ReactNode
       selectedTranslationId: state.selectedTranslationId,
       currentIndex: 0,
       preservePosition: false,
+      isMinimized: false,
     });
   }, [state.selectedReciterId, state.selectedTranslationId]);
 
@@ -426,10 +447,13 @@ export function PlayPleasantlyProvider({ children }: { children: React.ReactNode
     () => ({
       startExperience,
       closeExperience,
+      minimizeExperience,
+      expandExperience,
       isActive: state.status !== 'idle',
       isLoading: state.status === 'loading',
+      isMinimized: state.isMinimized,
     }),
-    [startExperience, closeExperience, state.status]
+    [startExperience, closeExperience, minimizeExperience, expandExperience, state.status, state.isMinimized]
   );
 
   return (
@@ -444,6 +468,9 @@ export function PlayPleasantlyProvider({ children }: { children: React.ReactNode
           currentIndex={state.currentIndex}
           onIndexChange={setCurrentIndex}
           onClose={closeExperience}
+          onMinimize={minimizeExperience}
+          onExpand={expandExperience}
+          isMinimized={state.isMinimized}
           reciters={reciters}
           selectedReciterId={state.selectedReciterId}
           onReciterChange={setSelectedReciterId}
