@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { FiChevronDown, FiChevronLeft, FiChevronRight, FiChevronUp, FiLoader, FiPause, FiPlay, FiVolume2, FiX } from 'react-icons/fi';
+import { FiChevronDown, FiChevronLeft, FiChevronRight, FiChevronUp, FiLoader, FiPause, FiPlay, FiVolume2, FiVolumeX, FiX } from 'react-icons/fi';
 import type { PlayPleasantlyRequest, PlayPleasantlySlide } from './PlayPleasantlyProvider';
 import type { ReciterSummary, TranslationSummary } from '../../services/apis';
 import rainImage from '/images/rain.gif';
+
+const RAIN_VOLUME = 0.05;
 
 interface PlayPleasantlyOverlayProps {
   request: PlayPleasantlyRequest;
@@ -44,6 +46,7 @@ export default function PlayPleasantlyOverlay({
   const [isVerseAudioLoading, setIsVerseAudioLoading] = useState(false);
   const [isVersePlaying, setIsVersePlaying] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
+  const [isRainEnabled, setIsRainEnabled] = useState(true);
   const verseAudioRef = useRef<HTMLAudioElement | null>(null);
   const rainAudioRef = useRef<HTMLAudioElement | null>(null);
   const slide = slides[currentIndex];
@@ -156,7 +159,7 @@ export default function PlayPleasantlyOverlay({
   useEffect(() => {
     const rain = new Audio('/sounds/rain.mp3');
     rain.loop = true;
-    rain.volume = 0.25;
+    rain.volume = RAIN_VOLUME;
     rainAudioRef.current = rain;
 
     const playRain = async () => {
@@ -175,6 +178,24 @@ export default function PlayPleasantlyOverlay({
       rainAudioRef.current = null;
     };
   }, []);
+
+  useEffect(() => {
+    const rain = rainAudioRef.current;
+    if (!rain) {
+      return;
+    }
+
+    if (isRainEnabled) {
+      rain.volume = RAIN_VOLUME;
+      if (rain.paused) {
+        void rain.play().catch((err) => {
+          console.warn('Rain ambiance playback blocked:', err);
+        });
+      }
+    } else {
+      rain.volume = 0;
+    }
+  }, [isRainEnabled]);
 
   useEffect(() => {
     if (!verseAudioRef.current) {
@@ -258,6 +279,10 @@ export default function PlayPleasantlyOverlay({
     onExpand();
   };
 
+  const toggleRain = () => {
+    setIsRainEnabled((prev) => !prev);
+  };
+
   const canRetreat = currentIndex > 0;
   const canAdvance = slides.length > 0 && currentIndex < slides.length - 1;
   const progressRatio = slides.length ? (currentIndex + 1) / slides.length : 0;
@@ -316,6 +341,20 @@ export default function PlayPleasantlyOverlay({
             </div>
 
             <div className="flex w-full flex-col gap-3 sm:w-auto sm:items-end sm:text-right">
+              <div className="flex items-center justify-end">
+                <button
+                  type="button"
+                  onClick={toggleRain}
+                  className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-3 py-2 text-[0.65rem] font-semibold uppercase tracking-[0.25em] text-green-100 transition hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-green-400"
+                  aria-pressed={isRainEnabled}
+                  aria-label={isRainEnabled ? 'Turn off rain ambiance' : 'Turn on rain ambiance'}
+                  title={isRainEnabled ? 'Turn off rain ambiance' : 'Turn on rain ambiance'}
+                >
+                  {isRainEnabled ? <FiVolume2 className="h-4 w-4" /> : <FiVolumeX className="h-4 w-4" />}
+                  <span className="hidden sm:inline">Rain</span>
+                  <span className="sm:hidden">Rain {isRainEnabled ? 'on' : 'off'}</span>
+                </button>
+              </div>
               <div className="flex flex-col gap-1 text-xs uppercase tracking-[0.3em] text-green-200/70">
                 <span className="flex items-center gap-2">
                   <FiVolume2 className="hidden h-4 w-4 text-green-200 sm:block" aria-hidden="true" />
