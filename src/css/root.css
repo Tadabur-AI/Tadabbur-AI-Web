@@ -5,7 +5,8 @@
 }
 @font-face {
   font-family: 'Quran';
-  src: url('/public/fonts/AmiriQuran-Regular.ttf') format('truetype');
+  /* src: url('/public/fonts/AmiriQuran-Regular.ttf') format('truetype'); */
+  src: url('/public/fonts/HAFS.otf') format('opentype');
 }
 html, body, #root {
   height: 100%;

@@ -35,7 +35,9 @@ useEffect(() => {
   return (
     <div style={containerStyle}>
       <h1 style={titleStyle}>Down for Maintenance</h1>
-      <p style={messageStyle}>Please try again on 12PM PKT OCT-30</p>
+      {/* <p style={messageStyle}>Please try again on 12PM PKT OCT-30</p> */}
+      <p style={messageStyle}>Really sorry for the inconvenience! Due to some issues, we are unable to provide the service at the moment.</p>
+      <p style={messageStyle}>Expected to be back around 12PM PKT Nov-5.</p>
     </div>
   );
 };

@@ -458,7 +458,7 @@ export default function PlayPleasantlyOverlay({
                   {slide.segmentLabel && <span className="text-green-200/70">{slide.segmentLabel}</span>}
                 </div>
 
-                <p className="text-3xl font-semibold leading-snug text-white drop-shadow-sm sm:text-4xl md:text-5xl">
+                <p className="text-3xl font-semibold leading-snug text-white drop-shadow-sm sm:text-4xl md:text-5xl font-[Quran]">
                   {slide.arabicText}
                 </p>
 
