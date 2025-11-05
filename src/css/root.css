@@ -6,7 +6,9 @@
 @font-face {
   font-family: 'Quran';
   /* src: url('/public/fonts/AmiriQuran-Regular.ttf') format('truetype'); */
-  src: url('/public/fonts/HAFS.otf') format('opentype');
+  /* src: url('/public/fonts/HAFS.otf') format('opentype'); */
+  src: url('/public/fonts/me_quran_volt_newmet.ttf') format('truetype');
+  font-display: swap;
 }
 html, body, #root {
   height: 100%;
@@ -77,4 +79,10 @@ textarea {
   .card {
     padding: 0.5rem;
   }
+}
+
+.quran-text {
+  font-family: 'Quran', serif;
+  word-spacing: 20.5px;
+  line-height: 50px;
 }

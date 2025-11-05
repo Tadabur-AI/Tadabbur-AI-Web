@@ -320,7 +320,7 @@ export default function ReadSurahLayout({
                                     isEffectEnabled ? 'bg-white/50 backdrop-blur-sm' : 'bg-gray-50'
                                 }`}
                             >
-                                <p className="text-xl leading-relaxed text-primary font-[Quran] sm:text-2xl">
+                                <p className="text-xl leading-relaxed text-primary quran-text sm:text-2xl">
                                     {currentVerse.text}
                                 </p>
                             </div>
