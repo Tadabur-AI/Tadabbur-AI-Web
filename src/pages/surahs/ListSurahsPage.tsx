@@ -6,6 +6,8 @@ import LogoLandscape from "../../components/common/LogoLandscape";
 import { listSurahs, type SurahSummary } from "../../services/apis";
 import { JUZ_METADATA } from "../../data/juz";
 import PlayPleasentlyButton from "../../components/PleasentPlay/PlayPleasentlyButton";
+import ReadWithTafsserButton from "../../components/PleasentPlay/ReadWithTafsserButton";
+import { useNavigate } from 'react-router-dom';
 import { usePlayPleasantly } from "../../components/PleasentPlay/PlayPleasantlyProvider";
 
 export default function ListSurahsPage() {
@@ -22,6 +24,7 @@ export default function ListSurahsPage() {
     isLoading: isPleasantlyLoading,
     isActive: isPleasantlyActive,
   } = usePlayPleasantly();
+  const navigate = useNavigate();
 
   useEffect(() => {
     async function loadChapters() {
@@ -271,7 +274,8 @@ export default function ListSurahsPage() {
                               {chapter.nameArabic}
                             </p>
                           </Link>
-                          <div className="w-full flex justify-end">
+                          <div className="w-full flex justify-end items-center gap-3">
+                            
                             <PlayPleasentlyButton
                               disabled={
                                 isPleasantlyLoading || isPleasantlyActive
@@ -291,6 +295,9 @@ export default function ListSurahsPage() {
                                   ],
                                 });
                               }}
+                            />
+                            <ReadWithTafsserButton
+                              onClick={() => navigate(`/surah/${chapter.id}?tafsir=ai`)}
                             />
                           </div>
                         </div>
@@ -359,7 +366,8 @@ export default function ListSurahsPage() {
                             );
                           })}
                         </div>
-                        <div className="mt-4 w-full flex justify-end">
+                        <div className="mt-4 w-full flex justify-end items-center gap-3">
+                          
                           <PlayPleasentlyButton
                             disabled={isPleasantlyLoading || isPleasantlyActive}
                             onClick={() => {
@@ -386,6 +394,9 @@ export default function ListSurahsPage() {
                                 segments,
                               });
                             }}
+                          />
+                          <ReadWithTafsserButton
+                            onClick={() => navigate(`/surah/${juz.sections[0].surahId}?tafsir=ai`)}
                           />
                         </div>
                       </li>
