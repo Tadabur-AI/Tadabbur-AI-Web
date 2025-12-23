@@ -1,1 +1,4 @@
 @import "tailwindcss";
+
+/* Configure Tailwind v4 dark mode to use .dark class selector */
+@variant dark (&:where(.dark, .dark *));

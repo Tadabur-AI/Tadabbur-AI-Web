@@ -3,7 +3,7 @@ import { useParams, useSearchParams } from 'react-router-dom';
 import ReadSurahLayout from '../../layouts/ReadSurahLayout';
 import { fetchRecitations, type Recitation } from '../../services/quranResourcesService';
 import { explainTafsir, type ExplainTafsirResponse } from '../../services/tafsirExplainerService';
-import { listSurahs, listTafseers, listTranslations, retrieveSurah, retrieveTafseer, type RetrieveSurahVerse, type RetrieveTafseerItem, type SurahSummary, type TranslationSummary } from '../../services/apis';
+import { listSurahs, listTafseers, listTranslations, retrieveSurah, retrieveTafseer, type RetrieveSurahVerse, type RetrieveTafseerItem, type SurahSummary, type TranslationSummary, type WordTranslation } from '../../services/apis';
 
 interface Verse {
   id: number;
@@ -12,6 +12,7 @@ interface Verse {
   translation: string;
   translationHtml?: string;
   surah_id: number;
+  word_translations?: WordTranslation[];
 }
 
 interface Surah {
@@ -41,6 +42,7 @@ const mapToVerse = (data: RetrieveSurahVerse): Verse => {
     translation: cleanedTranslation,
     translationHtml: data.translation,
     surah_id: Number.isFinite(surahId) ? surahId : 0,
+    word_translations: data.word_translations || [],
   };
 };
 

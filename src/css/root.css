@@ -16,6 +16,13 @@ html, body, #root {
   background-size: cover;
   margin: 0;
   font-family: 'Google Sans', sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Dark mode background */
+html.dark, html.dark body, html.dark #root {
+  background: #1a1a2e;
+  background-image: none;
 }
 
 :root {

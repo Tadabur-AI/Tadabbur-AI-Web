@@ -5,7 +5,10 @@ import ReactMarkdown from 'react-markdown';
 import LogoLandscape from '../components/common/LogoLandscape';
 import AudioPlayer from '../components/common/AudioPlayer';
 import TafsirExplainerModal from '../components/common/TafsirExplainerModal';
+import ThemeToggle from '../components/common/ThemeToggle';
+import WordByWord from '../components/common/WordByWord';
 import { type ExplainTafsirResponse } from '../services/tafsirExplainerService';
+import { type WordTranslation } from '../services/apis';
 
 interface Verse {
     id: number;
@@ -14,6 +17,7 @@ interface Verse {
     translation: string;
     translationHtml?: string;
     surah_id: number;
+    word_translations?: WordTranslation[];
 }
 
 interface Surah {
@@ -79,6 +83,11 @@ export default function ReadSurahLayout({
     const navigate = useNavigate();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isEffectEnabled, setIsEffectEnabled] = useState(false);
+    const [isWordByWordEnabled, setIsWordByWordEnabled] = useState(() => {
+        if (typeof window === 'undefined') return false;
+        const stored = localStorage.getItem('tadabbur_word_by_word');
+        return stored === 'true';
+    });
     const ambientAudioRef = useRef<HTMLAudioElement | null>(null);
     const isValidVerseIndex = currentVerseIndex >= 0 && currentVerseIndex < verses.length;
 
@@ -96,6 +105,13 @@ export default function ReadSurahLayout({
         }
         localStorage.setItem('tadabbur_surah_effect', String(isEffectEnabled));
     }, [isEffectEnabled]);
+
+    useEffect(() => {
+        if (typeof window === 'undefined') {
+            return;
+        }
+        localStorage.setItem('tadabbur_word_by_word', String(isWordByWordEnabled));
+    }, [isWordByWordEnabled]);
 
     useEffect(() => {
         if (typeof window === 'undefined') {
@@ -171,7 +187,7 @@ export default function ReadSurahLayout({
 
 
     return (
-        <div className="flex h-screen min-w-[50px] w-full overflow-hidden bg-white">
+        <div className="flex h-screen min-w-[50px] w-full overflow-hidden bg-white dark:bg-gray-900">
             {isSidebarOpen && (
                 <button
                     type="button"
@@ -182,11 +198,11 @@ export default function ReadSurahLayout({
             )}
             {/* Custom Sidebar for Verses */}
             <div
-                className={`fixed inset-y-0 left-0 z-30 flex w-[min(16rem,100vw)] transform flex-col border-r border-gray-200 bg-white transition-transform duration-200 ease-in-out lg:relative lg:z-0 lg:w-64 lg:translate-x-0 lg:flex lg:flex-col ${
+                className={`fixed inset-y-0 left-0 z-30 flex w-[min(16rem,100vw)] transform flex-col border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 transition-transform duration-200 ease-in-out lg:relative lg:z-0 lg:w-64 lg:translate-x-0 lg:flex lg:flex-col ${
                     isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
                 }`}
             >
-                <div className="flex items-center justify-between p-4 border-b border-gray-200">
+                <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
                     <h2 className="font-bold text-lg text-primary">Verses</h2>
                     <button
                         type="button"
@@ -201,8 +217,8 @@ export default function ReadSurahLayout({
                     {verses.map((verse, index) => (
                         <div
                             key={verse.id}
-                            className={`p-3 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors ${
-                                index === currentVerseIndex ? 'bg-blue-50 border-l-4 border-l-primary' : ''
+                            className={`p-3 border-b border-gray-100 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${
+                                index === currentVerseIndex ? 'bg-blue-50 dark:bg-blue-900/30 border-l-4 border-l-primary' : ''
                             }`}
                             onClick={() => {
                                 setCurrentVerseIndex(index);
@@ -210,7 +226,7 @@ export default function ReadSurahLayout({
                             }}
                         >
                             <p className="font-medium text-sm">Verse {verse.verse_key.split(':')[1]}</p>
-                            <p className="text-xs text-gray-600 mt-1 line-clamp-2">
+                            <p className="text-xs text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">
                                 {verse.translation
                                     ? `${verse.translation.slice(0, 60)}${verse.translation.length > 60 ? '...' : ''}`
                                     : 'No translation available.'}
@@ -223,12 +239,12 @@ export default function ReadSurahLayout({
             {/* Main Content */}
             <div className="flex flex-1 min-w-0 flex-col">
                 {/* Header */}
-                <div className="flex w-full flex-wrap items-center gap-2 border-b border-gray-200 p-2 sm:flex-nowrap sm:gap-3 sm:p-4">
+                <div className="flex w-full flex-wrap items-center gap-2 border-b border-gray-200 dark:border-gray-700 p-2 sm:flex-nowrap sm:gap-3 sm:p-4 bg-white dark:bg-gray-900">
                     {/* Back to Chapters Button */}
                     <button
                         type="button"
                         onClick={() => navigate('/surahs')}
-                        className="flex items-center justify-center gap-2 rounded border border-gray-300 px-2 py-2 text-sm font-medium transition-colors hover:border-primary hover:bg-gray-50"
+                        className="flex items-center justify-center gap-2 rounded border border-gray-300 dark:border-gray-600 px-2 py-2 text-sm font-medium transition-colors hover:border-primary hover:bg-gray-50 dark:hover:bg-gray-800"
                         title="Go back to chapters list"
                     >
                         <FiArrowLeft className="h-4 w-4 shrink-0" />
@@ -242,7 +258,7 @@ export default function ReadSurahLayout({
                     <button
                         type="button"
                         aria-label="Show verse list"
-                        className="flex items-center justify-center rounded border border-gray-200 p-2 transition-colors hover:border-primary hover:text-primary lg:hidden"
+                        className="flex items-center justify-center rounded border border-gray-200 dark:border-gray-600 p-2 transition-colors hover:border-primary hover:text-primary lg:hidden"
                         onClick={() => setIsSidebarOpen(true)}
                     >
                         <FiMenu />
@@ -254,25 +270,28 @@ export default function ReadSurahLayout({
                         {surah.name_english} ({surah.name_arabic})
                     </h1>
 
+                    {/* Theme Toggle */}
+                    <ThemeToggle />
+
                     {/* Desktop Navigation in Header */}
                     <div className="hidden sm:flex items-center gap-3">
                         <button
                             onClick={goToPreviousVerse}
                             disabled={currentVerseIndex === 0}
-                            className="flex items-center justify-center gap-2 rounded border border-gray-300 px-3 py-1.5 text-sm font-medium transition-colors hover:border-primary hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                            className="flex items-center justify-center gap-2 rounded border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-sm font-medium transition-colors hover:border-primary hover:bg-gray-50 dark:hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             <FiChevronLeft className="h-4 w-4 shrink-0" />
                             <span>Previous</span>
                         </button>
 
-                        <span className="text-sm font-medium text-gray-600">
+                        <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
                             {currentVerseIndex + 1}/{verses.length}
                         </span>
 
                         <button
                             onClick={goToNextVerse}
                             disabled={currentVerseIndex === verses.length - 1}
-                            className="flex items-center justify-center gap-2 rounded border border-gray-300 px-3 py-1.5 text-sm font-medium transition-colors hover:border-primary hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                            className="flex items-center justify-center gap-2 rounded border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-sm font-medium transition-colors hover:border-primary hover:bg-gray-50 dark:hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             <span>Next</span>
                             <FiChevronRight className="h-4 w-4 shrink-0" />
@@ -281,10 +300,28 @@ export default function ReadSurahLayout({
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 min-h-0 overflow-y-auto p-3 pb-20 sm:p-6 sm:pb-6">
+                <div className="flex-1 min-h-0 overflow-y-auto p-3 pb-20 sm:p-6 sm:pb-6 bg-gray-50 dark:bg-gray-800">
                     <div className="mx-auto w-full max-w-4xl min-w-0">
                         <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
-                            <label className="inline-flex cursor-pointer items-center gap-3 text-sm font-medium text-gray-700">
+                            <label className="inline-flex cursor-pointer items-center gap-3 text-sm font-medium text-gray-700 dark:text-gray-300">
+                                <span className="select-none">Word by Word</span>
+                                <span className="relative inline-flex h-6 w-11 flex-shrink-0">
+                                    <input
+                                        type="checkbox"
+                                        className="peer sr-only"
+                                        checked={isWordByWordEnabled}
+                                        onChange={() => setIsWordByWordEnabled((prev) => !prev)}
+                                        aria-label="Toggle word-by-word translation view"
+                                    />
+                                    <span
+                                        className="absolute inset-0 rounded-full bg-gray-300 dark:bg-gray-600 transition-colors duration-200 ease-in-out peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/40 peer-focus:ring-offset-2 peer-checked:bg-primary"
+                                    />
+                                    <span
+                                        className="absolute top-[2px] left-[2px] h-5 w-5 rounded-full bg-primary shadow transition-all duration-200 ease-in-out peer-checked:left-[calc(100%-1.375rem)]"
+                                    />
+                                </span>
+                            </label>
+                            <label className="inline-flex cursor-pointer items-center gap-3 text-sm font-medium text-gray-700 dark:text-gray-300">
                                 <span className="select-none">Enable effect</span>
                                 <span className="relative inline-flex h-6 w-11 flex-shrink-0">
                                     <input
@@ -295,7 +332,7 @@ export default function ReadSurahLayout({
                                         aria-label="Toggle animated verse background"
                                     />
                                     <span
-                                        className="absolute inset-0 rounded-full bg-gray-300 transition-colors duration-200 ease-in-out peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/40 peer-focus:ring-offset-2 peer-checked:bg-primary"
+                                        className="absolute inset-0 rounded-full bg-gray-300 dark:bg-gray-600 transition-colors duration-200 ease-in-out peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/40 peer-focus:ring-offset-2 peer-checked:bg-primary"
                                     />
                                     <span
                                         className="absolute top-[2px] left-[2px] h-5 w-5 rounded-full bg-primary shadow transition-all duration-200 ease-in-out peer-checked:left-[calc(100%-1.375rem)]"
@@ -317,13 +354,23 @@ export default function ReadSurahLayout({
                             {/* Arabic Text */}
                             <div
                                 className={`relative z-[2] mb-6 rounded-lg p-3 text-right sm:p-4 ${
-                                    isEffectEnabled ? 'bg-white/50 backdrop-blur-sm' : 'bg-gray-50'
+                                    isEffectEnabled ? 'bg-white/50 backdrop-blur-sm' : 'bg-gray-50 dark:bg-gray-800'
                                 }`}
                             >
                                 <p className="text-xl leading-relaxed text-primary quran-text sm:text-2xl">
                                     {currentVerse.text}
                                 </p>
                             </div>
+
+                            {/* Word by Word Translation */}
+                            {isWordByWordEnabled && currentVerse.word_translations && currentVerse.word_translations.length > 0 && (
+                                <div className="relative z-[2] mb-6">
+                                    <WordByWord
+                                        words={currentVerse.word_translations}
+                                        isEffectEnabled={isEffectEnabled}
+                                    />
+                                </div>
+                            )}
 
                             {/* Translation */}
                             <div className="relative z-[2] mb-6">
@@ -526,7 +573,7 @@ export default function ReadSurahLayout({
                 </div>
 
                 {/* Mobile Navigation - Fixed Bottom Bar */}
-                <div className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-between gap-3 border-t border-gray-200 bg-white px-4 py-3 shadow-lg sm:hidden">
+                <div className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-between gap-3 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-3 shadow-lg sm:hidden">
                     <button
                         onClick={goToPreviousVerse}
                         disabled={currentVerseIndex === 0}

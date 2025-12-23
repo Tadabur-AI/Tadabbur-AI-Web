@@ -34,11 +34,20 @@ export interface RetrieveSurahPayload {
   translationId?: number;
 }
 
+export interface WordTranslation {
+  text: string;
+  transliteration: string;
+  translation: string;
+  audio: string | null;
+  charType: string;
+}
+
 export interface RetrieveSurahVerse {
   verse: string;
   translation: string;
   words: string[];
   word_audios: string[];
+  word_translations: WordTranslation[];
   key: string;
 }
 
