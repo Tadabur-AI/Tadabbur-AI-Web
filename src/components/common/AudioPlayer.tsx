@@ -184,7 +184,7 @@ export default function AudioPlayer({
         className={
           isEffectEnabled
             ? 'rounded-lg border border-white/40 bg-white/50 p-4 shadow-sm backdrop-blur-md transition-colors'
-            : 'rounded-lg bg-gradient-to-r from-green-50 to-blue-50 p-4 border border-green-100 transition-colors'
+            : 'rounded-lg dark:from-black dark:to-black/40 bg-gradient-to-r from-green-50 to-blue-50 p-4 border border-green-100 transition-colors'
         }
       >
         {/* Reciter Selector - Inside the player box */}

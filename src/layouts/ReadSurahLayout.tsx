@@ -522,7 +522,7 @@ export default function ReadSurahLayout({
                                 )}
 
                                 {aiExplanation?.keyTerms && aiExplanation.keyTerms.length > 0 && !isExplanationLoading && (
-                                    <div className="mt-4 rounded-lg border border-blue-200 bg-white/60 p-4">
+                                    <div className="mt-4 rounded-lg border dark:bg-black border-blue-200 bg-white/60 p-4">
                                         <h4 className="text-sm font-semibold text-blue-900">Key Terms</h4>
                                         <ul className="mt-3 space-y-2 text-sm text-blue-900">
                                             {aiExplanation.keyTerms.map((item) => (
