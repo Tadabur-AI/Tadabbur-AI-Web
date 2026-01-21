@@ -5,6 +5,7 @@ import './css/root.css'
 import './css/tailwind.css'
 import { Router } from './routing/router'
 import { PlayPleasantlyProvider } from './components/PleasentPlay/PlayPleasantlyProvider'
+import { TajweedLearningProvider } from './components/TajweedLearning/TajweedLearningProvider'
 import { ThemeProvider } from './hooks/useTheme'
 // import DownForMaintanance from './components/common/DownForMaintanance'
 
@@ -14,7 +15,9 @@ createRoot(document.getElementById('root')!).render(
     {/* <DownForMaintanance /> */}
     <ThemeProvider>
       <PlayPleasantlyProvider>
-        <Router />
+        <TajweedLearningProvider>
+          <Router />
+        </TajweedLearningProvider>
       </PlayPleasantlyProvider>
     </ThemeProvider>
   {/* </StrictMode> */}

@@ -7,6 +7,7 @@ import AudioPlayer from '../components/common/AudioPlayer';
 import TafsirExplainerModal from '../components/common/TafsirExplainerModal';
 import ThemeToggle from '../components/common/ThemeToggle';
 import WordByWord from '../components/common/WordByWord';
+import TajweedLearningButton from '../components/TajweedLearning/TajweedLearningButton';
 import { type ExplainTafsirResponse } from '../services/tafsirExplainerService';
 import { type WordTranslation } from '../services/apis';
 
@@ -303,6 +304,12 @@ export default function ReadSurahLayout({
                 <div className="flex-1 min-h-0 overflow-y-auto p-3 pb-20 sm:p-6 sm:pb-6 bg-gray-50 dark:bg-gray-800">
                     <div className="mx-auto w-full max-w-4xl min-w-0">
                         <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
+                            {/* Tajweed Learning Button */}
+                            <TajweedLearningButton
+                                surahId={surah.id}
+                                surahName={surah.name_english}
+                                surahNameArabic={surah.name_arabic}
+                            />
                             <label className="inline-flex cursor-pointer items-center gap-3 text-sm font-medium text-gray-700 dark:text-gray-300">
                                 <span className="select-none">Word by Word</span>
                                 <span className="relative inline-flex h-6 w-11 flex-shrink-0">
