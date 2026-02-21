@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FiSearch } from 'react-icons/fi';
+import { FiSearch, FiBookmark } from 'react-icons/fi';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import PlayPleasentlyButton from '../../components/PleasentPlay/PlayPleasentlyButton';
 import ReadWithTafsserButton from '../../components/PleasentPlay/ReadWithTafsserButton';
 import { listSurahs, type SurahSummary } from '../../services/apis';
 import { JUZ_METADATA } from '../../data/juz';
 import { usePlayPleasantly } from '../../components/PleasentPlay/PlayPleasantlyProvider';
+import { getBookmarks, type BookmarkedVerse } from '../../utils/quranLocalStorage';
 
 export default function ListSurahsPage() {
   const [chapters, setChapters] = useState<SurahSummary[]>([]);
@@ -14,9 +15,14 @@ export default function ListSurahsPage() {
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [revelationFilter, setRevelationFilter] = useState<'all' | 'makkah' | 'madinah'>('all');
-  const [activeTab, setActiveTab] = useState<'surahs' | 'juz'>('surahs');
+  const [activeTab, setActiveTab] = useState<'surahs' | 'juz' | 'saved'>('surahs');
+  const [savedVerses, setSavedVerses] = useState<BookmarkedVerse[]>([]);
   const { startExperience, isLoading: isPleasantlyLoading, isActive: isPleasantlyActive } = usePlayPleasantly();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    setSavedVerses(getBookmarks());
+  }, [activeTab]);
 
   useEffect(() => {
     async function loadChapters() {
@@ -76,6 +82,7 @@ export default function ListSurahsPage() {
     <DashboardLayout
       sidebarItems={[
         { label: "Surahs", path: "/surahs" },
+        { label: "Saved", icon: <FiBookmark size={18} />, onClick: () => setActiveTab('saved') },
       ]}
       screenTitle="Quran"
     >
@@ -94,20 +101,28 @@ export default function ListSurahsPage() {
             >
               Juz
             </button>
+            <button
+              onClick={() => setActiveTab('saved')}
+              className={`btn-secondary ${activeTab === 'saved' ? 'bg-surface-2 border-primary' : ''}`}
+            >
+              Saved
+            </button>
           </div>
 
-          <div className="flex-1">
-            <div className="relative">
-              <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" size={18} />
-              <input
-                type="text"
-                placeholder="Search by name or number..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4"
-              />
+          {activeTab !== 'saved' && (
+            <div className="flex-1">
+              <div className="relative">
+                <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" size={18} />
+                <input
+                  type="text"
+                  placeholder="Search by name or number..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4"
+                />
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {activeTab === 'surahs' && (
@@ -252,6 +267,48 @@ export default function ListSurahsPage() {
               <div className="card text-center py-8 text-text-muted">
                 No juz found for "{searchQuery}"
               </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'saved' && (
+          <div className="space-y-2">
+            {savedVerses.length === 0 ? (
+              <div className="card text-center py-12">
+                <FiBookmark size={32} className="mx-auto mb-4 text-text-muted" />
+                <p className="text-text-muted">No saved verses yet</p>
+                <p className="text-sm text-text-muted mt-1">Bookmark verses while reading to save them here</p>
+              </div>
+            ) : (
+              savedVerses.map((verse) => (
+                <Link
+                  key={verse.verseKey}
+                  to={`/surah/${verse.surahId}?ayah=${verse.ayahNumber}`}
+                  className="card block hover:border-primary transition-colors"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-xs font-medium text-primary">
+                          {verse.surahName}
+                        </span>
+                        <span className="text-xs text-text-muted">
+                          {verse.surahNameArabic}
+                        </span>
+                        <span className="badge-number text-xs">
+                          {verse.ayahNumber}
+                        </span>
+                      </div>
+                      <p className="arabic text-lg text-text text-right mb-2" dir="rtl">
+                        {verse.arabicText}
+                      </p>
+                      <p className="text-sm text-text-muted line-clamp-2">
+                        {verse.translation}
+                      </p>
+                    </div>
+                  </div>
+                </Link>
+              ))
             )}
           </div>
         )}

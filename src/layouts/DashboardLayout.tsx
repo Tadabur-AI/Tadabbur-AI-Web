@@ -7,7 +7,7 @@ import ThemeToggle from "../components/common/ThemeToggle";
 export interface SidebarItem {
   label: string;
   icon?: React.ReactNode;
-  path: string;
+  path?: string;
   onClick?: () => void;
 }
 
@@ -30,7 +30,7 @@ export default function DashboardLayout({
   const handleItemClick = (item: SidebarItem) => {
     if (item.onClick) {
       item.onClick();
-    } else {
+    } else if (item.path) {
       navigate(item.path);
     }
     setIsSidebarOpen(false);

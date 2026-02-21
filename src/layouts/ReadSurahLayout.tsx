@@ -10,6 +10,7 @@ import TajweedLearningButton from '../components/TajweedLearning/TajweedLearning
 import { type ExplainTafsirResponse } from '../services/tafsirExplainerService';
 import { type WordTranslation } from '../services/apis';
 import { type Recitation } from '../services/quranResourcesService';
+import { isBookmarked, toggleBookmark } from '../utils/quranLocalStorage';
 
 interface Verse {
   id: number;
@@ -78,16 +79,24 @@ export default function ReadSurahLayout({
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [bookmarked, setBookmarked] = useState(false);
   const [isWordByWordEnabled, setIsWordByWordEnabled] = useState(() => {
     if (typeof window === 'undefined') return false;
     return localStorage.getItem('tadabbur_word_by_word') === 'true';
   });
 
   const isValidVerseIndex = currentVerseIndex >= 0 && currentVerseIndex < verses.length;
+  const currentVerse = isValidVerseIndex ? verses[currentVerseIndex] : null;
 
   useEffect(() => {
     localStorage.setItem('tadabbur_word_by_word', String(isWordByWordEnabled));
   }, [isWordByWordEnabled]);
+
+  useEffect(() => {
+    if (currentVerse) {
+      setBookmarked(isBookmarked(currentVerse.verse_key));
+    }
+  }, [currentVerse]);
 
   const handleCopy = async (verse: Verse, surahName: string) => {
     const text = `${verse.text}\n\n${verse.translation}\n\n— ${surahName} ${verse.verse_key}`;
@@ -101,15 +110,27 @@ export default function ReadSurahLayout({
     }
   };
 
-  if (!surah || verses.length === 0 || !isValidVerseIndex) {
+  const handleBookmark = () => {
+    if (!currentVerse || !surah) return;
+    const isNowBookmarked = toggleBookmark({
+      verseKey: currentVerse.verse_key,
+      surahId: currentVerse.surah_id,
+      surahName: surah.name_english,
+      surahNameArabic: surah.name_arabic,
+      ayahNumber: currentVerseIndex + 1,
+      arabicText: currentVerse.text,
+      translation: currentVerse.translation,
+    });
+    setBookmarked(isNowBookmarked);
+  };
+
+  if (!surah || verses.length === 0 || !isValidVerseIndex || !currentVerse) {
     return (
       <div className="flex h-screen items-center justify-center bg-background">
         <div className="skeleton w-48 h-6" />
       </div>
     );
   }
-
-  const currentVerse = verses[currentVerseIndex];
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-background">
@@ -280,9 +301,12 @@ export default function ReadSurahLayout({
                   <FiCopy size={14} />
                   {copied ? 'Copied!' : 'Copy'}
                 </button>
-                <button className="btn-ghost text-xs gap-1">
-                  <FiBookmark size={14} />
-                  Save
+                <button
+                  onClick={handleBookmark}
+                  className={`btn-ghost text-xs gap-1 ${bookmarked ? 'text-primary' : ''}`}
+                >
+                  <FiBookmark size={14} fill={bookmarked ? 'currentColor' : 'none'} />
+                  {bookmarked ? 'Saved' : 'Save'}
                 </button>
               </div>
             </div>

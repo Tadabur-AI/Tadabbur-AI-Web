@@ -7,6 +7,7 @@ const TRANSLATIONS_CACHE_KEY = 'tadabbur_translations_cache';
 const TRANSLATION_KEY = 'tadabbur_translation';
 const TAFSIRS_CACHE_KEY = 'tadabbur_tafsirs_cache';
 const TAFSIR_KEY = 'tadabbur_tafsir';
+const BOOKMARKS_KEY = 'tadabbur_bookmarks';
 
 const DEFAULT_TRANSLATION_ID = 20;
 const DEFAULT_TAFSIR_ID = 169;
@@ -203,4 +204,57 @@ export async function initializeQuranLocalStorage(): Promise<void> {
     ensureTranslations(),
     ensureTafsirs(),
   ]);
+}
+
+export interface BookmarkedVerse {
+  verseKey: string;
+  surahId: number;
+  surahName: string;
+  surahNameArabic: string;
+  ayahNumber: number;
+  arabicText: string;
+  translation: string;
+  savedAt: string;
+}
+
+export function getBookmarks(): BookmarkedVerse[] {
+  if (!isBrowser()) {
+    return [];
+  }
+  return safeParse<BookmarkedVerse[]>(localStorage.getItem(BOOKMARKS_KEY)) ?? [];
+}
+
+export function isBookmarked(verseKey: string): boolean {
+  const bookmarks = getBookmarks();
+  return bookmarks.some((b) => b.verseKey === verseKey);
+}
+
+export function addBookmark(verse: Omit<BookmarkedVerse, 'savedAt'>): void {
+  if (!isBrowser()) {
+    return;
+  }
+  const bookmarks = getBookmarks();
+  if (!bookmarks.some((b) => b.verseKey === verse.verseKey)) {
+    bookmarks.unshift({ ...verse, savedAt: new Date().toISOString() });
+    localStorage.setItem(BOOKMARKS_KEY, JSON.stringify(bookmarks));
+  }
+}
+
+export function removeBookmark(verseKey: string): void {
+  if (!isBrowser()) {
+    return;
+  }
+  const bookmarks = getBookmarks();
+  const filtered = bookmarks.filter((b) => b.verseKey !== verseKey);
+  localStorage.setItem(BOOKMARKS_KEY, JSON.stringify(filtered));
+}
+
+export function toggleBookmark(verse: Omit<BookmarkedVerse, 'savedAt'>): boolean {
+  if (isBookmarked(verse.verseKey)) {
+    removeBookmark(verse.verseKey);
+    return false;
+  } else {
+    addBookmark(verse);
+    return true;
+  }
 }
