@@ -144,9 +144,14 @@ export default function AudioPlayer({
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   const getReciterName = (r: Recitation | ReciterSummary): string => {
-    if ('reciter_name' in r) return r.reciter_name;
-    if ('translatedName' in r && r.translatedName) return r.translatedName.name;
-    return 'name' in r ? r.name : 'Reciter';
+    if ('reciterName' in r) return r.reciterName || 'Reciter';
+    if ('reciter_name' in r) return r.reciter_name || 'Reciter';
+    return 'Reciter';
+  };
+
+  const getReciterStyle = (r: Recitation | ReciterSummary): string | null => {
+    if ('style' in r && r.style) return r.style;
+    return null;
   };
 
   return (
@@ -159,12 +164,15 @@ export default function AudioPlayer({
           onChange={(e) => onRecitationChange(Number(e.target.value))}
           className="flex-1 bg-surface border border-border rounded-lg text-sm px-3 py-2 min-w-0"
         >
-          {recitations.map((r) => (
-            <option key={r.id} value={r.id}>
-              {getReciterName(r)}
-              {'style' in r ? ` (${r.style})` : ''}
-            </option>
-          ))}
+          {recitations.map((r) => {
+            const name = getReciterName(r);
+            const style = getReciterStyle(r);
+            return (
+              <option key={r.id} value={r.id}>
+                {name}{style ? ` (${style})` : ''}
+              </option>
+            );
+          })}
         </select>
       )}
 

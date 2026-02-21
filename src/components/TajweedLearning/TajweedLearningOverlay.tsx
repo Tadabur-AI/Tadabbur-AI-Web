@@ -412,7 +412,7 @@ export default function TajweedLearningOverlay({
                 <option value="">Select Reciter...</option>
                 {reciters.map((r) => (
                   <option key={r.id} value={r.id}>
-                    {r.translatedName?.name || r.name}
+                    {r.reciterName}
                   </option>
                 ))}
               </select>
@@ -446,7 +446,7 @@ export default function TajweedLearningOverlay({
                 <option value="">Select Reciter...</option>
                 {reciters.map((r) => (
                   <option key={r.id} value={r.id}>
-                    {r.translatedName?.name || r.name}
+                    {r.reciterName}
                   </option>
                 ))}
               </select>

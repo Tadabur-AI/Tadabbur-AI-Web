@@ -52,10 +52,10 @@ const parseStoredId = (value: string | null): number | null => {
 const normalizeReciters = (items: ReciterSummary[]): StoredRecitation[] =>
   items.map((item) => ({
     id: item.id,
-    reciter_name: item.name,
+    reciter_name: item.reciterName,
     style: item.style ?? 'Default',
     translated_name: {
-      name: item.translatedName?.name ?? item.name,
+      name: item.translatedName?.name ?? item.reciterName,
       language_name: item.translatedName?.languageName ?? 'unknown',
     },
   }));

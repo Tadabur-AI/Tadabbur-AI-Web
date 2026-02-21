@@ -206,7 +206,7 @@ export async function listTranslations(): Promise<TranslationSummary[]> {
 
 export interface ReciterSummary {
   id: number;
-  name: string;
+  reciterName: string;
   style: string | null;
   translatedName?: {
     name: string;

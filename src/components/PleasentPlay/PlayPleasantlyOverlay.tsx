@@ -59,7 +59,7 @@ export default function PlayPleasantlyOverlay({
     [translations, selectedTranslationId]
   );
   const selectedReciterLabel = selectedReciter
-    ? selectedReciter.translatedName?.name || selectedReciter.name || 'Reciter'
+    ? selectedReciter.reciterName || selectedReciter.translatedName?.name || 'Reciter'
     : 'Select a reciter';
   const selectedTranslationLabel = selectedTranslation
     ? `${selectedTranslation.name}${selectedTranslation.authorName ? ` - ${selectedTranslation.authorName}` : ''}`
@@ -385,7 +385,7 @@ export default function PlayPleasantlyOverlay({
                 >
                   {reciters.length === 0 && <option value="">Loading reciters...</option>}
                   {reciters.map((reciter) => {
-                    const label = reciter.translatedName?.name || reciter.name || `Reciter ${reciter.id}`;
+                    const label = reciter.reciterName || reciter.translatedName?.name || `Reciter ${reciter.id}`;
                     return (
                       <option key={reciter.id} value={reciter.id}>
                         {label}
