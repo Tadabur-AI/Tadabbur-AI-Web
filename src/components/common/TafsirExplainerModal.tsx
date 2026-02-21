@@ -101,37 +101,35 @@ export default function TafsirExplainerModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="max-w-4xl w-full max-h-[90vh] rounded-lg bg-white shadow-xl overflow-hidden flex flex-col">
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-gray-200 p-4">
-          <h2 className="text-xl font-bold text-gray-900">
+      <div className="max-w-4xl w-full max-h-[90vh] rounded-lg bg-surface shadow-xl overflow-hidden flex flex-col">
+        <div className="flex items-center justify-between border-b border-border p-4">
+          <h2 className="text-xl font-bold text-text">
             Tafsir Explanation - Surah {surahNumber}:{ayahNumber}
           </h2>
           <button
             onClick={onClose}
-            className="rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors"
+            className="rounded-lg p-2 text-text-muted hover:bg-surface-2 hover:text-text transition-colors"
             aria-label="Close tafsir explanation"
           >
             <FiX className="h-5 w-5" />
           </button>
         </div>
 
-        {/* Content */}
         <div className="flex-1 overflow-y-auto p-6">
           {loading && (
             <div className="flex flex-col items-center justify-center py-12">
               <FiLoader className="h-8 w-8 animate-spin text-primary" />
-              <p className="mt-4 text-gray-600">Generating modern English explanation...</p>
-              <p className="mt-2 text-sm text-gray-500">This may take 15-30 seconds</p>
+              <p className="mt-4 text-text-muted">Generating modern English explanation...</p>
+              <p className="mt-2 text-sm text-text-muted">This may take 15-30 seconds</p>
             </div>
           )}
 
           {error && (
-            <div className="rounded-lg border border-red-200 bg-red-50 p-4">
-              <p className="text-red-800">{error}</p>
+            <div className="rounded-lg border border-danger/30 bg-danger/10 p-4">
+              <p className="text-danger">{error}</p>
               <button
                 onClick={requestExplanation}
-                className="mt-2 text-sm text-red-600 hover:text-red-700 underline"
+                className="mt-2 text-sm text-danger hover:underline"
               >
                 Try again
               </button>
@@ -140,19 +138,19 @@ export default function TafsirExplainerModal({
 
           {explanation && !loading && !error && (
             <div className="space-y-6">
-              <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-                <h3 className="font-semibold text-gray-900">Surah {surahNumber}, Ayah {ayahNumber}</h3>
-                <p className="text-sm text-gray-600 mt-1">Tafsir ID: {tafsirId}</p>
+              <div className="rounded-lg border border-border bg-surface-2 p-4">
+                <h3 className="font-semibold text-text">Surah {surahNumber}, Ayah {ayahNumber}</h3>
+                <p className="text-sm text-text-muted mt-1">Tafsir ID: {tafsirId}</p>
               </div>
 
-              <div className="prose prose-sm max-w-none">
+              <div className="prose prose-sm max-w-none text-text">
                 <ReactMarkdown>{explanation.explanation}</ReactMarkdown>
               </div>
 
               {explanation.keyTerms && explanation.keyTerms.length > 0 && (
-                <div className="rounded-lg border border-blue-100 bg-blue-50 p-4">
-                  <h4 className="text-sm font-semibold text-blue-900">Key Terms</h4>
-                  <ul className="mt-3 space-y-2 text-sm text-blue-900">
+                <div className="rounded-lg border border-accent/30 bg-accent/5 p-4">
+                  <h4 className="text-sm font-semibold text-accent">Key Terms</h4>
+                  <ul className="mt-3 space-y-2 text-sm text-text">
                     {explanation.keyTerms.map((item) => (
                       <li key={item.term}>
                         <span className="font-semibold">{item.term}:</span> {item.definition}
@@ -163,12 +161,12 @@ export default function TafsirExplainerModal({
               )}
 
               {tafsirHtml && (
-                <details className="rounded-lg border border-gray-200 p-4">
-                  <summary className="cursor-pointer font-medium text-gray-900 hover:text-primary">
+                <details className="rounded-lg border border-border p-4">
+                  <summary className="cursor-pointer font-medium text-text hover:text-primary">
                     View Original Tafsir
                   </summary>
                   <div
-                    className="mt-4 prose prose-sm max-w-none"
+                    className="mt-4 prose prose-sm max-w-none text-text"
                     dangerouslySetInnerHTML={{ __html: tafsirHtml }}
                   />
                 </details>
@@ -177,22 +175,21 @@ export default function TafsirExplainerModal({
           )}
 
           {!loading && !explanation && !error && !plainTafsir && (
-            <p className="text-sm text-gray-500">No tafsir content available to generate an explanation.</p>
+            <p className="text-sm text-text-muted">No tafsir content available to generate an explanation.</p>
           )}
         </div>
 
-        {/* Footer */}
-        <div className="border-t border-gray-200 p-4 flex justify-end gap-2">
+        <div className="border-t border-border p-4 flex justify-end gap-2">
           <button
             onClick={onClose}
-            className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+            className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-text hover:bg-surface-2 transition-colors"
           >
             Close
           </button>
           {!loading && !explanation && !error && plainTafsir && (
             <button
               onClick={requestExplanation}
-              className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 transition-colors"
+              className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-on-primary hover:bg-primary-hover transition-colors"
             >
               Generate Explanation
             </button>

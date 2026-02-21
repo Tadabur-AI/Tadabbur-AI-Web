@@ -128,20 +128,19 @@ export default function ListSurahsPage() {
         },
       ]}
       screenTitle={<LogoLandscape />}
-      userProfile={null} // Replace with actual user profile if needed
+      userProfile={null}
     >
       <div className="p-4 sm:p-6">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-2xl font-bold mb-6">List of Surahs</h1>
+          <h1 className="text-2xl font-bold mb-6 text-primary">List of Surahs</h1>
 
-          {/* Tabs */}
           <div className="mb-6 flex gap-2">
             <button
               onClick={() => setActiveTab("surahs")}
               className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                 activeTab === "surahs"
-                  ? "bg-primary text-white"
-                  : "border border-gray-300 bg-white text-gray-700 hover:border-primary"
+                  ? "bg-primary text-on-primary"
+                  : "border border-border bg-surface text-text hover:border-primary"
               }`}
             >
               Surahs
@@ -150,28 +149,27 @@ export default function ListSurahsPage() {
               onClick={() => setActiveTab("juz")}
               className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                 activeTab === "juz"
-                  ? "bg-primary text-white"
-                  : "border border-gray-300 bg-white text-gray-700 hover:border-primary"
+                  ? "bg-primary text-on-primary"
+                  : "border border-border bg-surface text-text hover:border-primary"
               }`}
             >
               Juz
             </button>
           </div>
 
-          {/* Search Bar */}
           <div className="mb-6">
             <div className="relative">
-              <BiSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <BiSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-text-muted" />
               <input
                 type="text"
                 placeholder={searchPlaceholder}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 py-2.5 pl-10 pr-4 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="w-full rounded-lg border border-border py-2.5 pl-10 pr-4 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 bg-surface text-text"
               />
             </div>
             {searchQuery && (
-              <p className="mt-2 text-sm text-gray-600">
+              <p className="mt-2 text-sm text-text-muted">
                 {activeTab === "surahs"
                   ? `Found ${filteredChapters.length} surah${
                       filteredChapters.length !== 1 ? "s" : ""
@@ -181,15 +179,14 @@ export default function ListSurahsPage() {
             )}
           </div>
 
-          {/* Revelation Filter */}
           {activeTab === "surahs" && (
             <div className="mb-6 flex gap-2 flex-wrap">
               <button
                 onClick={() => setRevelationFilter("all")}
                 className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                   revelationFilter === "all"
-                    ? "bg-primary text-white"
-                    : "border border-gray-300 bg-white text-gray-700 hover:border-primary"
+                    ? "bg-primary text-on-primary"
+                    : "border border-border bg-surface text-text hover:border-primary"
                 }`}
               >
                 All Surahs
@@ -198,8 +195,8 @@ export default function ListSurahsPage() {
                 onClick={() => setRevelationFilter("makkah")}
                 className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                   revelationFilter === "makkah"
-                    ? "bg-primary text-white"
-                    : "border border-gray-300 bg-white text-gray-700 hover:border-primary"
+                    ? "bg-primary text-on-primary"
+                    : "border border-border bg-surface text-text hover:border-primary"
                 }`}
               >
                 Meccan (مكي)
@@ -208,8 +205,8 @@ export default function ListSurahsPage() {
                 onClick={() => setRevelationFilter("madinah")}
                 className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                   revelationFilter === "madinah"
-                    ? "bg-primary text-white"
-                    : "border border-gray-300 bg-white text-gray-700 hover:border-primary"
+                    ? "bg-primary text-on-primary"
+                    : "border border-border bg-surface text-text hover:border-primary"
                 }`}
               >
                 Medinan (مدني)
@@ -217,28 +214,25 @@ export default function ListSurahsPage() {
             </div>
           )}
 
-          {/* Loading State */}
           {loading && (
             <div className="text-center py-12">
               <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent"></div>
-              <p className="mt-2 text-gray-600">Loading surahs...</p>
+              <p className="mt-2 text-text-muted">Loading surahs...</p>
             </div>
           )}
 
-          {/* Error State */}
           {error && (
-            <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-center">
-              <p className="text-red-800">{error}</p>
+            <div className="rounded-lg border border-danger/30 bg-danger/10 p-4 text-center">
+              <p className="text-danger">{error}</p>
               <button
                 onClick={() => window.location.reload()}
-                className="mt-2 text-sm text-red-600 hover:text-red-700 underline"
+                className="mt-2 text-sm text-danger hover:underline"
               >
                 Try again
               </button>
             </div>
           )}
 
-          {/* Chapters List */}
           {!loading && !error && (
             <>
               {activeTab === "surahs" ? (
@@ -247,7 +241,7 @@ export default function ListSurahsPage() {
                     filteredChapters.map((chapter) => (
                       <li
                         key={chapter.id}
-                        className="border border-gray-200 rounded-lg p-4 hover:border-primary hover:bg-gray-50 transition-colors"
+                        className="border border-border rounded-lg p-4 hover:border-primary hover:bg-surface-2 transition-colors bg-surface"
                       >
                         <div className="flex flex-col gap-4">
                           <Link
@@ -259,10 +253,10 @@ export default function ListSurahsPage() {
                                 {chapter.id}
                               </span>
                               <div className="min-w-0 flex-1">
-                                <p className="font-medium text-gray-900">
+                                <p className="font-medium text-text">
                                   {chapter.nameSimple}
                                 </p>
-                                <p className="text-sm text-gray-600">
+                                <p className="text-sm text-text-muted">
                                   {chapter.versesCount} verses -{" "}
                                   {chapter.revelationPlace === "makkah"
                                     ? "Meccan"
@@ -304,7 +298,7 @@ export default function ListSurahsPage() {
                       </li>
                     ))
                   ) : (
-                    <li className="text-center py-8 text-gray-500">
+                    <li className="text-center py-8 text-text-muted">
                       No surahs found matching "{searchQuery}"
                     </li>
                   )}
@@ -315,15 +309,14 @@ export default function ListSurahsPage() {
                     filteredJuz.map((juz) => (
                       <li
                         key={juz.number}
-                        className="border border-gray-200 rounded-lg p-4"
+                        className="border border-border rounded-lg p-4 bg-surface"
                       >
                         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                           <div>
-                            {/* <p className="text-sm font-semibold text-primary">Juz {juz.number}</p> */}
-                            <p className="text-lg font-semibold text-gray-900">
+                            <p className="text-lg font-semibold text-text">
                               {juz.name}
                             </p>
-                            <p className="text-sm text-gray-600">
+                            <p className="text-sm text-text-muted">
                               {juz.summary}
                             </p>
                           </div>
@@ -347,10 +340,10 @@ export default function ListSurahsPage() {
                               <Link
                                 key={`${juz.number}-${section.surahId}-${section.startAyah}`}
                                 to={`/surah/${section.surahId}?${query}`}
-                                className="flex flex-col gap-1 rounded-md border border-gray-200 px-3 py-2 transition-colors hover:border-primary hover:bg-gray-50 sm:flex-row sm:items-center sm:justify-between"
+                                className="flex flex-col gap-1 rounded-md border border-border px-3 py-2 transition-colors hover:border-primary hover:bg-surface-2 sm:flex-row sm:items-center sm:justify-between bg-surface-2"
                               >
                                 <div>
-                                  <p className="font-medium text-gray-900">
+                                  <p className="font-medium text-text">
                                     {englishName}
                                   </p>
                                   {arabicName && (
@@ -359,7 +352,7 @@ export default function ListSurahsPage() {
                                     </p>
                                   )}
                                 </div>
-                                <p className="text-sm text-gray-600">
+                                <p className="text-sm text-text-muted">
                                   Ayat {section.startAyah} - {section.endAyah}
                                 </p>
                               </Link>
@@ -402,7 +395,7 @@ export default function ListSurahsPage() {
                       </li>
                     ))
                   ) : (
-                    <li className="text-center py-8 text-gray-500">
+                    <li className="text-center py-8 text-text-muted">
                       No juz found matching "{searchQuery}"
                     </li>
                   )}

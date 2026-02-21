@@ -4,61 +4,37 @@ export default function AuthenticationPage() {
   return (
     <AuthLayout
       leftContent={
-        <div style={{ textAlign: 'center' }}>
-          <h1 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '1rem' }}>Welcome Back</h1>
-          <p style={{ fontSize: '1rem' }}>Sign in to continue</p>
+        <div className="text-center">
+          <h1 className="text-3xl font-bold mb-4 text-primary">Welcome Back</h1>
+          <p className="text-lg text-text-muted">Sign in to continue</p>
         </div>
       }
       rightContent={
-        <div style={{ width: '100%', maxWidth: '400px' }}>
-          <form style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <div className="w-full max-w-[400px]">
+          <form className="flex flex-col gap-4">
             <div>
-              <label htmlFor="email" style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500' }}>
+              <label htmlFor="email" className="block text-sm font-medium text-text">
                 Email address
               </label>
               <input
                 type="email"
                 id="email"
-                style={{
-                  marginTop: '0.25rem',
-                  display: 'block',
-                  width: '100%',
-                  padding: '0.5rem',
-                  border: '1px solid #ccc',
-                  borderRadius: '0.375rem',
-                  boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
-                }}
+                className="mt-1 block w-full px-3 py-2 border border-border rounded-lg shadow-sm bg-surface text-text focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
               />
             </div>
             <div>
-              <label htmlFor="password" style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500' }}>
+              <label htmlFor="password" className="block text-sm font-medium text-text">
                 Password
               </label>
               <input
                 type="password"
                 id="password"
-                style={{
-                  marginTop: '0.25rem',
-                  display: 'block',
-                  width: '100%',
-                  padding: '0.5rem',
-                  border: '1px solid #ccc',
-                  borderRadius: '0.375rem',
-                  boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
-                }}
+                className="mt-1 block w-full px-3 py-2 border border-border rounded-lg shadow-sm bg-surface text-text focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
               />
             </div>
             <button
               type="submit"
-              style={{
-                width: '100%',
-                backgroundColor: '#000',
-                color: '#fff',
-                padding: '0.5rem 1rem',
-                borderRadius: '0.375rem',
-                border: 'none',
-                cursor: 'pointer',
-              }}
+              className="w-full bg-primary text-on-primary py-2 px-4 rounded-lg border-none cursor-pointer hover:bg-primary-hover transition-colors"
             >
               Sign In
             </button>

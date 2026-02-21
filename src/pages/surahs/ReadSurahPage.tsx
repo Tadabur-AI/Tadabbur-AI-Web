@@ -117,7 +117,6 @@ export default function ReadSurahPage() {
   const startAyah = parseAyahParam(searchParams.get('start'));
   const endAyah = parseAyahParam(searchParams.get('end'));
   
-  // Quran settings state - load from localStorage or use defaults
   const [selectedRecitation, setSelectedRecitation] = useState<number | null>(() => {
     const saved = localStorage.getItem('tadabbur_recitation');
     return saved ? Number(saved) : null;
@@ -128,24 +127,20 @@ export default function ReadSurahPage() {
   });
   const [selectedTafsir, setSelectedTafsir] = useState<number | null>(() => {
     const saved = localStorage.getItem('tadabbur_tafsir');
-    return saved ? Number(saved) : 169; // Default to Ibn Kathir if not saved
+    return saved ? Number(saved) : 169;
   });
   const [isExplainerOpen, setIsExplainerOpen] = useState(false);
   
-  // Tafsir data state
   const [tafsirOptions, setTafsirOptions] = useState<Array<{ id: number; name: string; languageName: string }>>([]);
   const [translationOptions, setTranslationOptions] = useState<Array<{ id: number; name: string; languageName: string }>>([]);
   const [tafsirText, setTafsirText] = useState<string | null>(null);
   const [isTafsirLoading, setIsTafsirLoading] = useState(false);
   const tafseerCache = useRef<Map<string, RetrieveTafseerItem[]>>(new Map());
   const explanationCache = useRef<Map<string, ExplainTafsirResponse>>(new Map());
-  // Tracks which verse-key the current `tafsirText` belongs to to avoid race conditions
   const tafsirTextForVerseRef = useRef<string | null>(null);
   
-  // Recitations data state
   const [recitations, setRecitations] = useState<Recitation[]>([]);
   
-  // AI explanation state
   const [aiExplanation, setAiExplanation] = useState<ExplainTafsirResponse | null>(null);
   const [isExplanationLoading, setIsExplanationLoading] = useState(false);
 
@@ -155,10 +150,8 @@ export default function ReadSurahPage() {
     }
   }, [selectedTranslation]);
 
-  // Load tafsir options from backend - with retry logic and localStorage caching
   useEffect(() => {
     const loadTafsirOptions = async () => {
-      // Try localStorage cache first
       const cachedTafsirs = localStorage.getItem('tadabbur_tafsirs_cache');
       if (cachedTafsirs) {
         try {
@@ -171,7 +164,6 @@ export default function ReadSurahPage() {
         }
       }
 
-      // If not in cache, fetch from API with retry logic
       const maxRetries = 3;
       for (let attempt = 0; attempt < maxRetries; attempt++) {
         try {
@@ -182,10 +174,9 @@ export default function ReadSurahPage() {
             languageName: t.languageName,
           }));
           setTafsirOptions(tafsirData);
-          // Cache to localStorage
           localStorage.setItem('tadabbur_tafsirs_cache', JSON.stringify(tafsirData));
           console.log('Fetched tafsir options from API and cached to localStorage');
-          return; // Success - exit early
+          return;
         } catch (error) {
           console.error(`Tafsir options fetch attempt ${attempt + 1}/${maxRetries} failed:`, error);
           if (attempt < maxRetries - 1) {
@@ -195,7 +186,6 @@ export default function ReadSurahPage() {
       }
     };
 
-    // Load recitations - with retry logic and localStorage caching
     const applyRecitations = (recitationsData: Recitation[]) => {
       setRecitations(recitationsData);
 
@@ -210,7 +200,6 @@ export default function ReadSurahPage() {
     };
 
     const loadRecitations = async () => {
-      // Try localStorage cache first
       const cachedRecitations = localStorage.getItem('tadabbur_recitations_cache');
       if (cachedRecitations) {
         try {
@@ -223,16 +212,14 @@ export default function ReadSurahPage() {
         }
       }
 
-      // If not in cache, fetch from API with retry logic
       const maxRetries = 3;
       for (let attempt = 0; attempt < maxRetries; attempt++) {
         try {
           const recitationsData = await fetchRecitations();
           applyRecitations(recitationsData);
-          // Cache to localStorage
           localStorage.setItem('tadabbur_recitations_cache', JSON.stringify(recitationsData));
           console.log('Fetched recitations from API and cached to localStorage');
-          return; // Success - exit early
+          return;
         } catch (error) {
           console.error(`Recitations fetch attempt ${attempt + 1}/${maxRetries} failed:`, error);
           if (attempt < maxRetries - 1) {
@@ -300,7 +287,6 @@ export default function ReadSurahPage() {
     void loadTranslations();
   }, [selectedTranslation]);
 
-  // Load surah and verses using new API endpoint
   useEffect(() => {
     if (!id) return;
     const surahNumber = Number(id);
@@ -338,7 +324,6 @@ export default function ReadSurahPage() {
     void loadSurah();
   }, [id, selectedTranslation]);
 
-  // Filter verses if a specific aya range is requested
   useEffect(() => {
     if (allVerses.length === 0) {
       setVerses([]);
@@ -356,12 +341,10 @@ export default function ReadSurahPage() {
     setCurrentVerseIndex(0);
   }, [allVerses, startAyah, endAyah]);
 
-  // Load tafsir text when verse or tafsir selection changes - with retry logic
   useEffect(() => {
     let ignore = false;
 
     const loadTafsirText = async () => {
-      // Clear ref/state early so other effects know tafsirText is no longer valid for previous verse
       if (!selectedTafsir || !verses[currentVerseIndex]) {
         if (!ignore) {
           tafsirTextForVerseRef.current = null;
@@ -372,7 +355,6 @@ export default function ReadSurahPage() {
 
       if (!ignore) {
         setIsTafsirLoading(true);
-        // mark that tafsirText no longer belongs to any verse until we set it below
         tafsirTextForVerseRef.current = null;
         setTafsirText(null);
       }
@@ -386,7 +368,6 @@ export default function ReadSurahPage() {
         if (ignore) return;
         const verseTafsir = selectBestTafsirEntry(cachedEntries, currentVerse);
         setTafsirText(verseTafsir?.text ?? null);
-        // record which verse this tafsirText belongs to (synchronous ref update)
         tafsirTextForVerseRef.current = currentVerse.verse_key;
         setIsTafsirLoading(false);
         return;
@@ -407,7 +388,6 @@ export default function ReadSurahPage() {
           tafseerCache.current.set(cacheKey, response);
           const verseTafsir = selectBestTafsirEntry(response, currentVerse);
           setTafsirText(verseTafsir?.text ?? null);
-          // record which verse this tafsirText belongs to (synchronous ref update)
           tafsirTextForVerseRef.current = currentVerse.verse_key;
           setIsTafsirLoading(false);
           return;
@@ -435,7 +415,6 @@ export default function ReadSurahPage() {
     };
   }, [selectedTafsir, currentVerseIndex, verses]);
 
-  // Auto-generate AI explanation when verse or tafsir changes - ONLY AFTER tafsir is loaded
   useEffect(() => {
     let ignore = false;
 
@@ -447,17 +426,13 @@ export default function ReadSurahPage() {
         return;
       }
 
-      // Skip if tafsir is still loading
       if (isTafsirLoading) {
         return;
       }
 
       const currentVerse = verses[currentVerseIndex];
 
-      // Guard against race where `tafsirText` still contains the previous verse's text.
-      // We update `tafsirTextForVerseRef` synchronously when we set `tafsirText`, so verify it matches.
       if (tafsirTextForVerseRef.current !== currentVerse.verse_key) {
-        // tafsirText does not belong to the current verse yet — wait for correct tafsirText
         if (!ignore) {
           setAiExplanation(null);
           setIsExplanationLoading(false);
@@ -533,19 +508,16 @@ export default function ReadSurahPage() {
     setCurrentVerseIndex((i) => Math.min(verses.length - 1, i + 1));
   };
 
-  // Handler for recitation change - saves to localStorage
   const handleRecitationChange = (id: number) => {
     setSelectedRecitation(id);
     localStorage.setItem('tadabbur_recitation', String(id));
   };
 
-  // Handler for translation change - saves to localStorage
   const handleTranslationChange = (id: number) => {
     setSelectedTranslation(id);
     localStorage.setItem('tadabbur_translation', String(id));
   };
 
-  // Handler for tafsir change - saves to localStorage
   const handleTafsirChange = (id: number) => {
     setSelectedTafsir(id);
     localStorage.setItem('tadabbur_tafsir', String(id));
@@ -553,10 +525,10 @@ export default function ReadSurahPage() {
 
   if (loadError) {
     return (
-      <div className="flex h-screen items-center justify-center bg-white px-4 text-center">
+      <div className="flex h-screen items-center justify-center bg-surface px-4 text-center">
         <div>
-          <p className="text-lg font-semibold text-red-600">Failed to load surah.</p>
-          <p className="mt-2 text-sm text-gray-600">{loadError}</p>
+          <p className="text-lg font-semibold text-danger">Failed to load surah.</p>
+          <p className="mt-2 text-sm text-text-muted">{loadError}</p>
         </div>
       </div>
     );

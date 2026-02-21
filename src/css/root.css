@@ -1,95 +1,109 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;500;600;700&display=swap');
 
 @font-face {
-  font-family: 'Google Sans';
-  src: url('/public/fonts/GoogleSansCode-VariableFont_wght.ttf') format('truetype');
-}
-@font-face {
   font-family: 'Quran';
-  /* src: url('/public/fonts/AmiriQuran-Regular.ttf') format('truetype'); */
-  /* src: url('/public/fonts/HAFS.otf') format('opentype'); */
   src: url('/public/fonts/me_quran_volt_newmet.ttf') format('truetype');
   font-display: swap;
 }
-html, body, #root {
-  height: 100%;
-  background: url(/public/images/background.svg) no-repeat center center fixed;
-  background-size: cover;
-  margin: 0;
-  font-family: 'Google Sans', sans-serif;
-  transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-/* Dark mode background */
-html.dark, html.dark body, html.dark #root {
-  background: #1a1a2e;
-  background-image: none;
-}
 
 :root {
+  --z-base: 0;
+  --z-sticky: 10;
+  --z-dropdown: 30;
+  --z-player: 40;
+  --z-modal: 100;
+  
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 24px;
+  --spacing-2xl: 32px;
+  --spacing-3xl: 48px;
+  
+  --header-height: 56px;
+  --sidebar-width: 260px;
+  --player-height: 72px;
+  
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  
   font-size: clamp(10px, 1.6vw + 6px, 16px);
 }
 
-body {
-  min-width: 50px;
-  overflow-x: hidden;
-  word-break: break-word;
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-img,
-svg,
-video,
-canvas {
+body {
+  background-color: var(--color-background);
+  color: var(--color-text);
+  min-width: 50px;
+  overflow-x: hidden;
+}
+
+html:not(.dark) body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url('/public/images/background.svg');
+  background-size: 300px;
+  background-repeat: repeat;
+  opacity: 0.04;
+  pointer-events: none;
+  z-index: -1;
+}
+
+html.dark body {
+  background-color: var(--color-background);
+}
+
+html.dark body::before {
+  display: none;
+}
+
+img, svg, video, canvas {
   max-width: 100%;
   height: auto;
 }
 
-button,
-input,
-select,
-textarea {
+button, input, select, textarea {
   min-width: 0;
   font-size: inherit;
-}
-
-.button-label {
-  white-space: nowrap;
-}
-
-@media (max-width: 320px) {
-  body {
-    font-size: 0.9rem;
-  }
-
-  button {
-    padding: 0.375rem 0.75rem;
-  }
-
-  .card {
-    padding: 0.75rem;
-  }
-}
-
-@media (max-width: 200px) {
-  body {
-    font-size: 0.8rem;
-  }
-
-  button {
-    padding: 0.25rem 0.5rem;
-    gap: 0.25rem;
-  }
-
-  .button-label {
-    display: none;
-  }
-
-  .card {
-    padding: 0.5rem;
-  }
+  font-family: inherit;
 }
 
 .quran-text {
-  font-family: 'Quran', serif;
-  word-spacing: 20.5px;
-  line-height: 50px;
+  font-family: 'Noto Naskh Arabic', 'Quran', serif;
+  word-spacing: 4px;
+  line-height: 2;
+  direction: rtl;
+  text-align: right;
+}
+
+.focus-ring {
+  outline: none;
+}
+
+.focus-ring:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  outline-opacity: 0.5;
+}
+
+@media (max-width: 320px) {
+  body { font-size: 0.9rem; }
+  button { padding: 0.375rem 0.75rem; }
+}
+
+@media (max-width: 200px) {
+  body { font-size: 0.8rem; }
+  button { padding: 0.25rem 0.5rem; gap: 0.25rem; }
 }

@@ -46,10 +46,10 @@ function WordItem({ word, index, isEffectEnabled }: WordItemProps) {
         isHovered
           ? isEffectEnabled
             ? 'bg-white/60 backdrop-blur-sm shadow-md'
-            : 'bg-blue-50 dark:bg-blue-900/30 shadow-md'
+            : 'bg-primary/10 shadow-md'
           : isEffectEnabled
           ? 'bg-white/30 hover:bg-white/50'
-          : 'bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700'
+          : 'bg-surface-2 hover:bg-primary/5'
       }`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -57,26 +57,22 @@ function WordItem({ word, index, isEffectEnabled }: WordItemProps) {
       tabIndex={0}
       aria-label={`Word ${index + 1}: ${word.text}`}
     >
-      {/* Arabic Word */}
       <span className="quran-text text-xl sm:text-2xl text-primary leading-relaxed">
         {word.text}
       </span>
 
-      {/* Transliteration */}
       {word.transliteration && (
-        <span className="text-xs text-gray-500 dark:text-gray-400 mt-1 italic">
+        <span className="text-xs text-text-muted mt-1 italic">
           {word.transliteration}
         </span>
       )}
 
-      {/* Translation */}
       {word.translation && (
-        <span className="text-xs text-gray-700 dark:text-gray-300 mt-0.5 font-medium text-center">
+        <span className="text-xs text-text mt-0.5 font-medium text-center">
           {word.translation}
         </span>
       )}
 
-      {/* Audio Button - Show on hover */}
       {word.audio && isHovered && (
         <button
           type="button"
@@ -84,8 +80,8 @@ function WordItem({ word, index, isEffectEnabled }: WordItemProps) {
           disabled={isPlaying}
           className={`absolute -top-1 -right-1 p-1.5 rounded-full transition-colors ${
             isPlaying
-              ? 'bg-primary text-white animate-pulse'
-              : 'bg-primary/80 text-white hover:bg-primary'
+              ? 'bg-primary text-on-primary animate-pulse'
+              : 'bg-primary/80 text-on-primary hover:bg-primary'
           }`}
           aria-label="Play word pronunciation"
         >
@@ -99,7 +95,7 @@ function WordItem({ word, index, isEffectEnabled }: WordItemProps) {
 export default function WordByWord({ words, className = '', isEffectEnabled }: WordByWordProps) {
   if (!words || words.length === 0) {
     return (
-      <div className={`text-sm text-gray-500 dark:text-gray-400 text-center py-4 ${className}`}>
+      <div className={`text-sm text-text-muted text-center py-4 ${className}`}>
         Word-by-word data not available for this verse.
       </div>
     );
@@ -108,20 +104,19 @@ export default function WordByWord({ words, className = '', isEffectEnabled }: W
   return (
     <div className={`${className}`}>
       <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+        <h3 className="text-sm font-medium text-text">
           Word by Word ({words.length} words)
         </h3>
-        <span className="text-xs text-gray-500 dark:text-gray-400">
+        <span className="text-xs text-text-muted">
           Hover/tap for translation • Click speaker for audio
         </span>
       </div>
 
-      {/* Words Grid - RTL for Arabic */}
       <div
         className={`flex flex-wrap gap-2 justify-end ${
           isEffectEnabled
             ? 'rounded-lg bg-white/40 p-3 backdrop-blur-sm'
-            : 'rounded-lg bg-white dark:bg-gray-900 p-3 border border-gray-200 dark:border-gray-700'
+            : 'rounded-lg bg-surface p-3 border border-border'
         }`}
         dir="rtl"
       >

@@ -52,7 +52,7 @@ export default function ThemeToggle({ className = '', showLabel = false }: Theme
     <button
       type="button"
       onClick={toggleTheme}
-      className={`flex items-center justify-center gap-2 rounded-lg border border-gray-300 p-2 text-sm font-medium transition-colors hover:border-primary hover:bg-gray-50 dark:border-gray-600 dark:hover:border-primary dark:hover:bg-gray-800 ${className}`}
+      className={`flex items-center justify-center gap-2 rounded-lg border border-border p-2 text-sm font-medium transition-colors hover:border-primary hover:bg-surface-2 ${className}`}
       title={getTitle()}
       aria-label={getTitle()}
     >

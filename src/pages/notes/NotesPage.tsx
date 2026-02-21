@@ -22,7 +22,6 @@ export default function NotesPage() {
 
 
 
-    // Load notes from localStorage on component mount
     useEffect(() => {
         const savedNotes = localStorage.getItem('tadabbur-notes');
         if (savedNotes) {
@@ -35,7 +34,6 @@ export default function NotesPage() {
         }
     }, []);
 
-    // Save notes to localStorage whenever notes change
     useEffect(() => {
         localStorage.setItem('tadabbur-notes', JSON.stringify(notes));
     }, [notes]);
@@ -110,28 +108,27 @@ export default function NotesPage() {
             userProfile={
                 <button
                     onClick={createNewNote}
-                    className="flex items-center gap-2 text-sm px-3 py-1 rounded"
+                    className="flex items-center gap-2 text-sm px-3 py-1 rounded hover:bg-surface-2 text-text"
                 >
                     <FiPlus /> New Note
                 </button>
             }
         >
             <div className="h-full flex flex-col">
-                {/* Toolbar */}
-                <div className="flex items-center justify-between p-4 border-b border-gray-200">
+                <div className="flex items-center justify-between p-4 border-b border-border">
                     {selectedNote && !isEditing && (
                         <>
-                            <h1 className="text-xl font-bold">{selectedNote.title}</h1>
+                            <h1 className="text-xl font-bold text-text">{selectedNote.title}</h1>
                             <div className="flex gap-2">
                                 <button
                                     onClick={startEditing}
-                                    className="flex items-center gap-2 text-sm px-3 py-1 rounded"
+                                    className="flex items-center gap-2 text-sm px-3 py-1 rounded hover:bg-surface-2 text-text"
                                 >
                                     <FiEdit3 /> Edit
                                 </button>
                                 <button
                                     onClick={() => deleteNote(selectedNote.id)}
-                                    className="flex items-center gap-2 text-sm px-3 py-1 rounded text-red-600"
+                                    className="flex items-center gap-2 text-sm px-3 py-1 rounded text-danger hover:bg-danger/10"
                                 >
                                     <FiTrash2 /> Delete
                                 </button>
@@ -145,19 +142,19 @@ export default function NotesPage() {
                                 type="text"
                                 value={editingTitle}
                                 onChange={(e) => setEditingTitle(e.target.value)}
-                                className="text-xl font-bold border-none outline-none bg-transparent flex-1"
+                                className="text-xl font-bold border-none outline-none bg-transparent flex-1 text-text"
                                 placeholder="Note title..."
                             />
                             <div className="flex gap-2">
                                 <button
                                     onClick={saveNote}
-                                    className="flex items-center gap-2 text-sm px-3 py-1 rounded bg-primary text-white"
+                                    className="flex items-center gap-2 text-sm px-3 py-1 rounded bg-primary text-on-primary hover:bg-primary-hover"
                                 >
                                     <FiSave /> Save
                                 </button>
                                 <button
                                     onClick={cancelEditing}
-                                    className="flex items-center gap-2 text-sm px-3 py-1 rounded"
+                                    className="flex items-center gap-2 text-sm px-3 py-1 rounded hover:bg-surface-2 text-text"
                                 >
                                     <FiX /> Cancel
                                 </button>
@@ -167,41 +164,38 @@ export default function NotesPage() {
                     
                     {!selectedNote && !isEditing && (
                         <div className="text-center w-full">
-                            <p className="text-gray-500">Select a note or create a new one</p>
+                            <p className="text-text-muted">Select a note or create a new one</p>
                         </div>
                     )}
                 </div>
 
-                {/* Content Area */}
                 <div className="flex-1 overflow-hidden">
                     {isEditing ? (
                         <div className="h-full flex">
-                            {/* Editor */}
-                            <div className="w-1/2 border-r border-gray-200">
+                            <div className="w-1/2 border-r border-border">
                                 <textarea
                                     value={editingContent}
                                     onChange={(e) => setEditingContent(e.target.value)}
-                                    className="w-full h-full p-4 border-none outline-none resize-none font-mono text-sm"
+                                    className="w-full h-full p-4 border-none outline-none resize-none font-mono text-sm bg-surface text-text"
                                     placeholder="Write your note in Markdown..."
                                 />
                             </div>
                             
-                            {/* Preview */}
-                            <div className="w-1/2 p-4 overflow-y-auto">
+                            <div className="w-1/2 p-4 overflow-y-auto bg-surface">
                                 <div className="prose prose-lg max-w-none">
                                     <ReactMarkdown 
                                         remarkPlugins={[remarkGfm]}
                                         components={{
                                             h1: ({children}) => <h1 className="text-2xl font-bold text-primary mb-4">{children}</h1>,
                                             h2: ({children}) => <h2 className="text-xl font-bold text-primary mb-3">{children}</h2>,
-                                            h3: ({children}) => <h3 className="text-lg font-bold text-secondary mb-2">{children}</h3>,
-                                            p: ({children}) => <p className="mb-3 leading-relaxed">{children}</p>,
-                                            blockquote: ({children}) => <blockquote className="border-l-4 border-accent pl-4 italic text-muted">{children}</blockquote>,
+                                            h3: ({children}) => <h3 className="text-lg font-bold text-primary mb-2">{children}</h3>,
+                                            p: ({children}) => <p className="mb-3 leading-relaxed text-text">{children}</p>,
+                                            blockquote: ({children}) => <blockquote className="border-l-4 border-accent pl-4 italic text-text-muted">{children}</blockquote>,
                                             ul: ({children}) => <ul className="list-disc pl-6 mb-3">{children}</ul>,
                                             ol: ({children}) => <ol className="list-decimal pl-6 mb-3">{children}</ol>,
                                             li: ({children}) => <li className="mb-1">{children}</li>,
-                                            code: ({children}) => <code className="bg-gray-100 px-2 py-1 rounded text-sm font-mono">{children}</code>,
-                                            pre: ({children}) => <pre className="bg-gray-100 p-4 rounded overflow-x-auto">{children}</pre>
+                                            code: ({children}) => <code className="bg-surface-2 px-2 py-1 rounded text-sm font-mono">{children}</code>,
+                                            pre: ({children}) => <pre className="bg-surface-2 p-4 rounded overflow-x-auto">{children}</pre>
                                         }}
                                     >
                                         {editingContent}
@@ -210,40 +204,40 @@ export default function NotesPage() {
                             </div>
                         </div>
                     ) : selectedNote ? (
-                        <div className="p-6 overflow-y-auto h-full">
+                        <div className="p-6 overflow-y-auto h-full bg-surface">
                             <div className="prose prose-lg max-w-none">
                                 <ReactMarkdown 
                                     remarkPlugins={[remarkGfm]}
                                     components={{
                                         h1: ({children}) => <h1 className="text-2xl font-bold text-primary mb-4">{children}</h1>,
                                         h2: ({children}) => <h2 className="text-xl font-bold text-primary mb-3">{children}</h2>,
-                                        h3: ({children}) => <h3 className="text-lg font-bold text-secondary mb-2">{children}</h3>,
-                                        p: ({children}) => <p className="mb-3 leading-relaxed">{children}</p>,
-                                        blockquote: ({children}) => <blockquote className="border-l-4 border-accent pl-4 italic text-muted">{children}</blockquote>,
+                                        h3: ({children}) => <h3 className="text-lg font-bold text-primary mb-2">{children}</h3>,
+                                        p: ({children}) => <p className="mb-3 leading-relaxed text-text">{children}</p>,
+                                        blockquote: ({children}) => <blockquote className="border-l-4 border-accent pl-4 italic text-text-muted">{children}</blockquote>,
                                         ul: ({children}) => <ul className="list-disc pl-6 mb-3">{children}</ul>,
                                         ol: ({children}) => <ol className="list-decimal pl-6 mb-3">{children}</ol>,
                                         li: ({children}) => <li className="mb-1">{children}</li>,
-                                        code: ({children}) => <code className="bg-gray-100 px-2 py-1 rounded text-sm font-mono">{children}</code>,
-                                        pre: ({children}) => <pre className="bg-gray-100 p-4 rounded overflow-x-auto">{children}</pre>
+                                        code: ({children}) => <code className="bg-surface-2 px-2 py-1 rounded text-sm font-mono">{children}</code>,
+                                        pre: ({children}) => <pre className="bg-surface-2 p-4 rounded overflow-x-auto">{children}</pre>
                                     }}
                                 >
                                     {selectedNote.content}
                                 </ReactMarkdown>
                             </div>
                             
-                            <div className="mt-6 pt-4 border-t border-gray-200 text-sm text-gray-500">
+                            <div className="mt-6 pt-4 border-t border-border text-sm text-text-muted">
                                 <p>Created: {selectedNote.createdAt.toLocaleDateString()}</p>
                                 <p>Last updated: {selectedNote.updatedAt.toLocaleDateString()}</p>
                             </div>
                         </div>
                     ) : (
-                        <div className="flex items-center justify-center h-full">
+                        <div className="flex items-center justify-center h-full bg-surface">
                             <div className="text-center">
-                                <h2 className="text-xl font-bold text-gray-400 mb-4">No note selected</h2>
-                                <p className="text-gray-500 mb-6">Create your first note to get started</p>
+                                <h2 className="text-xl font-bold text-text-muted mb-4">No note selected</h2>
+                                <p className="text-text-muted mb-6">Create your first note to get started</p>
                                 <button
                                     onClick={createNewNote}
-                                    className="flex items-center gap-2 mx-auto px-4 py-2 rounded"
+                                    className="flex items-center gap-2 mx-auto px-4 py-2 rounded hover:bg-surface-2 text-text"
                                 >
                                     <FiPlus /> Create New Note
                                 </button>

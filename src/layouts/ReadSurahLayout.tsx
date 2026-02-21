@@ -1,8 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiChevronLeft, FiChevronRight, FiMenu, FiX, FiArrowLeft } from 'react-icons/fi';
+import { FiChevronLeft, FiChevronRight, FiX, FiArrowLeft, FiMenu, FiCopy, FiBookmark } from 'react-icons/fi';
 import ReactMarkdown from 'react-markdown';
-import LogoLandscape from '../components/common/LogoLandscape';
 import AudioPlayer from '../components/common/AudioPlayer';
 import TafsirExplainerModal from '../components/common/TafsirExplainerModal';
 import ThemeToggle from '../components/common/ThemeToggle';
@@ -10,611 +9,423 @@ import WordByWord from '../components/common/WordByWord';
 import TajweedLearningButton from '../components/TajweedLearning/TajweedLearningButton';
 import { type ExplainTafsirResponse } from '../services/tafsirExplainerService';
 import { type WordTranslation } from '../services/apis';
+import { type Recitation } from '../services/quranResourcesService';
 
 interface Verse {
-    id: number;
-    verse_key: string;
-    text: string;
-    translation: string;
-    translationHtml?: string;
-    surah_id: number;
-    word_translations?: WordTranslation[];
+  id: number;
+  verse_key: string;
+  text: string;
+  translation: string;
+  translationHtml?: string;
+  surah_id: number;
+  word_translations?: WordTranslation[];
 }
 
 interface Surah {
-    id: number;
-    name_english: string;
-    name_arabic: string;
-    verses_count: number;
-}
-
-interface Recitation {
-    id: number;
-    reciter_name: string;
-    style: string;
+  id: number;
+  name_english: string;
+  name_arabic: string;
+  verses_count: number;
 }
 
 interface Props {
-    surah: Surah | null;
-    verses: Verse[];
-    currentVerseIndex: number;
-    setCurrentVerseIndex: (i: number) => void;
-    goToPreviousVerse: () => void;
-    goToNextVerse: () => void;
-    selectedRecitation?: number | null;
-    onRecitationChange?: (id: number) => void;
-    selectedTranslation?: number | null;
-    onTranslationChange?: (id: number) => void;
-    translationOptions?: Array<{ id: number; name: string; languageName: string }>;
-    selectedTafsir?: number | null;
-    onTafsirChange?: (id: number) => void;
-    isExplainerOpen?: boolean;
-    onExplainerToggle?: () => void;
-    tafsirText?: string | null;
-    isTafsirLoading?: boolean;
-    tafsirOptions?: Array<{ id: number; name: string; languageName: string }>;
-    aiExplanation?: ExplainTafsirResponse | null;
-    isExplanationLoading?: boolean;
-    recitations?: Recitation[];
+  surah: Surah | null;
+  verses: Verse[];
+  currentVerseIndex: number;
+  setCurrentVerseIndex: (i: number) => void;
+  goToPreviousVerse: () => void;
+  goToNextVerse: () => void;
+  selectedRecitation?: number | null;
+  selectedTranslation?: number | null;
+  onRecitationChange?: (id: number) => void;
+  onTranslationChange?: (id: number) => void;
+  translationOptions?: Array<{ id: number; name: string; languageName: string }>;
+  selectedTafsir?: number | null;
+  onTafsirChange?: (id: number) => void;
+  isExplainerOpen?: boolean;
+  onExplainerToggle?: () => void;
+  tafsirText?: string | null;
+  isTafsirLoading?: boolean;
+  tafsirOptions?: Array<{ id: number; name: string; languageName: string }>;
+  aiExplanation?: ExplainTafsirResponse | null;
+  isExplanationLoading?: boolean;
+  recitations?: Recitation[];
 }
 
 export default function ReadSurahLayout({
-    surah,
-    verses,
-    currentVerseIndex,
-    setCurrentVerseIndex,
-    goToPreviousVerse,
-    goToNextVerse,
-    selectedRecitation,
-    selectedTranslation,
-    selectedTafsir,
-    onRecitationChange,
-    onTranslationChange,
-    translationOptions = [],
-    onTafsirChange,
-    isExplainerOpen,
-    onExplainerToggle,
-    tafsirText,
-    isTafsirLoading,
-    tafsirOptions = [],
-    aiExplanation,
-    isExplanationLoading,
-    recitations = [],
+  surah,
+  verses,
+  currentVerseIndex,
+  setCurrentVerseIndex,
+  goToPreviousVerse,
+  goToNextVerse,
+  selectedRecitation,
+  selectedTranslation,
+  selectedTafsir,
+  onRecitationChange,
+  onTranslationChange,
+  translationOptions = [],
+  onTafsirChange,
+  isExplainerOpen,
+  onExplainerToggle,
+  tafsirText,
+  isTafsirLoading,
+  tafsirOptions = [],
+  aiExplanation,
+  isExplanationLoading,
+  recitations = [],
 }: Props) {
-    const navigate = useNavigate();
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-    const [isEffectEnabled, setIsEffectEnabled] = useState(false);
-    const [isWordByWordEnabled, setIsWordByWordEnabled] = useState(() => {
-        if (typeof window === 'undefined') return false;
-        const stored = localStorage.getItem('tadabbur_word_by_word');
-        return stored === 'true';
-    });
-    const ambientAudioRef = useRef<HTMLAudioElement | null>(null);
-    const isValidVerseIndex = currentVerseIndex >= 0 && currentVerseIndex < verses.length;
+  const navigate = useNavigate();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isWordByWordEnabled, setIsWordByWordEnabled] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem('tadabbur_word_by_word') === 'true';
+  });
 
-    useEffect(() => {
-        if (typeof window === 'undefined') {
-            return;
-        }
-        const storedPreference = localStorage.getItem('tadabbur_surah_effect');
-        setIsEffectEnabled(storedPreference === 'true');
-    }, []);
+  const isValidVerseIndex = currentVerseIndex >= 0 && currentVerseIndex < verses.length;
 
-    useEffect(() => {
-        if (typeof window === 'undefined') {
-            return;
-        }
-        localStorage.setItem('tadabbur_surah_effect', String(isEffectEnabled));
-    }, [isEffectEnabled]);
+  useEffect(() => {
+    localStorage.setItem('tadabbur_word_by_word', String(isWordByWordEnabled));
+  }, [isWordByWordEnabled]);
 
-    useEffect(() => {
-        if (typeof window === 'undefined') {
-            return;
-        }
-        localStorage.setItem('tadabbur_word_by_word', String(isWordByWordEnabled));
-    }, [isWordByWordEnabled]);
-
-    useEffect(() => {
-        if (typeof window === 'undefined') {
-            return;
-        }
-
-        let audio = ambientAudioRef.current;
-
-        if (isEffectEnabled) {
-            if (!audio) {
-                audio = new Audio('/sounds/rain.mp3');
-                audio.loop = true;
-                audio.volume = 0.15;
-                audio.preload = 'auto';
-                ambientAudioRef.current = audio;
-            }
-
-            const tryPlay = async () => {
-                try {
-                    if (audio && audio.paused) {
-                        await audio.play();
-                    }
-                } catch (err) {
-                    console.warn('Ambient audio playback blocked:', err);
-                }
-            };
-
-            void tryPlay();
-
-            const resumeOnInteraction = () => {
-                void tryPlay();
-                window.removeEventListener('touchstart', resumeOnInteraction);
-                window.removeEventListener('click', resumeOnInteraction);
-            };
-
-            window.addEventListener('touchstart', resumeOnInteraction, { once: true });
-            window.addEventListener('click', resumeOnInteraction, { once: true });
-
-            return () => {
-                window.removeEventListener('touchstart', resumeOnInteraction);
-                window.removeEventListener('click', resumeOnInteraction);
-            };
-        }
-
-        if (audio && !audio.paused) {
-            audio.pause();
-            audio.currentTime = 0;
-        }
-
-        return undefined;
-    }, [isEffectEnabled]);
-
-    useEffect(() => () => {
-        const audio = ambientAudioRef.current;
-        if (audio) {
-            audio.pause();
-            audio.currentTime = 0;
-        }
-    }, []);
-
-    if (!surah || verses.length === 0 || !isValidVerseIndex) {
-        return <div className="flex h-screen min-w-[50px] items-center justify-center">Loading...</div>;
-    }
-    const currentVerse = verses[currentVerseIndex];
-    const cardBackgroundStyle = isEffectEnabled
-        ? {
-              backgroundImage: "url('/images/rain.gif')",
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              backgroundRepeat: 'no-repeat',
-          }
-        : undefined;
-
-
+  if (!surah || verses.length === 0 || !isValidVerseIndex) {
     return (
-        <div className="flex h-screen min-w-[50px] w-full overflow-hidden bg-white dark:bg-gray-900">
-            {isSidebarOpen && (
-                <button
-                    type="button"
-                    aria-label="Hide verse list"
-                    className="fixed inset-0 z-20 bg-black/30 lg:hidden"
-                    onClick={() => setIsSidebarOpen(false)}
-                />
-            )}
-            {/* Custom Sidebar for Verses */}
-            <div
-                className={`fixed inset-y-0 left-0 z-30 flex w-[min(16rem,100vw)] transform flex-col border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 transition-transform duration-200 ease-in-out lg:relative lg:z-0 lg:w-64 lg:translate-x-0 lg:flex lg:flex-col ${
-                    isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-                }`}
+      <div className="flex h-screen items-center justify-center bg-background">
+        <div className="skeleton w-48 h-6" />
+      </div>
+    );
+  }
+
+  const currentVerse = verses[currentVerseIndex];
+
+  return (
+    <div className="flex h-screen w-full overflow-hidden bg-background">
+      {/* Mobile Sidebar Overlay */}
+      {isSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/30 z-dropdown lg:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
+      {/* Left Sidebar - Verses List */}
+      <aside
+        className={`
+          fixed lg:sticky top-0 left-0 h-screen w-[260px] z-sticky
+          bg-surface border-r border-border flex flex-col
+          transition-transform duration-200 ease-out
+          ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+        `}
+      >
+        {/* Sidebar Header */}
+        <div className="h-[56px] flex items-center justify-between px-4 border-b border-border shrink-0">
+          <h2 className="font-semibold text-text">Verses</h2>
+          <button
+            onClick={() => setIsSidebarOpen(false)}
+            className="btn-ghost p-1 lg:hidden"
+            aria-label="Close sidebar"
+          >
+            <FiX size={20} />
+          </button>
+        </div>
+
+        {/* Verse List */}
+        <nav className="flex-1 overflow-y-auto">
+          {verses.map((verse, index) => (
+            <button
+              key={verse.id}
+              onClick={() => {
+                setCurrentVerseIndex(index);
+                setIsSidebarOpen(false);
+              }}
+              className={`
+                w-full text-left px-4 py-3 border-b border-border
+                transition-colors
+                ${index === currentVerseIndex
+                  ? 'bg-primary/5 border-l-2 border-l-primary'
+                  : 'hover:bg-surface-2'
+                }
+              `}
             >
-                <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-                    <h2 className="font-bold text-lg text-primary">Verses</h2>
-                    <button
-                        type="button"
-                        aria-label="Hide verse list"
-                        className="rounded p-2 transition-colors hover:text-primary lg:hidden"
-                        onClick={() => setIsSidebarOpen(false)}
-                    >
-                        <FiX />
-                    </button>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="badge-number text-xs">{verse.verse_key.split(':')[1]}</span>
+                <span className="text-xs text-text-muted">Verse {verse.verse_key.split(':')[1]}</span>
+              </div>
+              <p className="text-xs text-text-muted line-clamp-1">
+                {verse.translation?.slice(0, 50) || 'No translation'}
+              </p>
+            </button>
+          ))}
+        </nav>
+      </aside>
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Top Header */}
+        <header className="sticky top-0 h-[56px] z-sticky bg-surface border-b border-border px-4 flex items-center gap-4 shrink-0">
+          <button
+            onClick={() => setIsSidebarOpen(true)}
+            className="btn-ghost p-2 lg:hidden"
+            aria-label="Open verse list"
+          >
+            <FiMenu size={20} />
+          </button>
+
+          <button
+            onClick={() => navigate('/surahs')}
+            className="btn-secondary py-1.5 px-3"
+          >
+            <FiArrowLeft size={16} />
+            <span className="hidden sm:inline">Back</span>
+          </button>
+
+          <div className="flex-1 min-w-0">
+            <h1 className="font-semibold text-text truncate">
+              {surah.name_english}
+              <span className="font-normal text-text-muted ml-2">{surah.name_arabic}</span>
+            </h1>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+          </div>
+
+          {/* Desktop Navigation */}
+          <div className="hidden sm:flex items-center gap-2">
+            <button
+              onClick={goToPreviousVerse}
+              disabled={currentVerseIndex === 0}
+              className="btn-secondary py-1.5 px-3 disabled:opacity-50"
+            >
+              <FiChevronLeft size={16} />
+              <span>Prev</span>
+            </button>
+            <span className="text-sm text-text-muted tabular-nums">
+              {currentVerseIndex + 1} / {verses.length}
+            </span>
+            <button
+              onClick={goToNextVerse}
+              disabled={currentVerseIndex === verses.length - 1}
+              className="btn-secondary py-1.5 px-3 disabled:opacity-50"
+            >
+              <span>Next</span>
+              <FiChevronRight size={16} />
+            </button>
+          </div>
+        </header>
+
+        {/* Scrollable Content */}
+        <main className="flex-1 overflow-y-auto pb-[88px]">
+          <div className="max-w-[900px] mx-auto p-4 sm:p-6">
+            {/* Toolbar */}
+            <div className="flex flex-wrap items-center gap-2 mb-4">
+              <TajweedLearningButton
+                surahId={surah.id}
+                surahName={surah.name_english}
+                surahNameArabic={surah.name_arabic}
+              />
+              <button
+                onClick={() => setIsWordByWordEnabled(!isWordByWordEnabled)}
+                className={isWordByWordEnabled ? 'btn-primary py-1.5 px-3' : 'btn-secondary py-1.5 px-3'}
+              >
+                Word by Word
+              </button>
+            </div>
+
+            {/* Verse Card */}
+            <div className="card mb-6">
+              {/* Arabic Text */}
+              <div className="bg-surface-2 rounded-lg p-4 mb-4 text-right">
+                <p className="arabic text-2xl sm:text-3xl text-text">
+                  {currentVerse.text}
+                </p>
+              </div>
+
+              {/* Word by Word */}
+              {isWordByWordEnabled && currentVerse.word_translations && currentVerse.word_translations.length > 0 && (
+                <div className="mb-4">
+                  <WordByWord words={currentVerse.word_translations} />
                 </div>
-                <div className="flex-1 overflow-y-auto">
-                    {verses.map((verse, index) => (
-                        <div
-                            key={verse.id}
-                            className={`p-3 border-b border-gray-100 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${
-                                index === currentVerseIndex ? 'bg-blue-50 dark:bg-blue-900/30 border-l-4 border-l-primary' : ''
-                            }`}
-                            onClick={() => {
-                                setCurrentVerseIndex(index);
-                                setIsSidebarOpen(false);
-                            }}
-                        >
-                            <p className="font-medium text-sm">Verse {verse.verse_key.split(':')[1]}</p>
-                            <p className="text-xs text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">
-                                {verse.translation
-                                    ? `${verse.translation.slice(0, 60)}${verse.translation.length > 60 ? '...' : ''}`
-                                    : 'No translation available.'}
-                            </p>
-                        </div>
+              )}
+
+              {/* Translation */}
+              <div className="mb-4">
+                <h3 className="text-sm font-medium text-text-muted mb-2">Translation</h3>
+                {currentVerse.translationHtml ? (
+                  <div
+                    className="text-text leading-relaxed"
+                    dangerouslySetInnerHTML={{ __html: currentVerse.translationHtml }}
+                  />
+                ) : (
+                  <p className="text-text leading-relaxed">{currentVerse.translation}</p>
+                )}
+              </div>
+
+              {/* Actions */}
+              <div className="flex items-center gap-2 pt-4 border-t border-border">
+                <button className="btn-ghost text-xs gap-1">
+                  <FiCopy size={14} />
+                  Copy
+                </button>
+                <button className="btn-ghost text-xs gap-1">
+                  <FiBookmark size={14} />
+                  Save
+                </button>
+              </div>
+            </div>
+
+            {/* Settings Row */}
+            <div className="flex flex-wrap gap-4 mb-6">
+              {onTranslationChange && translationOptions.length > 0 && (
+                <div className="flex-1 min-w-[200px]">
+                  <label className="block text-xs font-medium text-text-muted mb-1">Translation</label>
+                  <select
+                    value={selectedTranslation ?? ''}
+                    onChange={(e) => onTranslationChange(Number(e.target.value))}
+                    className="w-full"
+                  >
+                    {translationOptions.map((t) => (
+                      <option key={t.id} value={t.id}>{t.name} ({t.languageName})</option>
                     ))}
+                  </select>
                 </div>
+              )}
+
+              {onTafsirChange && (
+                <div className="flex-1 min-w-[200px]">
+                  <label className="block text-xs font-medium text-text-muted mb-1">Tafsir</label>
+                  <select
+                    value={selectedTafsir ?? ''}
+                    onChange={(e) => onTafsirChange(Number(e.target.value))}
+                    className="w-full"
+                  >
+                    <option value="">Select Tafsir...</option>
+                    {tafsirOptions.map((t) => (
+                      <option key={t.id} value={t.id}>{t.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
 
-            {/* Main Content */}
-            <div className="flex flex-1 min-w-0 flex-col">
-                {/* Header */}
-                <div className="flex w-full flex-wrap items-center gap-2 border-b border-gray-200 dark:border-gray-700 p-2 sm:flex-nowrap sm:gap-3 sm:p-4 bg-white dark:bg-gray-900">
-                    {/* Back to Chapters Button */}
-                    <button
-                        type="button"
-                        onClick={() => navigate('/surahs')}
-                        className="flex items-center justify-center gap-2 rounded border border-gray-300 dark:border-gray-600 px-2 py-2 text-sm font-medium transition-colors hover:border-primary hover:bg-gray-50 dark:hover:bg-gray-800"
-                        title="Go back to chapters list"
-                    >
-                        <FiArrowLeft className="h-4 w-4 shrink-0" />
-                        <span className="hidden sm:inline">Back</span>
-                    </button>
-                    {/* Logo - Hidden on mobile, visible on tablet/desktop */}
-                    <div className="hidden sm:flex items-center text-primary font-semibold">
-                        <LogoLandscape />
-                    </div>
-                    
-                    <button
-                        type="button"
-                        aria-label="Show verse list"
-                        className="flex items-center justify-center rounded border border-gray-200 dark:border-gray-600 p-2 transition-colors hover:border-primary hover:text-primary lg:hidden"
-                        onClick={() => setIsSidebarOpen(true)}
-                    >
-                        <FiMenu />
-                    </button>
-                    
-                    
-                    
-                    <h1 className="min-w-0 flex-1 truncate text-base font-bold text-primary sm:text-xl">
-                        {surah.name_english} ({surah.name_arabic})
-                    </h1>
-
-                    {/* Theme Toggle */}
-                    <ThemeToggle />
-
-                    {/* Desktop Navigation in Header */}
-                    <div className="hidden sm:flex items-center gap-3">
-                        <button
-                            onClick={goToPreviousVerse}
-                            disabled={currentVerseIndex === 0}
-                            className="flex items-center justify-center gap-2 rounded border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-sm font-medium transition-colors hover:border-primary hover:bg-gray-50 dark:hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                            <FiChevronLeft className="h-4 w-4 shrink-0" />
-                            <span>Previous</span>
-                        </button>
-
-                        <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                            {currentVerseIndex + 1}/{verses.length}
-                        </span>
-
-                        <button
-                            onClick={goToNextVerse}
-                            disabled={currentVerseIndex === verses.length - 1}
-                            className="flex items-center justify-center gap-2 rounded border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-sm font-medium transition-colors hover:border-primary hover:bg-gray-50 dark:hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                            <span>Next</span>
-                            <FiChevronRight className="h-4 w-4 shrink-0" />
-                        </button>
-                    </div>
+            {/* AI Explanation */}
+            <div className="card mb-6">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                  <span className="text-primary text-sm">AI</span>
                 </div>
+                <span className="text-sm font-medium text-text">AI Explanation</span>
+              </div>
 
-                {/* Content */}
-                <div className="flex-1 min-h-0 overflow-y-auto p-3 pb-20 sm:p-6 sm:pb-6 bg-gray-50 dark:bg-gray-800">
-                    <div className="mx-auto w-full max-w-4xl min-w-0">
-                        <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
-                            {/* Tajweed Learning Button */}
-                            <TajweedLearningButton
-                                surahId={surah.id}
-                                surahName={surah.name_english}
-                                surahNameArabic={surah.name_arabic}
-                            />
-                            <label className="inline-flex cursor-pointer items-center gap-3 text-sm font-medium text-gray-700 dark:text-gray-300">
-                                <span className="select-none">Word by Word</span>
-                                <span className="relative inline-flex h-6 w-11 flex-shrink-0">
-                                    <input
-                                        type="checkbox"
-                                        className="peer sr-only"
-                                        checked={isWordByWordEnabled}
-                                        onChange={() => setIsWordByWordEnabled((prev) => !prev)}
-                                        aria-label="Toggle word-by-word translation view"
-                                    />
-                                    <span
-                                        className="absolute inset-0 rounded-full bg-gray-300 dark:bg-gray-600 transition-colors duration-200 ease-in-out peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/40 peer-focus:ring-offset-2 peer-checked:bg-primary"
-                                    />
-                                    <span
-                                        className="absolute top-[2px] left-[2px] h-5 w-5 rounded-full bg-primary shadow transition-all duration-200 ease-in-out peer-checked:left-[calc(100%-1.375rem)]"
-                                    />
-                                </span>
-                            </label>
-                            <label className="inline-flex cursor-pointer items-center gap-3 text-sm font-medium text-gray-700 dark:text-gray-300">
-                                <span className="select-none">Enable effect</span>
-                                <span className="relative inline-flex h-6 w-11 flex-shrink-0">
-                                    <input
-                                        type="checkbox"
-                                        className="peer sr-only"
-                                        checked={isEffectEnabled}
-                                        onChange={() => setIsEffectEnabled((prev) => !prev)}
-                                        aria-label="Toggle animated verse background"
-                                    />
-                                    <span
-                                        className="absolute inset-0 rounded-full bg-gray-300 dark:bg-gray-600 transition-colors duration-200 ease-in-out peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/40 peer-focus:ring-offset-2 peer-checked:bg-primary"
-                                    />
-                                    <span
-                                        className="absolute top-[2px] left-[2px] h-5 w-5 rounded-full bg-primary shadow transition-all duration-200 ease-in-out peer-checked:left-[calc(100%-1.375rem)]"
-                                    />
-                                </span>
-                            </label>
-                        </div>
-
-                        {/* Verse Card */}
-                        <div className="card relative mb-6 overflow-hidden rounded-xl border border-gray-100 shadow-sm" style={cardBackgroundStyle}>
-                            {isEffectEnabled && <div className="absolute inset-0 z-[1] bg-black/40" aria-hidden />}
-
-                            <div className="relative z-[2] mb-4 text-center">
-                                <h2 className="mb-2 text-base font-medium text-primary sm:text-lg">
-                                    Verse {currentVerse.verse_key}
-                                </h2>
-                            </div>
-
-                            {/* Arabic Text */}
-                            <div
-                                className={`relative z-[2] mb-6 rounded-lg p-3 text-right sm:p-4 ${
-                                    isEffectEnabled ? 'bg-white/50 backdrop-blur-sm' : 'bg-gray-50 dark:bg-gray-800'
-                                }`}
-                            >
-                                <p className="text-xl leading-relaxed text-primary quran-text sm:text-2xl">
-                                    {currentVerse.text}
-                                </p>
-                            </div>
-
-                            {/* Word by Word Translation */}
-                            {isWordByWordEnabled && currentVerse.word_translations && currentVerse.word_translations.length > 0 && (
-                                <div className="relative z-[2] mb-6">
-                                    <WordByWord
-                                        words={currentVerse.word_translations}
-                                        isEffectEnabled={isEffectEnabled}
-                                    />
-                                </div>
-                            )}
-
-                            {/* Translation */}
-                            <div className="relative z-[2] mb-6">
-                                <h3 className="mb-2 text-base font-medium text-secondary sm:text-lg">Translation:</h3>
-                                <div
-                                    className={
-                                        isEffectEnabled ? 'rounded-lg bg-white/60 p-3 backdrop-blur-sm sm:p-4' : ''
-                                    }
-                                >
-                                    {currentVerse.translationHtml ? (
-                                        <div
-                                            className="break-words text-base leading-relaxed sm:text-lg"
-                                            dangerouslySetInnerHTML={{ __html: currentVerse.translationHtml }}
-                                        />
-                                    ) : (
-                                        <p className="break-words text-base leading-relaxed sm:text-lg">{currentVerse.translation}</p>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Audio Player - positioned below verse card, above explanation */}
-                            {selectedRecitation && (
-                                <div className="relative z-[2] mb-6">
-                                    {(() => {
-                                        const reciter = recitations.find(r => r.id === selectedRecitation);
-                                        return (
-                                            <AudioPlayer
-                                                surahNumber={currentVerse.surah_id}
-                                                ayahNumber={currentVerseIndex + 1}
-                                                recitationId={selectedRecitation}
-                                                recitationName={reciter?.reciter_name || 'Current Reciter'}
-                                                recitations={recitations}
-                                                onRecitationChange={onRecitationChange}
-                                                isEffectEnabled={isEffectEnabled}
-                                            />
-                                        );
-                                    })()}
-                                </div>
-                            )}
-                        </div>
-
-                        {/* AI-Generated Simplified Explanation */}
-                        <div className="mb-6">
-                            <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                                
-                                
-                                {(onTranslationChange || onTafsirChange) && (
-                                    <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:gap-3">
-                                        {onTranslationChange && translationOptions.length > 0 && (
-                                            <div className="relative w-full sm:w-auto">
-                                                <span className="font-semibold text-primary">
-                                                    Translation
-                                                </span>
-                                                <select
-                                                    id="translation-select"
-                                                    className="w-full rounded border border-gray-300 px-3 py-2 pt-3 text-xs focus:border-primary focus:outline-none sm:min-w-[220px] sm:text-sm"
-                                                    value={selectedTranslation ?? ''}
-                                                    onChange={(e) => onTranslationChange(Number(e.target.value))}
-                                                >
-                                                    <option value="">Select Translation...</option>
-                                                    {translationOptions.map((translation) => (
-                                                        <option key={translation.id} value={translation.id}>
-                                                            {translation.name} {translation.languageName ? `(${translation.languageName})` : ''}
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                            </div>
-                                        )}
-
-                                        {onTafsirChange && (
-                                            <div className="relative w-full sm:w-auto">
-                                                <span className="font-semibold text-primary">
-                                                    Tafsir
-                                                </span>
-                                                <select
-                                                    id="tafsir-select"
-                                                    className="w-full rounded border border-gray-300 px-3 py-2 pt-3 text-xs focus:border-primary focus:outline-none sm:min-w-[220px] sm:text-sm"
-                                                    value={selectedTafsir ?? ''}
-                                                    onChange={(e) => onTafsirChange(Number(e.target.value))}
-                                                >
-                                                    <option value="">Select Tafsir...</option>
-                                                    {tafsirOptions.map((tafsir) => (
-                                                        <option key={tafsir.id} value={tafsir.id}>
-                                                            {tafsir.name} ({tafsir.languageName})
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-                                
-                            {/* AI-Generated Explanation with bot logo */}
-                            <div className="rounded-lg border border-blue-100 bg-blue-50 p-4">
-                                <div className="mb-3 flex items-center gap-3">
-                                    <img
-                                        src="/images/bot-logo.svg"
-                                        alt="AI bot logo"
-                                        className="h-8 w-8 flex-shrink-0"
-                                    />
-                                    <p className="text-sm text-blue-800">
-                                        AI Generated - Simplified explanation to help you understand the verse better.
-                                    </p>
-                                </div>
-                                
-                                {/* Loading State */}
-                                {isExplanationLoading && (
-                                    <div className="space-y-2 animate-pulse">
-                                        <div className="h-3 bg-blue-200 rounded" />
-                                        <div className="h-3 bg-blue-200 rounded" />
-                                        <div className="h-3 bg-blue-200 rounded w-4/5" />
-                                    </div>
-                                )}
-                                
-                                {/* AI Explanation Content - Rendered as Markdown */}
-                                {aiExplanation && !isExplanationLoading &&  (
-                                    <div className="prose prose-sm max-w-none text-gray-700">
-                                        <ReactMarkdown
-                                        components={{
-                                            'pre': ({children, ...props}) => (
-                                                <pre
-                                                style={{
-                                                    color: '#1999',
-                                                    display: 'flex',
-                                                    flexDirection: 'column',
-                                                    background: '#f6f8fa',
-                                                    padding: '10px',
-                                                    borderRadius: '8px',
-                                                    overflowX: 'auto',
-                                                    maxWidth: '100%',
-                                                    boxSizing: 'border-box',
-                                                    fontSize: '1em',
-                                                    whiteSpace: 'pre-wrap',
-                                                    wordWrap: 'normal',
-                                                    wordBreak: 'keep-all',
-
-
-                                                }}
-                                                {...props}
-                                                >
-                                                    {children}
-                                                </pre>
-                                            ),
-                                        }}
-
-                                        >{aiExplanation.explanation}</ReactMarkdown>
-                                    </div>
-                                )}
-
-                                {aiExplanation?.keyTerms && aiExplanation.keyTerms.length > 0 && !isExplanationLoading && (
-                                    <div className="mt-4 rounded-lg border dark:bg-black border-blue-200 bg-white/60 p-4">
-                                        <h4 className="text-sm font-semibold text-blue-900">Key Terms</h4>
-                                        <ul className="mt-3 space-y-2 text-sm text-blue-900">
-                                            {aiExplanation.keyTerms.map((item) => (
-                                                <li key={item.term}>
-                                                    <span className="font-semibold">{item.term}:</span> {item.definition || 'No definition provided.'}
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </div>
-                                )}
-                                
-                                {/* No Tafsir Selected */}
-                                {!selectedTafsir && !isExplanationLoading && (
-                                    <p className="text-sm text-gray-600">Please select a tafsir above to see the AI explanation.</p>
-                                )}
-                                
-                                {/* No Content Yet */}
-                                {selectedTafsir && !aiExplanation && !isExplanationLoading && (
-                                    <p className="text-sm text-gray-600">Generating explanation...</p>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Original Tafsir - Loaded from backend */}
-                        <div className="mb-6">
-                            <h3 className="mb-3 text-base font-medium text-secondary sm:text-lg">Original Tafsir:</h3>
-                            {!selectedTafsir && (
-                                <p className="text-sm text-gray-500">Please select a tafsir above to view the original text.</p>
-                            )}
-                            {selectedTafsir && isTafsirLoading && (
-                                <div className="space-y-2 animate-pulse">
-                                    <div className="h-3 bg-gray-200 rounded" />
-                                    <div className="h-3 bg-gray-200 rounded" />
-                                    <div className="h-3 bg-gray-200 rounded w-2/3" />
-                                </div>
-                            )}
-                            {selectedTafsir && !isTafsirLoading && tafsirText && (
-                                <div 
-                                    className="prose prose-sm max-w-none text-gray-700 break-words text-sm leading-relaxed sm:text-base"
-                                    dangerouslySetInnerHTML={{ __html: tafsirText }}
-                                />
-                            )}
-                            {selectedTafsir && !isTafsirLoading && !tafsirText && (
-                                <p className="text-sm text-gray-500">Tafsir not available for this verse.</p>
-                            )}
-                        </div>
-                    </div>
+              {isExplanationLoading && (
+                <div className="space-y-2">
+                  <div className="skeleton h-4 w-full" />
+                  <div className="skeleton h-4 w-4/5" />
+                  <div className="skeleton h-4 w-3/4" />
                 </div>
+              )}
 
-                {/* Mobile Navigation - Fixed Bottom Bar */}
-                <div className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-between gap-3 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-3 shadow-lg sm:hidden">
-                    <button
-                        onClick={goToPreviousVerse}
-                        disabled={currentVerseIndex === 0}
-                        className="flex flex-1 items-center justify-center gap-2 rounded bg-primary px-4 py-2.5 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                        <FiChevronLeft className="h-5 w-5 shrink-0" />
-                        <span>Previous</span>
-                    </button>
+              {!selectedTafsir && !isExplanationLoading && (
+                <p className="text-sm text-text-muted">Select a tafsir to see the AI explanation.</p>
+              )}
 
-                    <span className="flex-shrink-0 text-sm font-medium">
-                        {currentVerseIndex + 1}/{verses.length}
-                    </span>
-
-                    <button
-                        onClick={goToNextVerse}
-                        disabled={currentVerseIndex === verses.length - 1}
-                        className="flex flex-1 items-center justify-center gap-2 rounded bg-primary px-4 py-2.5 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                        <span>Next</span>
-                        <FiChevronRight className="h-5 w-5 shrink-0" />
-                    </button>
+              {aiExplanation && !isExplanationLoading && (
+                <div className="prose prose-sm max-w-none">
+                  <ReactMarkdown>{aiExplanation.explanation}</ReactMarkdown>
                 </div>
+              )}
+
+              {aiExplanation?.keyTerms && aiExplanation.keyTerms.length > 0 && (
+                <div className="mt-4 pt-4 border-t border-border">
+                  <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wide mb-2">Key Terms</h4>
+                  <ul className="space-y-1">
+                    {aiExplanation.keyTerms.map((item) => (
+                      <li key={item.term} className="text-sm">
+                        <span className="font-medium text-text">{item.term}:</span>{' '}
+                        <span className="text-text-muted">{item.definition}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
 
-            {/* Tafsir Explainer Modal */}
-            {selectedTafsir && isExplainerOpen !== undefined && onExplainerToggle && isValidVerseIndex && (
-                <TafsirExplainerModal
-                    isOpen={isExplainerOpen}
-                    onClose={onExplainerToggle}
+            {/* Original Tafsir */}
+            {selectedTafsir && (
+              <div className="card">
+                <h3 className="text-sm font-medium text-text-muted mb-3">Original Tafsir</h3>
+                {isTafsirLoading && (
+                  <div className="space-y-2">
+                    <div className="skeleton h-4 w-full" />
+                    <div className="skeleton h-4 w-4/5" />
+                  </div>
+                )}
+                {!isTafsirLoading && tafsirText && (
+                  <div
+                    className="prose prose-sm max-w-none text-sm"
+                    dangerouslySetInnerHTML={{ __html: tafsirText }}
+                  />
+                )}
+                {!isTafsirLoading && !tafsirText && (
+                  <p className="text-sm text-text-muted">Tafsir not available for this verse.</p>
+                )}
+              </div>
+            )}
+          </div>
+        </main>
+
+        {/* Bottom Player */}
+        {selectedRecitation && (
+          <div className="fixed bottom-0 left-0 right-0 h-[72px] z-player bg-surface border-t border-border px-4 flex items-center gap-4">
+            <div className="flex items-center gap-2 lg:hidden">
+              <button
+                onClick={goToPreviousVerse}
+                disabled={currentVerseIndex === 0}
+                className="btn-ghost p-2 disabled:opacity-50"
+              >
+                <FiChevronLeft size={20} />
+              </button>
+            </div>
+
+            <div className="flex-1 min-w-0">
+              {(() => {
+                const reciter = recitations.find((r) => r.id === selectedRecitation);
+                return (
+                  <AudioPlayer
                     surahNumber={currentVerse.surah_id}
                     ayahNumber={currentVerseIndex + 1}
-                    tafsirId={selectedTafsir}
-                />
-            )}
-        </div>
-    );
+                    recitationId={selectedRecitation}
+                    recitationName={reciter?.reciter_name || 'Reciter'}
+                    recitations={recitations}
+                    onRecitationChange={onRecitationChange}
+                  />
+                );
+              })()}
+            </div>
+
+            <div className="flex items-center gap-2 lg:hidden">
+              <button
+                onClick={goToNextVerse}
+                disabled={currentVerseIndex === verses.length - 1}
+                className="btn-ghost p-2 disabled:opacity-50"
+              >
+                <FiChevronRight size={20} />
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Modal */}
+      {selectedTafsir && isExplainerOpen !== undefined && onExplainerToggle && (
+        <TafsirExplainerModal
+          isOpen={isExplainerOpen}
+          onClose={onExplainerToggle}
+          surahNumber={currentVerse.surah_id}
+          ayahNumber={currentVerseIndex + 1}
+          tafsirId={selectedTafsir}
+        />
+      )}
+    </div>
+  );
 }

@@ -298,7 +298,7 @@ export default function PlayPleasantlyOverlay({
         style={{ zIndex: 80 }}
         aria-hidden={isMinimized}
       >
-        <div className="absolute inset-0 bg-black">
+        <div className="absolute inset-0 bg-[#0B1310]">
           <div
             className="absolute inset-0 z-10 bg-cover bg-center opacity-40"
             aria-hidden="true"
@@ -312,32 +312,32 @@ export default function PlayPleasantlyOverlay({
           <div
             className="absolute inset-0"
             aria-hidden="true"
-            style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,1), rgba(0,0,0,0.8), rgba(0,0,0,1))' }}
+            style={{ background: 'linear-gradient(to bottom, rgba(11,19,16,1), rgba(11,19,16,0.8), rgba(11,19,16,1))' }}
           />
         </div>
 
-        <div className="relative z-10 flex h-full max-h-screen flex-col overflow-y-auto text-white">
+        <div className="relative z-10 flex h-full max-h-screen flex-col overflow-y-auto text-[#F2F0EA]">
           <header className="flex flex-col gap-4 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-4">
             <div className="flex items-center justify-between gap-3 sm:justify-start">
               <button
                 type="button"
                 onClick={handleMinimize}
-                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white transition hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-green-400"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/30 bg-white/10 text-[#F2F0EA] transition hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-primary"
                 aria-label="Minimize Play Pleasantly"
               >
                 <FiChevronDown className="h-5 w-5" />
               </button>
               <div className="flex flex-col text-left sm:hidden">
-                <p className="text-[0.65rem] uppercase tracking-[0.35em] text-green-200/70">Play Pleasantly</p>
+                <p className="text-[0.65rem] uppercase tracking-[0.35em] text-primary/70">Play Pleasantly</p>
                 <h2 className="mt-1 text-lg font-semibold">{request.title}</h2>
-                {request.subtitle && <p className="text-xs text-green-200/80">{request.subtitle}</p>}
+                {request.subtitle && <p className="text-xs text-primary/80">{request.subtitle}</p>}
               </div>
             </div>
 
             <div className="hidden flex-1 text-center sm:block">
-              <p className="text-xs uppercase tracking-[0.4em] text-green-200/70">Play Pleasantly</p>
+              <p className="text-xs uppercase tracking-[0.4em] text-primary/70">Play Pleasantly</p>
               <h2 className="mt-2 text-xl font-semibold sm:text-2xl">{request.title}</h2>
-              {request.subtitle && <p className="text-sm text-green-200/80">{request.subtitle}</p>}
+              {request.subtitle && <p className="text-sm text-primary/80">{request.subtitle}</p>}
             </div>
 
             <div className="flex w-full flex-col gap-3 sm:w-auto sm:items-end sm:text-right">
@@ -345,7 +345,7 @@ export default function PlayPleasantlyOverlay({
                 <button
                   type="button"
                   onClick={toggleRain}
-                  className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-3 py-2 text-[0.65rem] font-semibold uppercase tracking-[0.25em] text-green-100 transition hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-green-400"
+                  className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-3 py-2 text-[0.65rem] font-semibold uppercase tracking-[0.25em] text-primary/90 transition hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-primary"
                   aria-pressed={isRainEnabled}
                   aria-label={isRainEnabled ? 'Turn off rain ambiance' : 'Turn on rain ambiance'}
                   title={isRainEnabled ? 'Turn off rain ambiance' : 'Turn on rain ambiance'}
@@ -355,12 +355,12 @@ export default function PlayPleasantlyOverlay({
                   <span className="sm:hidden">Rain {isRainEnabled ? 'on' : 'off'}</span>
                 </button>
               </div>
-              <div className="flex flex-col gap-1 text-xs uppercase tracking-[0.3em] text-green-200/70">
+              <div className="flex flex-col gap-1 text-xs uppercase tracking-[0.3em] text-primary/70">
                 <span className="flex items-center gap-2">
-                  <FiVolume2 className="hidden h-4 w-4 text-green-200 sm:block" aria-hidden="true" />
+                  <FiVolume2 className="hidden h-4 w-4 text-primary sm:block" aria-hidden="true" />
                   <span className="sm:hidden">Reciter</span>
                 </span>
-                <span className="text-[0.7rem] font-semibold normal-case tracking-normal text-green-100/80">
+                <span className="text-[0.7rem] font-semibold normal-case tracking-normal text-primary/80">
                   {selectedReciterLabel}
                   {selectedReciter?.style ? ` · ${selectedReciter.style}` : ''}
                 </span>
@@ -371,7 +371,7 @@ export default function PlayPleasantlyOverlay({
                 </label>
                 <select
                   id="pleasantly-reciter-select"
-                  className="w-full min-w-[140px] rounded-lg border border-white/30 bg-black/40 px-3 py-2 text-sm focus:border-green-400 focus:outline-none sm:w-fit sm:max-w-[300px]"
+                  className="w-full min-w-[140px] rounded-lg border border-white/30 bg-[#0B1310]/80 px-3 py-2 text-sm focus:border-primary focus:outline-none sm:w-fit sm:max-w-[300px] text-[#F2F0EA]"
                   value={selectedReciterId ?? ''}
                   onChange={(event) => {
                     const reciterId = Number(event.target.value);
@@ -396,13 +396,13 @@ export default function PlayPleasantlyOverlay({
                 </select>
               </div>
               <div className="flex flex-col gap-1">
-                <span className="text-[0.7rem] font-semibold tracking-wide text-green-100/70">{selectedTranslationLabel}</span>
+                <span className="text-[0.7rem] font-semibold tracking-wide text-primary/70">{selectedTranslationLabel}</span>
                 <label htmlFor="pleasantly-translation-select" className="sr-only">
                   Translation
                 </label>
                 <select
                   id="pleasantly-translation-select"
-                  className="w-full min-w-[140px] rounded-lg border border-white/30 bg-black/40 px-3 py-2 text-sm focus:border-green-400 focus:outline-none sm:w-fit sm:max-w-[300px]"
+                  className="w-full min-w-[140px] rounded-lg border border-white/30 bg-[#0B1310]/80 px-3 py-2 text-sm focus:border-primary focus:outline-none sm:w-fit sm:max-w-[300px] text-[#F2F0EA]"
                   value={selectedTranslationId ?? ''}
                   onChange={(event) => {
                     const translationId = Number(event.target.value);
@@ -432,19 +432,19 @@ export default function PlayPleasantlyOverlay({
 
           <main className="flex flex-1 flex-col items-center justify-center gap-8 px-4 pb-8 text-center sm:px-6 md:pb-10">
             {status === 'loading' && (
-              <div className="flex items-center gap-4 rounded-2xl border border-white/10 bg-black/40 px-6 py-4">
-                <div className="h-6 w-6 animate-spin rounded-full border-2 border-green-300/80 border-t-transparent" aria-hidden="true" />
-                <span className="text-lg font-medium tracking-wide text-green-100">Loading immersive recitation...</span>
+              <div className="flex items-center gap-4 rounded-2xl border border-white/10 bg-[#0B1310]/60 px-6 py-4">
+                <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary/80 border-t-transparent" aria-hidden="true" />
+                <span className="text-lg font-medium tracking-wide text-[#F2F0EA]/90">Loading immersive recitation...</span>
               </div>
             )}
 
             {status === 'error' && (
-              <div className="max-w-xl rounded-2xl border border-red-500/30 bg-red-500/10 px-6 py-6">
-                <p className="text-lg font-semibold text-red-200">{error ?? 'Something went wrong while preparing this experience.'}</p>
+              <div className="max-w-xl rounded-2xl border border-danger/30 bg-danger/10 px-6 py-6">
+                <p className="text-lg font-semibold text-[#F2F0EA]/80">{error ?? 'Something went wrong while preparing this experience.'}</p>
                 <button
                   type="button"
                   onClick={onClose}
-                  className="mt-4 inline-flex items-center justify-center rounded-lg bg-red-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-400"
+                  className="mt-4 inline-flex items-center justify-center rounded-lg bg-danger px-4 py-2 text-sm font-semibold text-[#F2F0EA] transition hover:bg-danger/80"
                 >
                   Stop
                 </button>
@@ -453,25 +453,25 @@ export default function PlayPleasantlyOverlay({
 
             {status === 'ready' && slide && (
               <div className="flex w-full max-w-4xl flex-col items-center gap-6 sm:gap-8">
-                <div className="flex flex-wrap items-center justify-center gap-2 text-[0.7rem] uppercase tracking-[0.3em] text-green-300/80 sm:text-xs">
+                <div className="flex flex-wrap items-center justify-center gap-2 text-[0.7rem] uppercase tracking-[0.3em] text-primary/80 sm:text-xs">
                   <span>{progressText}</span>
-                  {slide.segmentLabel && <span className="text-green-200/70">{slide.segmentLabel}</span>}
+                  {slide.segmentLabel && <span className="text-primary/70">{slide.segmentLabel}</span>}
                 </div>
 
-                <p className="text-3xl font-semibold leading-snug text-white drop-shadow-sm sm:text-4xl md:text-5xl quran-text">
+                <p className="text-3xl font-semibold leading-snug text-[#F2F0EA] drop-shadow-sm sm:text-4xl md:text-5xl quran-text">
                   {slide.arabicText?.slice(0,-1) }
                 </p>
 
-                <p className="max-w-3xl text-base text-green-100/90 sm:text-lg md:text-xl">
+                <p className="max-w-3xl text-base text-[#F2F0EA]/90 sm:text-lg md:text-xl">
                   {slide.translation?.trim() ? slide.translation : 'Translation not available for this verse.'}
                 </p>
 
-                <div className="flex items-center gap-5 text-sm text-green-200/70 sm:gap-6">
+                <div className="flex items-center gap-5 text-sm text-primary/70 sm:gap-6">
                   <button
                     type="button"
                     onClick={retreat}
                     disabled={!canRetreat}
-                    className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white transition hover:bg-white/20 disabled:opacity-40"
+                    className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/20 bg-white/10 text-[#F2F0EA] transition hover:bg-white/20 disabled:opacity-40"
                     aria-label="Previous verse"
                   >
                     <FiChevronLeft className="h-6 w-6" />
@@ -480,7 +480,7 @@ export default function PlayPleasantlyOverlay({
                   <button
                     type="button"
                     onClick={togglePlayback}
-                    className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-green-500 text-white shadow-lg transition hover:bg-green-400"
+                    className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-primary text-on-primary shadow-lg transition hover:bg-primary-hover"
                     aria-label={isVersePlaying ? 'Pause verse audio' : 'Play verse audio'}
                     disabled={isVerseAudioLoading}
                   >
@@ -497,7 +497,7 @@ export default function PlayPleasantlyOverlay({
                     type="button"
                     onClick={advance}
                     disabled={!canAdvance}
-                    className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white transition hover:bg-white/20 disabled:opacity-40"
+                    className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/20 bg-white/10 text-[#F2F0EA] transition hover:bg-white/20 disabled:opacity-40"
                     aria-label="Next verse"
                   >
                     <FiChevronRight className="h-6 w-6" />
@@ -505,11 +505,11 @@ export default function PlayPleasantlyOverlay({
                 </div>
 
                 <div className="h-1 w-full max-w-3xl overflow-hidden rounded-full bg-white/10">
-                  <div className="h-full bg-green-400" style={{ width: `${progressRatio * 100}%` }} aria-hidden="true" />
+                  <div className="h-full bg-primary" style={{ width: `${progressRatio * 100}%` }} aria-hidden="true" />
                 </div>
 
                 {isComplete && (
-                  <div className="mt-4 rounded-xl border border-green-500/30 bg-green-500/10 px-6 py-4 text-green-100">
+                  <div className="mt-4 rounded-xl border border-primary/30 bg-primary/10 px-6 py-4 text-[#F2F0EA]">
                     <p className="text-sm font-medium tracking-wide">Reflection complete. Take a moment to internalize what you just heard.</p>
                   </div>
                 )}
@@ -517,7 +517,7 @@ export default function PlayPleasantlyOverlay({
             )}
           </main>
 
-          <footer className="px-6 pb-6 text-xs text-green-200/60">
+          <footer className="px-6 pb-6 text-xs text-primary/60">
             <p>Tip: Use the left and right arrow keys to navigate verses, and spacebar to play or pause.</p>
           </footer>
         </div>
@@ -532,11 +532,11 @@ export default function PlayPleasantlyOverlay({
           }`}
           style={{ zIndex: 70 }}
         >
-          <div className="mx-auto flex max-w-3xl items-center gap-3 rounded-2xl border border-white/20 bg-zinc-900/95 px-4 py-3 text-white shadow-lg backdrop-blur">
+          <div className="mx-auto flex max-w-3xl items-center gap-3 rounded-2xl border border-white/20 bg-[#0B1310]/95 px-4 py-3 text-[#F2F0EA] shadow-lg backdrop-blur">
             <button
               type="button"
               onClick={handleExpand}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-[#F2F0EA] transition hover:bg-white/20"
               aria-label="Expand Play Pleasantly"
             >
               <FiChevronUp className="h-5 w-5" />
@@ -544,7 +544,7 @@ export default function PlayPleasantlyOverlay({
 
             <div className="flex min-w-0 flex-1 flex-col">
               <span className="truncate text-sm font-semibold">{request.title}</span>
-              <span className="truncate text-xs text-green-200/80">
+              <span className="truncate text-xs text-primary/80">
                 {status === 'loading'
                   ? 'Preparing verses...'
                   : status === 'error'
@@ -552,7 +552,7 @@ export default function PlayPleasantlyOverlay({
                   : `${progressText}${slide?.segmentLabel ? ` · ${slide.segmentLabel}` : ''}`}
               </span>
               <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-white/10" aria-hidden="true">
-                <div className="h-full bg-green-400" style={{ width: `${progressRatio * 100}%` }} />
+                <div className="h-full bg-primary" style={{ width: `${progressRatio * 100}%` }} />
               </div>
             </div>
 
@@ -560,7 +560,7 @@ export default function PlayPleasantlyOverlay({
               <button
                 type="button"
                 onClick={togglePlayback}
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-green-500 text-white transition hover:bg-green-400"
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-on-primary transition hover:bg-primary-hover"
                 aria-label={isVersePlaying ? 'Pause verse audio' : 'Play verse audio'}
                 disabled={isVerseAudioLoading || status !== 'ready'}
               >
@@ -575,7 +575,7 @@ export default function PlayPleasantlyOverlay({
               <button
                 type="button"
                 onClick={onClose}
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-[#F2F0EA] transition hover:bg-white/20"
                 aria-label="Stop Play Pleasantly"
               >
                 <FiX className="h-5 w-5" />
