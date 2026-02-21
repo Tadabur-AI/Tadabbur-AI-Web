@@ -77,6 +77,7 @@ export default function ReadSurahLayout({
 }: Props) {
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
   const [isWordByWordEnabled, setIsWordByWordEnabled] = useState(() => {
     if (typeof window === 'undefined') return false;
     return localStorage.getItem('tadabbur_word_by_word') === 'true';
@@ -87,6 +88,18 @@ export default function ReadSurahLayout({
   useEffect(() => {
     localStorage.setItem('tadabbur_word_by_word', String(isWordByWordEnabled));
   }, [isWordByWordEnabled]);
+
+  const handleCopy = async (verse: Verse, surahName: string) => {
+    const text = `${verse.text}\n\n${verse.translation}\n\n— ${surahName} ${verse.verse_key}`;
+    
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
 
   if (!surah || verses.length === 0 || !isValidVerseIndex) {
     return (
@@ -263,9 +276,9 @@ export default function ReadSurahLayout({
 
               {/* Actions */}
               <div className="flex items-center gap-2 pt-4 border-t border-border">
-                <button className="btn-ghost text-xs gap-1">
+                <button onClick={() => handleCopy(currentVerse, surah.name_english)} className="btn-ghost text-xs gap-1">
                   <FiCopy size={14} />
-                  Copy
+                  {copied ? 'Copied!' : 'Copy'}
                 </button>
                 <button className="btn-ghost text-xs gap-1">
                   <FiBookmark size={14} />
