@@ -6,7 +6,7 @@ interface ReadWithTafsserButtonProps extends ButtonHTMLAttributes<HTMLButtonElem
 }
 
 export default function ReadWithTafsserButton({ 
-  label = 'Tafsir', 
+  label = 'Read', 
   className = '', 
   type = 'button', 
   ...rest 
