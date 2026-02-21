@@ -139,6 +139,8 @@ export default function ReadSurahPage() {
   const [isTafsirLoading, setIsTafsirLoading] = useState(false);
   const tafseerCache = useRef<Map<string, RetrieveTafseerItem[]>>(new Map());
   const explanationCache = useRef<Map<string, ExplainTafsirResponse>>(new Map());
+  // Tracks which verse-key the current `tafsirText` belongs to to avoid race conditions
+  const tafsirTextForVerseRef = useRef<string | null>(null);
   
   // Recitations data state
   const [recitations, setRecitations] = useState<Recitation[]>([]);
@@ -356,14 +358,24 @@ export default function ReadSurahPage() {
 
   // Load tafsir text when verse or tafsir selection changes - with retry logic
   useEffect(() => {
+    let ignore = false;
+
     const loadTafsirText = async () => {
+      // Clear ref/state early so other effects know tafsirText is no longer valid for previous verse
       if (!selectedTafsir || !verses[currentVerseIndex]) {
-        setTafsirText(null);
+        if (!ignore) {
+          tafsirTextForVerseRef.current = null;
+          setTafsirText(null);
+        }
         return;
       }
 
-      setIsTafsirLoading(true);
-      setTafsirText(null);
+      if (!ignore) {
+        setIsTafsirLoading(true);
+        // mark that tafsirText no longer belongs to any verse until we set it below
+        tafsirTextForVerseRef.current = null;
+        setTafsirText(null);
+      }
 
       const currentVerse = verses[currentVerseIndex];
       const cacheKey = `${currentVerse.surah_id}-${selectedTafsir}`;
@@ -371,8 +383,11 @@ export default function ReadSurahPage() {
       const cachedEntries = tafseerCache.current.get(cacheKey);
 
       if (cachedEntries) {
+        if (ignore) return;
         const verseTafsir = selectBestTafsirEntry(cachedEntries, currentVerse);
         setTafsirText(verseTafsir?.text ?? null);
+        // record which verse this tafsirText belongs to (synchronous ref update)
+        tafsirTextForVerseRef.current = currentVerse.verse_key;
         setIsTafsirLoading(false);
         return;
       }
@@ -387,9 +402,13 @@ export default function ReadSurahPage() {
             tafseerId: selectedTafsir,
           });
 
+          if (ignore) return;
+
           tafseerCache.current.set(cacheKey, response);
           const verseTafsir = selectBestTafsirEntry(response, currentVerse);
           setTafsirText(verseTafsir?.text ?? null);
+          // record which verse this tafsirText belongs to (synchronous ref update)
+          tafsirTextForVerseRef.current = currentVerse.verse_key;
           setIsTafsirLoading(false);
           return;
         } catch (error) {
@@ -397,8 +416,11 @@ export default function ReadSurahPage() {
           console.error(`Tafsir fetch attempt ${attempt + 1}/${maxRetries} failed:`, lastError);
 
           if (attempt === maxRetries - 1) {
-            setTafsirText(null);
-            setIsTafsirLoading(false);
+            if (!ignore) {
+              tafsirTextForVerseRef.current = null;
+              setTafsirText(null);
+              setIsTafsirLoading(false);
+            }
           } else {
             await new Promise((resolve) => setTimeout(resolve, Math.pow(2, attempt) * 1000));
           }
@@ -407,13 +429,21 @@ export default function ReadSurahPage() {
     };
 
     void loadTafsirText();
+
+    return () => {
+      ignore = true;
+    };
   }, [selectedTafsir, currentVerseIndex, verses]);
 
   // Auto-generate AI explanation when verse or tafsir changes - ONLY AFTER tafsir is loaded
   useEffect(() => {
+    let ignore = false;
+
     const generateExplanation = async () => {
       if (!selectedTafsir || !verses[currentVerseIndex] || !tafsirText) {
-        setAiExplanation(null);
+        if (!ignore) {
+          setAiExplanation(null);
+        }
         return;
       }
 
@@ -423,24 +453,42 @@ export default function ReadSurahPage() {
       }
 
       const currentVerse = verses[currentVerseIndex];
+
+      // Guard against race where `tafsirText` still contains the previous verse's text.
+      // We update `tafsirTextForVerseRef` synchronously when we set `tafsirText`, so verify it matches.
+      if (tafsirTextForVerseRef.current !== currentVerse.verse_key) {
+        // tafsirText does not belong to the current verse yet — wait for correct tafsirText
+        if (!ignore) {
+          setAiExplanation(null);
+          setIsExplanationLoading(false);
+        }
+        return;
+      }
+
       const cacheKey = `${currentVerse.verse_key}-${selectedTafsir}`;
       const plainTafsir = stripHtml(tafsirText);
 
       if (!plainTafsir) {
-        setAiExplanation(null);
-        setIsExplanationLoading(false);
+        if (!ignore) {
+          setAiExplanation(null);
+          setIsExplanationLoading(false);
+        }
         return;
       }
 
       const cachedExplanation = explanationCache.current.get(cacheKey);
       if (cachedExplanation) {
-        setAiExplanation(cachedExplanation);
-        setIsExplanationLoading(false);
+        if (!ignore) {
+          setAiExplanation(cachedExplanation);
+          setIsExplanationLoading(false);
+        }
         return;
       }
 
-      setIsExplanationLoading(true);
-      setAiExplanation(null);
+      if (!ignore) {
+        setIsExplanationLoading(true);
+        setAiExplanation(null);
+      }
 
       const maxRetries = 3;
       let lastError: Error | null = null;
@@ -448,6 +496,8 @@ export default function ReadSurahPage() {
       for (let attempt = 0; attempt < maxRetries; attempt++) {
         try {
           const result = await explainTafsir(plainTafsir);
+          if (ignore) return;
+
           explanationCache.current.set(cacheKey, result);
           setAiExplanation(result);
           setIsExplanationLoading(false);
@@ -457,8 +507,10 @@ export default function ReadSurahPage() {
           console.error(`AI explanation attempt ${attempt + 1}/${maxRetries} failed:`, lastError);
 
           if (attempt === maxRetries - 1) {
-            setAiExplanation(null);
-            setIsExplanationLoading(false);
+            if (!ignore) {
+              setAiExplanation(null);
+              setIsExplanationLoading(false);
+            }
           } else {
             await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
           }
@@ -467,6 +519,10 @@ export default function ReadSurahPage() {
     };
 
     void generateExplanation();
+
+    return () => {
+      ignore = true;
+    };
   }, [selectedTafsir, currentVerseIndex, verses, tafsirText, isTafsirLoading]);
 
   const goToPreviousVerse = () => {
