@@ -5,16 +5,14 @@ import { type WordTranslation } from '../../services/apis';
 interface WordByWordProps {
   words: WordTranslation[];
   className?: string;
-  isEffectEnabled?: boolean;
 }
 
 interface WordItemProps {
   word: WordTranslation;
   index: number;
-  isEffectEnabled?: boolean;
 }
 
-function WordItem({ word, index, isEffectEnabled }: WordItemProps) {
+function WordItem({ word, index }: WordItemProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -42,33 +40,28 @@ function WordItem({ word, index, isEffectEnabled }: WordItemProps) {
 
   return (
     <div
-      className={`relative flex flex-col items-center p-2 rounded-lg cursor-pointer transition-all duration-200 ${
-        isHovered
-          ? isEffectEnabled
-            ? 'bg-white/60 backdrop-blur-sm shadow-md'
-            : 'bg-primary/10 shadow-md'
-          : isEffectEnabled
-          ? 'bg-white/30 hover:bg-white/50'
-          : 'bg-surface-2 hover:bg-primary/5'
-      }`}
+      className={`
+        relative flex flex-col items-center p-2 rounded-lg cursor-pointer transition-colors
+        ${isHovered ? 'bg-surface-2' : 'hover:bg-surface-2'}
+      `}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       role="button"
       tabIndex={0}
       aria-label={`Word ${index + 1}: ${word.text}`}
     >
-      <span className="quran-text text-xl sm:text-2xl text-primary leading-relaxed">
+      <span className="arabic text-lg sm:text-xl text-text">
         {word.text}
       </span>
 
       {word.transliteration && (
-        <span className="text-xs text-text-muted mt-1 italic">
+        <span className="text-xs text-text-muted mt-0.5 italic">
           {word.transliteration}
         </span>
       )}
 
       {word.translation && (
-        <span className="text-xs text-text mt-0.5 font-medium text-center">
+        <span className="text-xs text-text-muted mt-0.5 text-center">
           {word.translation}
         </span>
       )}
@@ -78,11 +71,10 @@ function WordItem({ word, index, isEffectEnabled }: WordItemProps) {
           type="button"
           onClick={playAudio}
           disabled={isPlaying}
-          className={`absolute -top-1 -right-1 p-1.5 rounded-full transition-colors ${
-            isPlaying
-              ? 'bg-primary text-on-primary animate-pulse'
-              : 'bg-primary/80 text-on-primary hover:bg-primary'
-          }`}
+          className={`
+            absolute -top-1 -right-1 p-1 rounded-full transition-colors
+            ${isPlaying ? 'bg-primary text-on-primary animate-pulse' : 'bg-primary/80 text-on-primary hover:bg-primary'}
+          `}
           aria-label="Play word pronunciation"
         >
           <FiVolume2 className="h-3 w-3" />
@@ -92,32 +84,23 @@ function WordItem({ word, index, isEffectEnabled }: WordItemProps) {
   );
 }
 
-export default function WordByWord({ words, className = '', isEffectEnabled }: WordByWordProps) {
+export default function WordByWord({ words, className = '' }: WordByWordProps) {
   if (!words || words.length === 0) {
     return (
-      <div className={`text-sm text-text-muted text-center py-4 ${className}`}>
+      <p className={`text-sm text-text-muted text-center py-4 ${className}`}>
         Word-by-word data not available for this verse.
-      </div>
+      </p>
     );
   }
 
   return (
-    <div className={`${className}`}>
-      <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-sm font-medium text-text">
-          Word by Word ({words.length} words)
-        </h3>
-        <span className="text-xs text-text-muted">
-          Hover/tap for translation • Click speaker for audio
-        </span>
-      </div>
+    <div className={className}>
+      <p className="text-xs text-text-muted mb-2">
+        Word by Word ({words.length} words) — hover for audio
+      </p>
 
       <div
-        className={`flex flex-wrap gap-2 justify-end ${
-          isEffectEnabled
-            ? 'rounded-lg bg-white/40 p-3 backdrop-blur-sm'
-            : 'rounded-lg bg-surface p-3 border border-border'
-        }`}
+        className="flex flex-wrap gap-2 justify-end bg-surface-2 rounded-lg p-3"
         dir="rtl"
       >
         {words.map((word, index) => (
@@ -125,7 +108,6 @@ export default function WordByWord({ words, className = '', isEffectEnabled }: W
             key={`${word.text}-${index}`}
             word={word}
             index={index}
-            isEffectEnabled={isEffectEnabled}
           />
         ))}
       </div>

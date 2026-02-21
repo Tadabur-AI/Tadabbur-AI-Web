@@ -36,18 +36,11 @@ export default function TajweedLearningButton({
       type="button"
       onClick={handleClick}
       disabled={isLoading}
-      className={`
-        inline-flex items-center gap-2 px-4 py-2 
-        bg-primary text-white rounded-lg 
-        hover:bg-secondary/80 
-        disabled:opacity-50 disabled:cursor-not-allowed 
-        transition-colors
-        ${className}
-      `}
+      className={`btn-secondary ${className}`}
       aria-label="Start Tajweed Learning Mode"
     >
-      <FiBookOpen className="w-4 h-4" />
-      <span className="text-sm font-medium">Tajweed Learning</span>
+      <FiBookOpen size={16} />
+      <span>Tajweed</span>
     </button>
   );
 }

@@ -1,5 +1,5 @@
 import { FiBookOpen, FiHome, FiMessageCircle } from "react-icons/fi";
-import DashboardLayout, { type sidebarItems } from "../../layouts/DashboardLayout";
+import DashboardLayout, { type SidebarItem } from "../../layouts/DashboardLayout";
 import { useEffect, useState } from "react";
 import { listSurahs, type SurahSummary } from "../../services/apis";
 
@@ -17,7 +17,7 @@ export default function Homepage() {
 
         void loadSurahs();
     }, []);
-    const sidebarItems:sidebarItems[] = [
+    const sidebarItems: SidebarItem[] = [
         {
             label: "Home",
             icon: <FiHome className="text-xl" />,

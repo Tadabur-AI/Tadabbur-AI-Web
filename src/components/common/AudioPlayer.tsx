@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { FiPlay, FiPause } from 'react-icons/fi';
 import { retrieveRecitation, type RetrieveRecitationVerse, type ReciterSummary } from '../../services/apis';
 
@@ -106,14 +106,14 @@ export default function AudioPlayer({
     setCurrentTime(0);
   }, [audioUrl]);
 
-  const formatTime = (time: number) => {
+  const formatTime = useCallback((time: number) => {
     if (!isFinite(time)) return '0:00';
     const minutes = Math.floor(time / 60);
     const seconds = Math.floor(time % 60);
     return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-  };
+  }, []);
 
-  const togglePlay = async () => {
+  const togglePlay = useCallback(async () => {
     const audio = audioRef.current;
     if (!audio) return;
 
@@ -131,28 +131,42 @@ export default function AudioPlayer({
       setError('Playback failed');
       setIsPlaying(false);
     }
-  };
+  }, [isPlaying]);
 
-  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSeek = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const audio = audioRef.current;
     if (!audio) return;
     const newTime = parseFloat(e.target.value);
     audio.currentTime = newTime;
     setCurrentTime(newTime);
-  };
+  }, []);
 
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   const getReciterName = (r: Recitation | ReciterSummary): string => {
     if ('reciter_name' in r) return r.reciter_name;
     if ('translatedName' in r && r.translatedName) return r.translatedName.name;
-    if ('name' in r) return r.name;
-    return 'Reciter';
+    return 'name' in r ? r.name : 'Reciter';
   };
 
   return (
     <div className={`flex items-center gap-3 w-full ${className}`}>
       {audioUrl && <audio ref={audioRef} src={audioUrl} preload="metadata" />}
+
+      {recitations.length > 0 && onRecitationChange && (
+        <select
+          value={recitationId || ''}
+          onChange={(e) => onRecitationChange(Number(e.target.value))}
+          className="flex-1 bg-surface border border-border rounded-lg text-sm px-3 py-2 min-w-0"
+        >
+          {recitations.map((r) => (
+            <option key={r.id} value={r.id}>
+              {getReciterName(r)}
+              {'style' in r ? ` (${r.style})` : ''}
+            </option>
+          ))}
+        </select>
+      )}
 
       <button
         onClick={togglePlay}
@@ -165,13 +179,13 @@ export default function AudioPlayer({
         ) : isPlaying ? (
           <FiPause size={18} />
         ) : (
-          <FiPlay size={18} className="ml-0.5" />
+          <FiPlay size={18} />
         )}
       </button>
 
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <div className="flex-1 h-1 bg-surface-2 rounded-full overflow-hidden">
+        <div className="relative">
+          <div className="h-1 bg-surface-2 rounded-full overflow-hidden">
             <div
               className="h-full bg-primary transition-all"
               style={{ width: `${progress}%` }}
@@ -184,7 +198,7 @@ export default function AudioPlayer({
             value={currentTime}
             onChange={handleSeek}
             disabled={!audioUrl || isLoading}
-            className="sr-only"
+            className="absolute inset-0 w-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
           />
         </div>
         <div className="flex justify-between text-xs text-text-muted mt-1">
@@ -193,23 +207,7 @@ export default function AudioPlayer({
         </div>
       </div>
 
-      {recitations.length > 0 && onRecitationChange && (
-        <select
-          value={recitationId || ''}
-          onChange={(e) => onRecitationChange(Number(e.target.value))}
-          className="w-32 text-xs bg-surface-2 border-border rounded px-2 py-1 hidden sm:block"
-        >
-          {recitations.map((r) => (
-            <option key={r.id} value={r.id}>
-              {getReciterName(r)}
-            </option>
-          ))}
-        </select>
-      )}
-
-      {error && (
-        <span className="text-xs text-danger shrink-0">{error}</span>
-      )}
+      {error && <span className="text-xs text-danger shrink-0">{error}</span>}
     </div>
   );
 }

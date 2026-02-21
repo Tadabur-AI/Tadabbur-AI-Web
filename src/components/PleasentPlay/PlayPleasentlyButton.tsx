@@ -5,11 +5,16 @@ interface PlayPleasentlyButtonProps extends ButtonHTMLAttributes<HTMLButtonEleme
   label?: string;
 }
 
-export default function PlayPleasentlyButton({ label = 'Play Pleasantly', className = '', type = 'button', ...rest }: PlayPleasentlyButtonProps) {
+export default function PlayPleasentlyButton({ 
+  label = 'Play', 
+  className = '', 
+  type = 'button', 
+  ...rest 
+}: PlayPleasentlyButtonProps) {
   return (
     <button
       type={type}
-      className={`flex items-center gap-2 rounded-md w-fit px-4 py-2 text-sm font-semibold uppercase tracking-wide text-on-primary transition focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background focus:ring-primary disabled:opacity-60 disabled:cursor-not-allowed bg-gradient-to-l from-primary via-accent to-primary shadow-md hover:shadow-lg ${className}`}
+      className={`btn-primary ${className}`}
       {...rest}
     >
       <FiPlay size={16} />

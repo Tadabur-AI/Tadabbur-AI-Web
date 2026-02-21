@@ -388,19 +388,13 @@ export default function ReadSurahLayout({
             </div>
 
             <div className="flex-1 min-w-0">
-              {(() => {
-                const reciter = recitations.find((r) => r.id === selectedRecitation);
-                return (
-                  <AudioPlayer
-                    surahNumber={currentVerse.surah_id}
-                    ayahNumber={currentVerseIndex + 1}
-                    recitationId={selectedRecitation}
-                    recitationName={reciter?.reciter_name || 'Reciter'}
-                    recitations={recitations}
-                    onRecitationChange={onRecitationChange}
-                  />
-                );
-              })()}
+              <AudioPlayer
+                surahNumber={currentVerse.surah_id}
+                ayahNumber={currentVerseIndex + 1}
+                recitationId={selectedRecitation}
+                recitations={recitations}
+                onRecitationChange={onRecitationChange}
+              />
             </div>
 
             <div className="flex items-center gap-2 lg:hidden">
