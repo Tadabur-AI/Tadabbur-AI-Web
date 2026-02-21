@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FiSearch, FiBookmark } from 'react-icons/fi';
+import { FiSearch, FiBookmark, FiBookOpen } from 'react-icons/fi';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import PlayPleasentlyButton from '../../components/PleasentPlay/PlayPleasentlyButton';
 import ReadWithTafsserButton from '../../components/PleasentPlay/ReadWithTafsserButton';
@@ -81,7 +81,7 @@ export default function ListSurahsPage() {
   return (
     <DashboardLayout
       sidebarItems={[
-        { label: "Surahs", path: "/surahs" },
+        { label: "Surahs", icon: <FiBookOpen size={18} />, path: "/surahs" },
         { label: "Saved", icon: <FiBookmark size={18} />, onClick: () => setActiveTab('saved') },
       ]}
       screenTitle="Quran"
