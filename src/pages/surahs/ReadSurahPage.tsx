@@ -116,6 +116,7 @@ export default function ReadSurahPage() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const startAyah = parseAyahParam(searchParams.get('start'));
   const endAyah = parseAyahParam(searchParams.get('end'));
+  const ayahParam = parseAyahParam(searchParams.get('ayah'));
   
   const [selectedRecitation, setSelectedRecitation] = useState<number | null>(() => {
     const saved = localStorage.getItem('tadabbur_recitation');
@@ -338,8 +339,19 @@ export default function ReadSurahPage() {
 
     const nextVerses = filtered.length > 0 ? filtered : allVerses;
     setVerses(nextVerses);
-    setCurrentVerseIndex(0);
-  }, [allVerses, startAyah, endAyah]);
+
+    // Determine initial verse index based on ayah param or default to 0
+    if (ayahParam) {
+      const ayahIndex = nextVerses.findIndex((verse) => verse.id === ayahParam);
+      if (ayahIndex !== -1) {
+        setCurrentVerseIndex(ayahIndex);
+      } else {
+        setCurrentVerseIndex(0);
+      }
+    } else {
+      setCurrentVerseIndex(0);
+    }
+  }, [allVerses, startAyah, endAyah, ayahParam]);
 
   useEffect(() => {
     let ignore = false;
