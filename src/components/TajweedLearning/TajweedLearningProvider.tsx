@@ -179,17 +179,17 @@ export function TajweedLearningProvider({ children }: { children: React.ReactNod
   );
 
   const closeLearning = useCallback(() => {
-    setState({
+    setState((prev) => ({
       request: null,
       slides: [],
       status: 'idle',
       error: null,
       currentVerseIndex: 0,
       currentWordIndex: 0,
-      reciters: [],
-      selectedReciterId: null,
-      playFullVerseAfter: true,
-    });
+      reciters: prev.reciters,
+      selectedReciterId: prev.selectedReciterId,
+      playFullVerseAfter: prev.playFullVerseAfter,
+    }));
   }, []);
 
   const setCurrentVerseIndex = useCallback((index: number) => {

@@ -682,6 +682,18 @@ export default function TajweedLearningOverlay({
                       <span className="text-on-primary/80 text-xs font-medium">Verse {currentSlide.ayahNumber}</span>
                     </div>
                     <div className="flex items-center gap-2">
+                      {/* Manual Play Full Verse Button */}
+                      {selectedReciterId && !isPlayingFullVerse && (
+                        <button
+                          type="button"
+                          onClick={() => void playFullVerse()}
+                          className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white/20 hover:bg-white/30 text-on-primary text-xs transition-colors"
+                          title="Play full verse recitation"
+                        >
+                          <FiVolume2 className="w-3 h-3" />
+                          Play Verse
+                        </button>
+                      )}
                       {isPlayingFullVerse && (
                         <span className="flex items-center gap-1.5 text-on-primary/90 text-xs">
                           <FiVolume2 className="w-3 h-3 animate-pulse" />
