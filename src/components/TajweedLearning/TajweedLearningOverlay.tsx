@@ -833,7 +833,7 @@ export default function TajweedLearningOverlay({
               className="p-3 rounded-xl bg-surface-2 hover:bg-surface-2 hover:border-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all text-text-muted"
               aria-label="Previous word"
             >
-              <FiChevronRight className="w-6 h-6" />
+              <FiChevronLeft className="w-6 h-6" />
             </button>
 
             {/* Play/Pause */}
@@ -865,7 +865,7 @@ export default function TajweedLearningOverlay({
               className="p-3 rounded-xl bg-surface-2 hover:bg-surface-2 hover:border-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all text-text-muted"
               aria-label="Next word"
             >
-              <FiChevronLeft className="w-6 h-6" />
+              <FiChevronRight className="w-6 h-6" />
             </button>
           </div>
 
