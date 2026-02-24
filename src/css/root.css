@@ -81,7 +81,7 @@ button, input, select, textarea {
 }
 
 .quran-text {
-  font-family: 'Noto Naskh Arabic', 'Quran', serif;
+  font-family: 'Quran';
   word-spacing: 4px;
   line-height: 2;
   direction: rtl;

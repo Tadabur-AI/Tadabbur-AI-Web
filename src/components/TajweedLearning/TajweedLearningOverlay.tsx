@@ -536,7 +536,7 @@ export default function TajweedLearningOverlay({
                 ) : displayWord ? (
                   <div className="space-y-8">
                     <div className="py-8">
-                      <p className="quran-text text-7xl sm:text-8xl md:text-9xl text-primary leading-normal">
+                      <p className="arabic text-7xl sm:text-8xl md:text-9xl text-primary leading-normal">
                         {displayWord.text}
                       </p>
                     </div>
