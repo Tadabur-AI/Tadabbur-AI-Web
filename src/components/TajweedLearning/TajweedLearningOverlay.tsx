@@ -590,7 +590,7 @@ export default function TajweedLearningOverlay({
                 onClick={() => handleVerseChange(index)}
                 className={`w-full group relative rounded-lg overflow-hidden transition-all duration-200 ${
                   index === currentVerseIndex
-                    ? 'ring-2 ring-primary bg-surface-2'
+                    ? ' bg-surface-2'
                     : 'hover:bg-surface-2 bg-transparent'
                 } ${isSidebarCollapsed ? 'p-1' : 'p-2'}`}
               >
@@ -800,7 +800,7 @@ export default function TajweedLearningOverlay({
       </div>
 
       {/* Bottom Controls - Presenter Style */}
-      <footer className="flex-shrink-0 bg-surface-2 border-t border-border">
+      <footer className="shrink-0 bg-surface-2 border-t border-border">
         <div className="flex items-center justify-between px-4 py-3">
           {/* Mobile Slide Selector */}
           <div className="lg:hidden flex items-center gap-2 overflow-x-auto max-w-[40%]">
@@ -843,7 +843,7 @@ export default function TajweedLearningOverlay({
               className={`p-4 rounded-2xl transition-all shadow-lg ${
                 isPlaying 
                   ? 'bg-primary hover:bg-primary-hover text-on-primary' 
-                  : 'bg-accent hover:bg-accent text-on-accent'
+                  : 'bg-surface-2 hover:bg-surface-3 text-text-muted'
               }`}
               aria-label={isPlaying ? 'Pause' : 'Play'}
             >
