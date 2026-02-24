@@ -145,7 +145,7 @@ export default function ReadSurahLayout({
       {/* Left Sidebar - Verses List */}
       <aside
         className={`
-          fixed lg:sticky top-0 left-0 h-screen w-[260px] z-sticky
+          fixed lg:sticky top-0 left-0 h-[100dvh] lg:h-screen w-[260px] z-modal
           bg-surface border-r border-border flex flex-col
           transition-transform duration-200 ease-out
           ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
