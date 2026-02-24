@@ -656,7 +656,7 @@ export default function TajweedLearningOverlay({
                   <div className="absolute inset-0 rounded-full border-4 border-border" />
                   <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin" />
                 </div>
-                <p className="text-text-muted text-lg">Loading presentation...</p>
+                <p className="text-text-muted text-lg">Loading...</p>
               </div>
             )}
 
