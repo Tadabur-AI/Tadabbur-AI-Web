@@ -79,34 +79,7 @@ export default function TajweedLearningOverlay({
   const actualWords = currentSlide ? getActualWords(currentSlide.words) : [];
   const displayWord = actualWords[currentWordIndex];
 
-  const advanceWord = useCallback((isAutoAdvance = false) => {
-    if (!currentSlide) return;
-
-    if (verseAudioRef.current) {
-      verseAudioRef.current.pause();
-      verseAudioRef.current.currentTime = 0;
-    }
-    setIsPlayingFullVerse(false);
-
-    const words = getActualWords(currentSlide.words);
-
-    if (currentWordIndex < words.length - 1) {
-      onWordIndexChange(currentWordIndex + 1);
-    } else if (currentVerseIndex < slides.length - 1) {
-      if (isAutoAdvance && playFullVerseAfter && selectedReciterId) {
-        isAutoAdvanceRef.current = true;
-        void playFullVerse().then(() => {
-          onVerseIndexChange(currentVerseIndex + 1);
-          isAutoAdvanceRef.current = false;
-        });
-      } else {
-        onVerseIndexChange(currentVerseIndex + 1);
-      }
-    } else {
-      setIsPlaying(false);
-    }
-  }, [currentSlide, currentWordIndex, currentVerseIndex, slides.length, getActualWords, onWordIndexChange, onVerseIndexChange, playFullVerseAfter, selectedReciterId]);
-
+  // playFullVerse is defined first since advanceWord depends on it
   const playFullVerse = useCallback(async (): Promise<void> => {
     if (!currentSlide || !selectedReciterId) return Promise.resolve();
 
@@ -178,6 +151,47 @@ export default function TajweedLearningOverlay({
       }
     });
   }, [currentSlide, selectedReciterId, retrieveRecitation]);
+
+  const advanceWord = useCallback((isAutoAdvance = false) => {
+    if (!currentSlide) return;
+
+    if (verseAudioRef.current) {
+      verseAudioRef.current.pause();
+      verseAudioRef.current.currentTime = 0;
+    }
+    setIsPlayingFullVerse(false);
+
+    const words = getActualWords(currentSlide.words);
+    const isLastWord = currentWordIndex >= words.length - 1;
+    const isLastVerse = currentVerseIndex >= slides.length - 1;
+
+    if (!isLastWord) {
+      // Move to next word in current verse
+      onWordIndexChange(currentWordIndex + 1);
+    } else if (!isLastVerse) {
+      // End of current verse, move to next verse
+      if (isAutoAdvance && playFullVerseAfter && selectedReciterId) {
+        isAutoAdvanceRef.current = true;
+        void playFullVerse().then(() => {
+          onVerseIndexChange(currentVerseIndex + 1);
+          isAutoAdvanceRef.current = false;
+        });
+      } else {
+        onVerseIndexChange(currentVerseIndex + 1);
+      }
+    } else {
+      // End of last verse - play full verse if enabled, then stop
+      if (isAutoAdvance && playFullVerseAfter && selectedReciterId) {
+        isAutoAdvanceRef.current = true;
+        void playFullVerse().then(() => {
+          setIsPlaying(false);
+          isAutoAdvanceRef.current = false;
+        });
+      } else {
+        setIsPlaying(false);
+      }
+    }
+  }, [currentSlide, currentWordIndex, currentVerseIndex, slides.length, getActualWords, onWordIndexChange, onVerseIndexChange, playFullVerseAfter, selectedReciterId, playFullVerse]);
 
   const retreatWord = useCallback(() => {
     isAutoAdvanceRef.current = false;
