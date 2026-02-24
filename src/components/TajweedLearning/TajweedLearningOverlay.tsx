@@ -1,5 +1,19 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { FiChevronLeft, FiChevronRight, FiLoader, FiPause, FiPlay, FiX, FiVolume2 } from 'react-icons/fi';
+import { 
+  FiChevronLeft, 
+  FiChevronRight, 
+  FiLoader, 
+  FiPause, 
+  FiPlay, 
+  FiX, 
+  FiVolume2, 
+  FiSettings,
+  FiMaximize2,
+  FiMinimize2,
+  FiHome,
+  FiSkipBack,
+  FiSkipForward
+} from 'react-icons/fi';
 import type { TajweedLearningRequest, TajweedVerseSlide } from './TajweedLearningProvider';
 import type { WordTranslation, ReciterSummary, RetrieveRecitationVerse } from '../../services/apis';
 
@@ -44,6 +58,9 @@ export default function TajweedLearningOverlay({
   const [slideDirection, setSlideDirection] = useState<'left' | 'right'>('left');
   const [isAnimating, setIsAnimating] = useState(false);
   const [isEntering, setIsEntering] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const verseAudioRef = useRef<HTMLAudioElement | null>(null);
   const autoAdvanceTimeoutRef = useRef<number | null>(null);
@@ -51,6 +68,7 @@ export default function TajweedLearningOverlay({
   const prevVerseIndexRef = useRef(currentVerseIndex);
   const isAutoAdvanceRef = useRef(false);
   const recitationCacheRef = useRef<Map<string, RetrieveRecitationVerse[]>>(new Map());
+  const slideContentRef = useRef<HTMLDivElement>(null);
 
   const currentSlide = slides[currentVerseIndex];
 
@@ -203,6 +221,32 @@ export default function TajweedLearningOverlay({
     onWordIndexChange(0);
   }, [onVerseIndexChange, onWordIndexChange]);
 
+  const toggleFullscreen = useCallback(() => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().then(() => {
+        setIsFullscreen(true);
+      }).catch((err) => {
+        console.warn('Fullscreen not available:', err);
+      });
+    } else {
+      document.exitFullscreen().then(() => {
+        setIsFullscreen(false);
+      }).catch((err) => {
+        console.warn('Exit fullscreen failed:', err);
+      });
+    }
+  }, []);
+
+  const goToFirstSlide = useCallback(() => {
+    handleVerseChange(0);
+  }, [handleVerseChange]);
+
+  const goToLastSlide = useCallback(() => {
+    if (slides.length > 0) {
+      handleVerseChange(slides.length - 1);
+    }
+  }, [handleVerseChange, slides.length]);
+
   useEffect(() => {
     if (status !== 'ready' || !displayWord || !isPlaying || isPlayingFullVerse) {
       return;
@@ -304,11 +348,23 @@ export default function TajweedLearningOverlay({
         event.preventDefault();
         togglePlayback();
       }
+      if (event.key === 'f' || event.key === 'F') {
+        event.preventDefault();
+        toggleFullscreen();
+      }
+      if (event.key === 'Home') {
+        event.preventDefault();
+        goToFirstSlide();
+      }
+      if (event.key === 'End') {
+        event.preventDefault();
+        goToLastSlide();
+      }
     };
 
     window.addEventListener('keydown', handleKeys);
     return () => window.removeEventListener('keydown', handleKeys);
-  }, [advanceWord, retreatWord, togglePlayback, onClose]);
+  }, [advanceWord, retreatWord, togglePlayback, onClose, toggleFullscreen, goToFirstSlide, goToLastSlide]);
 
   useEffect(() => {
     const originalOverflow = document.body.style.overflow;
@@ -328,12 +384,12 @@ export default function TajweedLearningOverlay({
       const exitTimer = setTimeout(() => {
         setIsAnimating(false);
         setIsEntering(true);
-      }, 200);
+      }, 150);
 
       const enterTimer = setTimeout(() => {
         setIsEntering(false);
         prevVerseIndexRef.current = currentVerseIndex;
-      }, 400);
+      }, 300);
 
       return () => {
         clearTimeout(exitTimer);
@@ -346,313 +402,468 @@ export default function TajweedLearningOverlay({
   const wordProgressRatio = actualWords.length > 0 ? (currentWordIndex + 1) / actualWords.length : 0;
 
   return (
-    <div className="fixed inset-0 z-50 flex bg-surface">
-      <aside className="hidden lg:flex w-80 flex-col border-r border-border bg-surface-2">
-        <div className="p-6 border-b border-border">
-          <h3 className="text-xs font-semibold text-text-muted uppercase tracking-widest">
-            Verses ({slides.length})
-          </h3>
-        </div>
-        <div className="flex-1 overflow-y-auto">
-          {slides.map((slide, index) => (
-            <button
-              key={slide.id}
-              type="button"
-              onClick={() => handleVerseChange(index)}
-              className={`w-full text-right px-6 border-b border-border transition-all duration-200 ${
-                index === currentVerseIndex
-                  ? 'bg-primary/10 border-l-4 border-l-primary'
-                  : 'hover:bg-surface-2 bg-surface'
-              }`}
-            >
-              <span className="text-xs text-text-muted block mb-2">
-                Verse {slide.ayahNumber}
-              </span>
-              <p
-                className="quran-text text-lg text-text-muted leading-relaxed"
-                dir="rtl"
-              >
-                {slide.arabicText}
-              </p>
-            </button>
-          ))}
-        </div>
-      </aside>
-
-      <main className="flex-1 flex flex-col min-w-0">
-        <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 px-6 py-4 border-b border-border bg-surface">
-          <div className="flex items-center gap-4">
+    <div className="fixed inset-0 z-50 flex flex-col bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+      {/* Top Toolbar - PowerPoint Style */}
+      <header className="flex-shrink-0 bg-slate-800/90 backdrop-blur-sm border-b border-slate-700/50">
+        <div className="flex items-center justify-between px-4 py-2">
+          {/* Left Section - Close & Title */}
+          <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={onClose}
-              className="p-2.5 rounded-full border border-border hover:bg-surface-2 hover:border-primary transition-all duration-200 text-text-muted"
+              className="p-2 rounded-lg hover:bg-slate-700/50 transition-colors text-slate-400 hover:text-white"
               aria-label="Close"
             >
               <FiX className="w-5 h-5" />
             </button>
-            <div>
-              <p className="text-xs uppercase tracking-widest text-primary font-medium mb-1">
-                Tajweed Learning
-              </p>
-              <h2 className="text-xl font-semibold text-text">
-                {request.surahName}
-                <span className="ml-3 text-text-muted quran-text text-lg">{request.surahNameArabic}</span>
-              </h2>
-            </div>
-          </div>
-
-          <div className="hidden sm:flex items-center gap-4 flex-wrap">
+            <div className="h-6 w-px bg-slate-600" />
             <div className="flex items-center gap-2">
-              <FiVolume2 className="w-4 h-4 text-text-muted" />
-              <select
-                value={selectedReciterId ?? ''}
-                onChange={(e) => onReciterChange(Number(e.target.value))}
-                className="text-sm px-3 py-2 rounded-lg border border-border bg-surface text-text focus:border-primary focus:outline-none"
-              >
-                <option value="">Select Reciter...</option>
-                {reciters.map((r) => (
-                  <option key={r.id} value={r.id}>
-                    {r.reciterName}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <label className="inline-flex items-center gap-2 cursor-pointer text-sm">
-              <input
-                type="checkbox"
-                checked={playFullVerseAfter}
-                onChange={(e) => onPlayFullVerseAfterChange(e.target.checked)}
-                className="w-4 h-4 rounded border-border accent-primary"
-              />
-              <span className="text-text font-medium">Play after</span>
-            </label>
-
-            <span className="text-sm text-text-muted">
-              Verse {currentVerseIndex + 1} of {slides.length}
-            </span>
-          </div>
-        </header>
-
-        <div className="sm:hidden border-b border-border bg-surface-2 px-6 py-3">
-          <div className="flex flex-col gap-3">
-            <div className="flex items-center gap-2">
-              <FiVolume2 className="w-4 h-4 text-text-muted shrink-0" />
-              <select
-                value={selectedReciterId ?? ''}
-                onChange={(e) => onReciterChange(Number(e.target.value))}
-                className="flex-1 text-sm px-3 py-2 rounded-lg border border-border bg-surface text-text focus:border-primary focus:outline-none"
-              >
-                <option value="">Select Reciter...</option>
-                {reciters.map((r) => (
-                  <option key={r.id} value={r.id}>
-                    {r.reciterName}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <label className="inline-flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={playFullVerseAfter}
-                onChange={(e) => onPlayFullVerseAfterChange(e.target.checked)}
-                className="w-4 h-4 rounded border-border accent-primary"
-              />
-              <span className="text-sm text-text font-medium">Play full verse after each verse</span>
-            </label>
-          </div>
-        </div>
-
-        {status === 'loading' && (
-          <div className="flex-1 flex items-center justify-center bg-surface-2">
-            <div className="text-center">
-              <FiLoader className="w-16 h-16 text-primary animate-spin mx-auto mb-6" />
-              <p className="text-text text-lg">Loading verses...</p>
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center">
+                <span className="text-white text-xs font-bold">ت</span>
+              </div>
+              <div>
+                <h1 className="text-sm font-semibold text-white leading-tight">
+                  {request.surahName}
+                </h1>
+                <p className="text-xs text-slate-400 quran-text" dir="rtl">
+                  {request.surahNameArabic}
+                </p>
+              </div>
             </div>
           </div>
-        )}
 
-        {status === 'error' && (
-          <div className="flex-1 flex items-center justify-center bg-surface-2">
-            <div className="text-center max-w-md px-6">
-              <p className="text-danger mb-6 text-lg">{error || 'An error occurred'}</p>
+          {/* Center Section - Slide Navigation */}
+          <div className="hidden md:flex items-center gap-1 bg-slate-700/30 rounded-lg px-2 py-1">
+            <button
+              type="button"
+              onClick={goToFirstSlide}
+              disabled={currentVerseIndex === 0}
+              className="p-1.5 rounded hover:bg-slate-600/50 disabled:opacity-30 disabled:cursor-not-allowed text-slate-300 transition-colors"
+              title="First Slide"
+            >
+              <FiHome className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => handleVerseChange(Math.max(0, currentVerseIndex - 1))}
+              disabled={currentVerseIndex === 0}
+              className="p-1.5 rounded hover:bg-slate-600/50 disabled:opacity-30 disabled:cursor-not-allowed text-slate-300 transition-colors"
+              title="Previous Slide"
+            >
+              <FiSkipBack className="w-4 h-4" />
+            </button>
+            <div className="flex items-center gap-1 px-3 py-1 bg-slate-800/50 rounded">
+              <span className="text-sm font-medium text-white">{currentVerseIndex + 1}</span>
+              <span className="text-slate-500">/</span>
+              <span className="text-sm text-slate-400">{slides.length}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => handleVerseChange(Math.min(slides.length - 1, currentVerseIndex + 1))}
+              disabled={currentVerseIndex === slides.length - 1}
+              className="p-1.5 rounded hover:bg-slate-600/50 disabled:opacity-30 disabled:cursor-not-allowed text-slate-300 transition-colors"
+              title="Next Slide"
+            >
+              <FiSkipForward className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
+              onClick={goToLastSlide}
+              disabled={currentVerseIndex === slides.length - 1}
+              className="p-1.5 rounded hover:bg-slate-600/50 disabled:opacity-30 disabled:cursor-not-allowed text-slate-300 transition-colors"
+              title="Last Slide"
+            >
+              <FiMaximize2 className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Right Section - Settings & Fullscreen */}
+          <div className="flex items-center gap-2">
+            <div className="relative">
               <button
                 type="button"
-                onClick={onClose}
-                className="px-6 py-3 bg-primary rounded-xl text-on-primary font-medium hover:bg-primary-hover transition-colors"
+                onClick={() => setShowSettings(!showSettings)}
+                className={`p-2 rounded-lg transition-colors ${showSettings ? 'bg-emerald-600 text-white' : 'hover:bg-slate-700/50 text-slate-400 hover:text-white'}`}
+                aria-label="Settings"
               >
-                Close
+                <FiSettings className="w-5 h-5" />
               </button>
+              
+              {showSettings && (
+                <div className="absolute right-0 top-full mt-2 w-72 bg-slate-800 rounded-xl border border-slate-700 shadow-2xl p-4 z-50">
+                  <h3 className="text-sm font-semibold text-white mb-3">Audio Settings</h3>
+                  
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-xs text-slate-400 mb-1.5 block">Reciter</label>
+                      <select
+                        value={selectedReciterId ?? ''}
+                        onChange={(e) => onReciterChange(Number(e.target.value))}
+                        className="w-full text-sm px-3 py-2 rounded-lg bg-slate-700 border border-slate-600 text-white focus:border-emerald-500 focus:outline-none"
+                      >
+                        <option value="">Select Reciter...</option>
+                        {reciters.map((r) => (
+                          <option key={r.id} value={r.id}>
+                            {r.reciterName}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <label className="flex items-center gap-3 cursor-pointer p-2 rounded-lg hover:bg-slate-700/50 transition-colors">
+                      <input
+                        type="checkbox"
+                        checked={playFullVerseAfter}
+                        onChange={(e) => onPlayFullVerseAfterChange(e.target.checked)}
+                        className="w-4 h-4 rounded border-slate-500 bg-slate-700 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0"
+                      />
+                      <div>
+                        <span className="text-sm text-white">Play full verse after</span>
+                        <p className="text-xs text-slate-400">Auto-play complete verse recitation</p>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+              )}
             </div>
+            
+            <div className="h-6 w-px bg-slate-600 hidden sm:block" />
+            
+            <button
+              type="button"
+              onClick={toggleFullscreen}
+              className="p-2 rounded-lg hover:bg-slate-700/50 text-slate-400 hover:text-white transition-colors hidden sm:flex"
+              aria-label="Toggle Fullscreen"
+            >
+              {isFullscreen ? (
+                <FiMinimize2 className="w-5 h-5" />
+              ) : (
+                <FiMaximize2 className="w-5 h-5" />
+              )}
+            </button>
           </div>
-        )}
+        </div>
+      </header>
 
-        {status === 'ready' && currentSlide && (
-          <div className="flex-1 flex flex-col bg-surface-2">
-            <div className="h-1.5 bg-border">
-              <div
-                className="h-full bg-primary transition-all duration-300 ease-out"
-                style={{ width: `${wordProgressRatio * 100}%` }}
-              />
-            </div>
+      {/* Main Content Area */}
+      <div className="flex-1 flex min-h-0">
+        {/* Left Sidebar - Slide Thumbnails (PowerPoint Style) */}
+        <aside 
+          className={`hidden lg:flex flex-col bg-slate-800/50 border-r border-slate-700/50 transition-all duration-300 ${isSidebarCollapsed ? 'w-12' : 'w-56'}`}
+        >
+          {/* Sidebar Header */}
+          <div className="flex items-center justify-between px-3 py-2 border-b border-slate-700/50">
+            {!isSidebarCollapsed && (
+              <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">
+                Slides
+              </span>
+            )}
+            <button
+              type="button"
+              onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+              className="p-1 rounded hover:bg-slate-700/50 text-slate-400 hover:text-white transition-colors"
+            >
+              <FiChevronLeft className={`w-4 h-4 transition-transform ${isSidebarCollapsed ? 'rotate-180' : ''}`} />
+            </button>
+          </div>
 
-            <div className="flex-1 flex items-center justify-center px-6 py-12 md:py-16 overflow-hidden">
-              <div
-                className={`text-center w-full max-w-3xl transition-all duration-200 ease-out ${
+          {/* Slide Thumbnails */}
+          <div className="flex-1 overflow-y-auto p-2 space-y-2">
+            {slides.map((slide, index) => (
+              <button
+                key={slide.id}
+                type="button"
+                onClick={() => handleVerseChange(index)}
+                className={`w-full group relative rounded-lg overflow-hidden transition-all duration-200 ${
+                  index === currentVerseIndex
+                    ? 'ring-2 ring-emerald-500 bg-slate-700/50'
+                    : 'hover:bg-slate-700/30 bg-transparent'
+                } ${isSidebarCollapsed ? 'p-1' : 'p-2'}`}
+              >
+                {/* Slide Number Badge */}
+                <div className={`absolute top-1 left-1 z-10 ${isSidebarCollapsed ? 'hidden' : ''}`}>
+                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                    index === currentVerseIndex
+                      ? 'bg-emerald-500 text-white'
+                      : 'bg-slate-600 text-slate-300 group-hover:bg-slate-500'
+                  }`}>
+                    {index + 1}
+                  </span>
+                </div>
+
+                {isSidebarCollapsed ? (
+                  <div className={`w-8 h-8 rounded flex items-center justify-center text-xs font-bold ${
+                    index === currentVerseIndex
+                      ? 'bg-emerald-500 text-white'
+                      : 'bg-slate-700 text-slate-400'
+                  }`}>
+                    {index + 1}
+                  </div>
+                ) : (
+                  <div className="aspect-[16/9] bg-slate-900/50 rounded overflow-hidden p-2">
+                    <p 
+                      className="quran-text text-[9px] text-slate-400 leading-relaxed line-clamp-3"
+                      dir="rtl"
+                    >
+                      {slide.arabicText}
+                    </p>
+                  </div>
+                )}
+
+                {/* Current Indicator */}
+                {index === currentVerseIndex && !isSidebarCollapsed && (
+                  <div className="absolute bottom-1 right-1">
+                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  </div>
+                )}
+              </button>
+            ))}
+          </div>
+        </aside>
+
+        {/* Main Slide Area */}
+        <main className="flex-1 flex flex-col min-w-0 bg-gradient-to-b from-slate-900/50 to-slate-800/30">
+          {/* Progress Bar */}
+          <div className="h-1 bg-slate-700/50">
+            <div
+              className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 transition-all duration-500 ease-out"
+              style={{ width: `${progressRatio * 100}%` }}
+            />
+          </div>
+
+          {/* Slide Content */}
+          <div 
+            ref={slideContentRef}
+            className="flex-1 flex items-center justify-center p-4 md:p-8 overflow-hidden"
+          >
+            {status === 'loading' && (
+              <div className="text-center">
+                <div className="relative w-24 h-24 mx-auto mb-6">
+                  <div className="absolute inset-0 rounded-full border-4 border-slate-700" />
+                  <div className="absolute inset-0 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin" />
+                </div>
+                <p className="text-slate-400 text-lg">Loading presentation...</p>
+              </div>
+            )}
+
+            {status === 'error' && (
+              <div className="text-center max-w-md px-6">
+                <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-4">
+                  <FiX className="w-8 h-8 text-red-400" />
+                </div>
+                <p className="text-red-400 mb-6">{error || 'An error occurred'}</p>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="px-6 py-3 bg-emerald-600 rounded-xl text-white font-medium hover:bg-emerald-500 transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            )}
+
+            {status === 'ready' && currentSlide && (
+              <div 
+                className={`w-full max-w-4xl transition-all duration-150 ease-out ${
                   isAnimating
                     ? slideDirection === 'left'
-                      ? 'opacity-0 translate-x-full'
-                      : 'opacity-0 -translate-x-full'
+                      ? 'opacity-0 translate-x-8 scale-95'
+                      : 'opacity-0 -translate-x-8 scale-95'
                     : isEntering
-                    ? slideDirection === 'left'
-                      ? 'opacity-0 -translate-x-full animate-slide-in-left'
-                      : 'opacity-0 translate-x-full animate-slide-in-right'
-                    : 'opacity-100 translate-x-0'
+                    ? 'opacity-100 translate-x-0 scale-100'
+                    : 'opacity-100 translate-x-0 scale-100'
                 }`}
-                style={
-                  isEntering
-                    ? {
-                        animation: slideDirection === 'left'
-                          ? 'slideInFromLeft 0.2s ease-out forwards'
-                          : 'slideInFromRight 0.2s ease-out forwards'
-                      }
-                    : {}
-                }
               >
-                {isPlayingFullVerse ? (
-                  <div className="space-y-8">
-                    <div className="py-8">
-                      <p className="quran-text text-5xl sm:text-6xl md:text-7xl text-primary leading-relaxed">
-                        {actualWords.map((word) => word.text).join(' ')}
-                      </p>
+                {/* Slide Card - PowerPoint Style */}
+                <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl overflow-hidden aspect-[16/9] flex flex-col">
+                  {/* Slide Header */}
+                  <div className="flex items-center justify-between px-6 py-3 bg-gradient-to-r from-emerald-600 to-emerald-500">
+                    <div className="flex items-center gap-2">
+                      <span className="text-white/80 text-xs font-medium">Verse {currentSlide.ayahNumber}</span>
                     </div>
-
-                    <div className="flex items-center justify-center gap-3 text-primary">
-                      <FiVolume2 className="w-5 h-5 animate-pulse" />
-                      <span className="text-sm font-medium">Playing full verse...</span>
-                    </div>
-                  </div>
-                ) : displayWord ? (
-                  <div className="space-y-8">
-                    <div className="py-8">
-                      <p className="arabic text-7xl sm:text-8xl md:text-9xl text-primary leading-normal">
-                        {displayWord.text}
-                      </p>
-                    </div>
-
-                    <div className="space-y-3 mt-16">
-                      <p className="text-2xl sm:text-3xl text-text font-medium">
-                        {displayWord.translation || 'Translation not available'}
-                      </p>
-
-                      {displayWord.transliteration && (
-                        <p className="text-xl text-text-muted italic">
-                          {displayWord.transliteration}
-                        </p>
+                    <div className="flex items-center gap-2">
+                      {isPlayingFullVerse && (
+                        <span className="flex items-center gap-1.5 text-white/90 text-xs">
+                          <FiVolume2 className="w-3 h-3 animate-pulse" />
+                          Playing full verse
+                        </span>
+                      )}
+                      {isAudioLoading && (
+                        <span className="flex items-center gap-1.5 text-white/90 text-xs">
+                          <FiLoader className="w-3 h-3 animate-spin" />
+                          Loading audio
+                        </span>
                       )}
                     </div>
-
-                    {isAudioLoading && (
-                      <div className="flex items-center justify-center gap-3 text-primary">
-                        <FiLoader className="w-5 h-5 animate-spin" />
-                        <span className="text-sm font-medium">Loading audio...</span>
-                      </div>
-                    )}
                   </div>
-                ) : null}
 
-                <div className="mt-16 p-6 rounded-2xl bg-surface border border-border shadow-sm">
-                  <p className="quran-text text-xl sm:text-2xl text-text-muted leading-loose">
-                    {actualWords.map((word, idx) => (
-                      <span
-                        key={idx}
-                        className={`inline mx-1 transition-all duration-200 ${
-                          idx === currentWordIndex
-                            ? 'text-primary font-bold'
-                            : idx < currentWordIndex
-                            ? 'text-text-muted/50'
-                            : 'text-text-muted'
-                        }`}
-                      >
-                        {word.text}
+                  {/* Main Content */}
+                  <div className="flex-1 flex flex-col items-center justify-center p-8 bg-gradient-to-b from-slate-50 to-white dark:from-slate-800 dark:to-slate-850">
+                    {isPlayingFullVerse ? (
+                      /* Full Verse Display */
+                      <div className="text-center space-y-6">
+                        <p className="quran-text text-4xl sm:text-5xl md:text-6xl text-slate-800 dark:text-slate-100 leading-relaxed">
+                          {actualWords.map((word) => word.text).join(' ')}
+                        </p>
+                        <div className="flex items-center justify-center gap-2 text-emerald-600">
+                          <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                          <span className="text-sm font-medium">Playing recitation...</span>
+                        </div>
+                      </div>
+                    ) : displayWord ? (
+                      /* Single Word Display */
+                      <div className="text-center space-y-6 w-full">
+                        {/* Arabic Word - Main Focus */}
+                        <div className="relative">
+                          <div className="absolute inset-0 blur-3xl bg-emerald-500/10 rounded-full" />
+                          <p className="arabic relative text-6xl sm:text-7xl md:text-8xl text-slate-800 dark:text-white font-bold leading-normal">
+                            {displayWord.text}
+                          </p>
+                        </div>
+
+                        {/* Translation */}
+                        <div className="space-y-2">
+                          <p className="text-2xl sm:text-3xl text-slate-700 dark:text-slate-200 font-medium">
+                            {displayWord.translation || 'Translation not available'}
+                          </p>
+                          {displayWord.transliteration && (
+                            <p className="text-lg text-slate-500 dark:text-slate-400 italic">
+                              {displayWord.transliteration}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
+
+                  {/* Slide Footer - Word Progress */}
+                  <div className="px-6 py-3 bg-slate-100 dark:bg-slate-700/50 border-t border-slate-200 dark:border-slate-600">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs text-slate-500 dark:text-slate-400">
+                        Word {currentWordIndex + 1} of {actualWords.length}
                       </span>
-                    ))}
-                  </p>
+                      <div className="h-1 flex-1 mx-4 bg-slate-200 dark:bg-slate-600 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-emerald-500 rounded-full transition-all duration-300"
+                          style={{ width: `${wordProgressRatio * 100}%` }}
+                        />
+                      </div>
+                    </div>
+                    <p className="quran-text text-sm text-slate-600 dark:text-slate-300 leading-relaxed" dir="rtl">
+                      {actualWords.map((word, idx) => (
+                        <span
+                          key={idx}
+                          className={`inline mx-0.5 transition-all duration-200 ${
+                            idx === currentWordIndex
+                              ? 'text-emerald-600 dark:text-emerald-400 font-bold'
+                              : idx < currentWordIndex
+                              ? 'text-slate-400 dark:text-slate-500'
+                              : 'text-slate-500 dark:text-slate-400'
+                          }`}
+                        >
+                          {word.text}
+                        </span>
+                      ))}
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
-
-            <div className="px-6 py-6 border-t border-border bg-surface">
-              <div className="flex items-center justify-center gap-8 max-w-lg mx-auto">
-                <button
-                  type="button"
-                  onClick={() => advanceWord(false)}
-                  disabled={
-                    currentVerseIndex === slides.length - 1 &&
-                    currentWordIndex === actualWords.length - 1
-                  }
-                  className="p-4 rounded-full border-2 border-border hover:border-primary hover:bg-primary/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 text-text-muted"
-                  aria-label="Next word"
-                >
-                  <FiChevronLeft className="w-7 h-7" />
-                </button>
-                <button
-                  type="button"
-                  onClick={togglePlayback}
-                  className="p-5 rounded-full bg-primary hover:bg-primary-hover transition-all duration-200 text-on-primary shadow-lg"
-                  aria-label={isPlaying ? 'Pause' : 'Play'}
-                >
-                  {isPlaying ? (
-                    <FiPause className="w-9 h-9" />
-                  ) : (
-                    <FiPlay className="w-9 h-9" />
-                  )}
-                </button>
-                <button
-                  type="button"
-                  onClick={retreatWord}
-                  disabled={currentVerseIndex === 0 && currentWordIndex === 0}
-                  className="p-4 rounded-full border-2 border-border hover:border-primary hover:bg-primary/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 text-text-muted"
-                  aria-label="Previous word"
-                >
-                  <FiChevronRight className="w-7 h-7" />
-                </button>
-              </div>
-
-              <p className="text-center text-sm text-text-muted mt-4 font-medium">
-                Word {currentWordIndex + 1} of {actualWords.length}
-              </p>
-            </div>
-
-            <div className="lg:hidden border-t border-border bg-surface">
-              <div className="flex gap-2 p-4 overflow-x-auto">
-                {slides.map((slide, index) => (
-                  <button
-                    key={slide.id}
-                    type="button"
-                    onClick={() => handleVerseChange(index)}
-                    className={`shrink-0 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
-                      index === currentVerseIndex
-                        ? 'bg-primary text-on-primary shadow-md'
-                        : 'bg-surface-2 border border-border text-text-muted hover:border-primary'
-                    }`}
-                  >
-                    {slide.ayahNumber}
-                  </button>
-                ))}
-              </div>
-            </div>
+            )}
           </div>
-        )}
+        </main>
+      </div>
 
-        <div className="h-1.5 bg-border">
-          <div
-            className="h-full bg-accent transition-all duration-500 ease-out"
-            style={{ width: `${progressRatio * 100}%` }}
-          />
+      {/* Bottom Controls - Presenter Style */}
+      <footer className="flex-shrink-0 bg-slate-800/95 backdrop-blur-sm border-t border-slate-700/50">
+        <div className="flex items-center justify-between px-4 py-3">
+          {/* Mobile Slide Selector */}
+          <div className="lg:hidden flex items-center gap-2 overflow-x-auto max-w-[40%]">
+            {slides.slice(Math.max(0, currentVerseIndex - 2), Math.min(slides.length, currentVerseIndex + 3)).map((slide, idx) => {
+              const actualIndex = Math.max(0, currentVerseIndex - 2) + idx;
+              return (
+                <button
+                  key={slide.id}
+                  type="button"
+                  onClick={() => handleVerseChange(actualIndex)}
+                  className={`shrink-0 w-8 h-8 rounded-lg text-xs font-medium transition-all ${
+                    actualIndex === currentVerseIndex
+                      ? 'bg-emerald-500 text-white'
+                      : 'bg-slate-700 text-slate-400 hover:bg-slate-600'
+                  }`}
+                >
+                  {actualIndex + 1}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Center - Playback Controls */}
+          <div className="flex items-center gap-3 mx-auto">
+            {/* Previous Word */}
+            <button
+              type="button"
+              onClick={retreatWord}
+              disabled={currentVerseIndex === 0 && currentWordIndex === 0}
+              className="p-3 rounded-xl bg-slate-700/50 hover:bg-slate-600/50 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-slate-300 hover:text-white"
+              aria-label="Previous word"
+            >
+              <FiChevronRight className="w-6 h-6" />
+            </button>
+
+            {/* Play/Pause */}
+            <button
+              type="button"
+              onClick={togglePlayback}
+              className={`p-4 rounded-2xl transition-all shadow-lg ${
+                isPlaying 
+                  ? 'bg-emerald-500 hover:bg-emerald-400 text-white' 
+                  : 'bg-amber-500 hover:bg-amber-400 text-white'
+              }`}
+              aria-label={isPlaying ? 'Pause' : 'Play'}
+            >
+              {isPlaying ? (
+                <FiPause className="w-7 h-7" />
+              ) : (
+                <FiPlay className="w-7 h-7" />
+              )}
+            </button>
+
+            {/* Next Word */}
+            <button
+              type="button"
+              onClick={() => advanceWord(false)}
+              disabled={
+                currentVerseIndex === slides.length - 1 &&
+                currentWordIndex === actualWords.length - 1
+              }
+              className="p-3 rounded-xl bg-slate-700/50 hover:bg-slate-600/50 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-slate-300 hover:text-white"
+              aria-label="Next word"
+            >
+              <FiChevronLeft className="w-6 h-6" />
+            </button>
+          </div>
+
+          {/* Status Info */}
+          <div className="hidden sm:flex items-center gap-4 text-sm">
+            <span className="text-slate-400">
+              Slide <span className="text-white font-medium">{currentVerseIndex + 1}</span> of <span className="text-slate-300">{slides.length}</span>
+            </span>
+            <div className="h-4 w-px bg-slate-600" />
+            <span className="text-slate-400">
+              Word <span className="text-white font-medium">{currentWordIndex + 1}</span> of <span className="text-slate-300">{actualWords.length}</span>
+            </span>
+          </div>
         </div>
-      </main>
+
+        {/* Keyboard Shortcuts Hint */}
+        <div className="hidden md:flex items-center justify-center gap-6 pb-2 text-xs text-slate-500">
+          <span><kbd className="px-1.5 py-0.5 rounded bg-slate-700 text-slate-400">←</kbd> Next</span>
+          <span><kbd className="px-1.5 py-0.5 rounded bg-slate-700 text-slate-400">→</kbd> Previous</span>
+          <span><kbd className="px-1.5 py-0.5 rounded bg-slate-700 text-slate-400">Space</kbd> Play/Pause</span>
+          <span><kbd className="px-1.5 py-0.5 rounded bg-slate-700 text-slate-400">F</kbd> Fullscreen</span>
+          <span><kbd className="px-1.5 py-0.5 rounded bg-slate-700 text-slate-400">Esc</kbd> Close</span>
+        </div>
+      </footer>
     </div>
   );
 }
