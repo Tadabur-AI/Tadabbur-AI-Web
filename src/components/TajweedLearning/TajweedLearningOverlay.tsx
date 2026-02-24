@@ -416,7 +416,7 @@ export default function TajweedLearningOverlay({
   const wordProgressRatio = actualWords.length > 0 ? (currentWordIndex + 1) / actualWords.length : 0;
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div className="fixed inset-0 z-50 flex flex-col overlay bg-primary-900/80 backdrop-blur-3xl">
       {/* Top Toolbar - PowerPoint Style */}
       <header className="flex-shrink-0 bg-surface-2 border-b border-border">
         <div className="flex items-center justify-between px-4 py-2">
@@ -636,7 +636,7 @@ export default function TajweedLearningOverlay({
         </aside>
 
         {/* Main Slide Area */}
-        <main className="flex-1 flex flex-col min-w-0 bg-gradient-to-b from-slate-900/50 to-slate-800/30">
+        <main className="flex-1 flex flex-col min-w-0 bg-gradient-to-b from-primary-900/50 to-primary-800/30">
           {/* Progress Bar */}
           <div className="h-1 bg-border">
             <div
@@ -648,7 +648,7 @@ export default function TajweedLearningOverlay({
           {/* Slide Content */}
           <div 
             ref={slideContentRef}
-            className="flex-1 flex items-center justify-center p-4 md:p-8 overflow-hidden"
+            className="flex-1 flex items-center justify-center p-4 md:p-8 overflow-hidden bg-transparent"
           >
             {status === 'loading' && (
               <div className="text-center">
@@ -801,6 +801,16 @@ export default function TajweedLearningOverlay({
 
       {/* Bottom Controls - Presenter Style */}
       <footer className="shrink-0 bg-surface-2 border-t border-border">
+         {/* Status Info */}
+          <div className="hidden sm:flex items-center gap-4 text-sm justify-between px-4 py-2">
+            <span className="text-text-muted">
+              Slide <span className="text-text font-medium">{currentVerseIndex + 1}</span> of <span className="text-text-muted">{slides.length}</span>
+            </span>
+            <div className="h-4 w-px bg-border" />
+            <span className="text-text-muted">
+              Word <span className="text-text font-medium">{currentWordIndex + 1}</span> of <span className="text-text-muted">{actualWords.length}</span>
+            </span>
+          </div>
         <div className="flex items-center justify-between px-4 py-3">
           {/* Mobile Slide Selector */}
           <div className="lg:hidden flex items-center gap-2 overflow-x-auto max-w-[40%]">
@@ -867,17 +877,6 @@ export default function TajweedLearningOverlay({
             >
               <FiChevronRight className="w-6 h-6" />
             </button>
-          </div>
-
-          {/* Status Info */}
-          <div className="hidden sm:flex items-center gap-4 text-sm">
-            <span className="text-text-muted">
-              Slide <span className="text-text font-medium">{currentVerseIndex + 1}</span> of <span className="text-text-muted">{slides.length}</span>
-            </span>
-            <div className="h-4 w-px bg-border" />
-            <span className="text-text-muted">
-              Word <span className="text-text font-medium">{currentWordIndex + 1}</span> of <span className="text-text-muted">{actualWords.length}</span>
-            </span>
           </div>
         </div>
 
