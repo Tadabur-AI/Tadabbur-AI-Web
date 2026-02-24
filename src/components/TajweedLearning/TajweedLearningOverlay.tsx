@@ -404,28 +404,28 @@ export default function TajweedLearningOverlay({
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       {/* Top Toolbar - PowerPoint Style */}
-      <header className="flex-shrink-0 bg-slate-800/90 backdrop-blur-sm border-b border-slate-700/50">
+      <header className="flex-shrink-0 bg-surface-2 border-b border-border">
         <div className="flex items-center justify-between px-4 py-2">
           {/* Left Section - Close & Title */}
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={onClose}
-              className="p-2 rounded-lg hover:bg-slate-700/50 transition-colors text-slate-400 hover:text-white"
+              className="p-2 rounded-lg hover:bg-surface-2 hover:border-primary transition-all duration-200 text-text-muted"
               aria-label="Close"
             >
               <FiX className="w-5 h-5" />
             </button>
-            <div className="h-6 w-px bg-slate-600" />
+            <div className="h-6 w-px bg-border" />
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center">
-                <span className="text-white text-xs font-bold">ت</span>
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary-pressed flex items-center justify-center">
+                <span className="text-on-primary text-xs font-bold">ت</span>
               </div>
               <div>
-                <h1 className="text-sm font-semibold text-white leading-tight">
+                <h1 className="text-sm font-semibold text-text leading-tight">
                   {request.surahName}
                 </h1>
-                <p className="text-xs text-slate-400 quran-text" dir="rtl">
+                <p className="text-xs text-text-muted quran-text" dir="rtl">
                   {request.surahNameArabic}
                 </p>
               </div>
@@ -433,12 +433,12 @@ export default function TajweedLearningOverlay({
           </div>
 
           {/* Center Section - Slide Navigation */}
-          <div className="hidden md:flex items-center gap-1 bg-slate-700/30 rounded-lg px-2 py-1">
+          <div className="hidden md:flex items-center gap-1 bg-surface-2 rounded-lg px-2 py-1">
             <button
               type="button"
               onClick={goToFirstSlide}
               disabled={currentVerseIndex === 0}
-              className="p-1.5 rounded hover:bg-slate-600/50 disabled:opacity-30 disabled:cursor-not-allowed text-slate-300 transition-colors"
+              className="p-1.5 rounded hover:bg-surface-2 hover:border-primary disabled:opacity-30 disabled:cursor-not-allowed text-text-muted transition-colors"
               title="First Slide"
             >
               <FiHome className="w-4 h-4" />
@@ -447,21 +447,21 @@ export default function TajweedLearningOverlay({
               type="button"
               onClick={() => handleVerseChange(Math.max(0, currentVerseIndex - 1))}
               disabled={currentVerseIndex === 0}
-              className="p-1.5 rounded hover:bg-slate-600/50 disabled:opacity-30 disabled:cursor-not-allowed text-slate-300 transition-colors"
+              className="p-1.5 rounded hover:bg-surface-2 hover:border-primary disabled:opacity-30 disabled:cursor-not-allowed text-text-muted transition-colors"
               title="Previous Slide"
             >
               <FiSkipBack className="w-4 h-4" />
             </button>
-            <div className="flex items-center gap-1 px-3 py-1 bg-slate-800/50 rounded">
-              <span className="text-sm font-medium text-white">{currentVerseIndex + 1}</span>
-              <span className="text-slate-500">/</span>
-              <span className="text-sm text-slate-400">{slides.length}</span>
+            <div className="flex items-center gap-1 px-3 py-1 bg-surface rounded">
+              <span className="text-sm font-medium text-text">{currentVerseIndex + 1}</span>
+              <span className="text-text-muted">/</span>
+              <span className="text-sm text-text-muted">{slides.length}</span>
             </div>
             <button
               type="button"
               onClick={() => handleVerseChange(Math.min(slides.length - 1, currentVerseIndex + 1))}
               disabled={currentVerseIndex === slides.length - 1}
-              className="p-1.5 rounded hover:bg-slate-600/50 disabled:opacity-30 disabled:cursor-not-allowed text-slate-300 transition-colors"
+              className="p-1.5 rounded hover:bg-surface-2 hover:border-primary disabled:opacity-30 disabled:cursor-not-allowed text-text-muted transition-colors"
               title="Next Slide"
             >
               <FiSkipForward className="w-4 h-4" />
@@ -470,7 +470,7 @@ export default function TajweedLearningOverlay({
               type="button"
               onClick={goToLastSlide}
               disabled={currentVerseIndex === slides.length - 1}
-              className="p-1.5 rounded hover:bg-slate-600/50 disabled:opacity-30 disabled:cursor-not-allowed text-slate-300 transition-colors"
+              className="p-1.5 rounded hover:bg-surface-2 hover:border-primary disabled:opacity-30 disabled:cursor-not-allowed text-text-muted transition-colors"
               title="Last Slide"
             >
               <FiMaximize2 className="w-4 h-4" />
@@ -483,23 +483,23 @@ export default function TajweedLearningOverlay({
               <button
                 type="button"
                 onClick={() => setShowSettings(!showSettings)}
-                className={`p-2 rounded-lg transition-colors ${showSettings ? 'bg-emerald-600 text-white' : 'hover:bg-slate-700/50 text-slate-400 hover:text-white'}`}
+                className={`p-2 rounded-lg transition-colors ${showSettings ? 'bg-primary text-on-primary' : 'hover:bg-surface-2 text-text-muted'}`}
                 aria-label="Settings"
               >
                 <FiSettings className="w-5 h-5" />
               </button>
               
               {showSettings && (
-                <div className="absolute right-0 top-full mt-2 w-72 bg-slate-800 rounded-xl border border-slate-700 shadow-2xl p-4 z-50">
-                  <h3 className="text-sm font-semibold text-white mb-3">Audio Settings</h3>
+                <div className="absolute right-0 top-full mt-2 w-72 bg-surface rounded-xl border border-border shadow-2xl p-4 z-50">
+                  <h3 className="text-sm font-semibold text-text mb-3">Audio Settings</h3>
                   
                   <div className="space-y-3">
                     <div>
-                      <label className="text-xs text-slate-400 mb-1.5 block">Reciter</label>
+                      <label className="text-xs text-text-muted mb-1.5 block">Reciter</label>
                       <select
                         value={selectedReciterId ?? ''}
                         onChange={(e) => onReciterChange(Number(e.target.value))}
-                        className="w-full text-sm px-3 py-2 rounded-lg bg-slate-700 border border-slate-600 text-white focus:border-emerald-500 focus:outline-none"
+                        className="w-full text-sm px-3 py-2 rounded-lg bg-surface border border-border text-text focus:border-primary focus:outline-none"
                       >
                         <option value="">Select Reciter...</option>
                         {reciters.map((r) => (
@@ -510,16 +510,16 @@ export default function TajweedLearningOverlay({
                       </select>
                     </div>
 
-                    <label className="flex items-center gap-3 cursor-pointer p-2 rounded-lg hover:bg-slate-700/50 transition-colors">
+                    <label className="flex items-center gap-3 cursor-pointer p-2 rounded-lg hover:bg-surface-2 transition-colors">
                       <input
                         type="checkbox"
                         checked={playFullVerseAfter}
                         onChange={(e) => onPlayFullVerseAfterChange(e.target.checked)}
-                        className="w-4 h-4 rounded border-slate-500 bg-slate-700 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0"
+                        className="w-4 h-4 rounded border-border bg-surface text-primary focus:ring-primary focus:ring-offset-0"
                       />
                       <div>
-                        <span className="text-sm text-white">Play full verse after</span>
-                        <p className="text-xs text-slate-400">Auto-play complete verse recitation</p>
+                        <span className="text-sm text-text">Play full verse after</span>
+                        <p className="text-xs text-text-muted">Auto-play complete verse recitation</p>
                       </div>
                     </label>
                   </div>
@@ -527,12 +527,12 @@ export default function TajweedLearningOverlay({
               )}
             </div>
             
-            <div className="h-6 w-px bg-slate-600 hidden sm:block" />
+            <div className="h-6 w-px bg-border hidden sm:block" />
             
             <button
               type="button"
               onClick={toggleFullscreen}
-              className="p-2 rounded-lg hover:bg-slate-700/50 text-slate-400 hover:text-white transition-colors hidden sm:flex"
+              className="p-2 rounded-lg hover:bg-surface-2 text-text-muted transition-colors hidden sm:flex"
               aria-label="Toggle Fullscreen"
             >
               {isFullscreen ? (
@@ -549,19 +549,19 @@ export default function TajweedLearningOverlay({
       <div className="flex-1 flex min-h-0">
         {/* Left Sidebar - Slide Thumbnails (PowerPoint Style) */}
         <aside 
-          className={`hidden lg:flex flex-col bg-slate-800/50 border-r border-slate-700/50 transition-all duration-300 ${isSidebarCollapsed ? 'w-12' : 'w-56'}`}
+          className={`hidden lg:flex flex-col bg-surface-2 border-r border-border transition-all duration-300 ${isSidebarCollapsed ? 'w-12' : 'w-56'}`}
         >
           {/* Sidebar Header */}
-          <div className="flex items-center justify-between px-3 py-2 border-b border-slate-700/50">
+          <div className="flex items-center justify-between px-3 py-2 border-b border-border">
             {!isSidebarCollapsed && (
-              <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">
+              <span className="text-xs font-medium text-text-muted uppercase tracking-wider">
                 Slides
               </span>
             )}
             <button
               type="button"
               onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-              className="p-1 rounded hover:bg-slate-700/50 text-slate-400 hover:text-white transition-colors"
+              className="p-1 rounded hover:bg-surface-2 text-text-muted transition-colors"
             >
               <FiChevronLeft className={`w-4 h-4 transition-transform ${isSidebarCollapsed ? 'rotate-180' : ''}`} />
             </button>
@@ -576,16 +576,16 @@ export default function TajweedLearningOverlay({
                 onClick={() => handleVerseChange(index)}
                 className={`w-full group relative rounded-lg overflow-hidden transition-all duration-200 ${
                   index === currentVerseIndex
-                    ? 'ring-2 ring-emerald-500 bg-slate-700/50'
-                    : 'hover:bg-slate-700/30 bg-transparent'
+                    ? 'ring-2 ring-primary bg-surface-2'
+                    : 'hover:bg-surface-2 bg-transparent'
                 } ${isSidebarCollapsed ? 'p-1' : 'p-2'}`}
               >
                 {/* Slide Number Badge */}
                 <div className={`absolute top-1 left-1 z-10 ${isSidebarCollapsed ? 'hidden' : ''}`}>
                   <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
                     index === currentVerseIndex
-                      ? 'bg-emerald-500 text-white'
-                      : 'bg-slate-600 text-slate-300 group-hover:bg-slate-500'
+                      ? 'bg-primary text-on-primary'
+                      : 'bg-surface text-text-muted group-hover:bg-surface-2'
                   }`}>
                     {index + 1}
                   </span>
@@ -594,15 +594,15 @@ export default function TajweedLearningOverlay({
                 {isSidebarCollapsed ? (
                   <div className={`w-8 h-8 rounded flex items-center justify-center text-xs font-bold ${
                     index === currentVerseIndex
-                      ? 'bg-emerald-500 text-white'
-                      : 'bg-slate-700 text-slate-400'
+                      ? 'bg-primary text-on-primary'
+                      : 'bg-surface-2 text-text-muted'
                   }`}>
                     {index + 1}
                   </div>
                 ) : (
-                  <div className="aspect-[16/9] bg-slate-900/50 rounded overflow-hidden p-2">
+                  <div className="aspect-[16/9] bg-surface rounded overflow-hidden p-2">
                     <p 
-                      className="quran-text text-[9px] text-slate-400 leading-relaxed line-clamp-3"
+                      className="quran-text text-[9px] text-text-muted leading-relaxed line-clamp-3"
                       dir="rtl"
                     >
                       {slide.arabicText}
@@ -613,7 +613,7 @@ export default function TajweedLearningOverlay({
                 {/* Current Indicator */}
                 {index === currentVerseIndex && !isSidebarCollapsed && (
                   <div className="absolute bottom-1 right-1">
-                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
                   </div>
                 )}
               </button>
@@ -624,9 +624,9 @@ export default function TajweedLearningOverlay({
         {/* Main Slide Area */}
         <main className="flex-1 flex flex-col min-w-0 bg-gradient-to-b from-slate-900/50 to-slate-800/30">
           {/* Progress Bar */}
-          <div className="h-1 bg-slate-700/50">
+          <div className="h-1 bg-border">
             <div
-              className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 transition-all duration-500 ease-out"
+              className="h-full bg-gradient-to-r from-primary to-primary-pressed transition-all duration-500 ease-out"
               style={{ width: `${progressRatio * 100}%` }}
             />
           </div>
@@ -639,23 +639,23 @@ export default function TajweedLearningOverlay({
             {status === 'loading' && (
               <div className="text-center">
                 <div className="relative w-24 h-24 mx-auto mb-6">
-                  <div className="absolute inset-0 rounded-full border-4 border-slate-700" />
-                  <div className="absolute inset-0 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin" />
+                  <div className="absolute inset-0 rounded-full border-4 border-border" />
+                  <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin" />
                 </div>
-                <p className="text-slate-400 text-lg">Loading presentation...</p>
+                <p className="text-text-muted text-lg">Loading presentation...</p>
               </div>
             )}
 
             {status === 'error' && (
               <div className="text-center max-w-md px-6">
-                <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-4">
-                  <FiX className="w-8 h-8 text-red-400" />
+                <div className="w-16 h-16 rounded-full bg-danger/20 flex items-center justify-center mx-auto mb-4">
+                  <FiX className="w-8 h-8 text-danger" />
                 </div>
-                <p className="text-red-400 mb-6">{error || 'An error occurred'}</p>
+                <p className="text-danger mb-6">{error || 'An error occurred'}</p>
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-6 py-3 bg-emerald-600 rounded-xl text-white font-medium hover:bg-emerald-500 transition-colors"
+                  className="px-6 py-3 bg-primary rounded-xl text-on-primary font-medium hover:bg-primary-hover transition-colors"
                 >
                   Close
                 </button>
@@ -675,21 +675,21 @@ export default function TajweedLearningOverlay({
                 }`}
               >
                 {/* Slide Card - PowerPoint Style */}
-                <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl overflow-hidden aspect-[16/9] flex flex-col">
+                <div className="bg-surface rounded-2xl shadow-2xl overflow-hidden aspect-[16/9] flex flex-col">
                   {/* Slide Header */}
-                  <div className="flex items-center justify-between px-6 py-3 bg-gradient-to-r from-emerald-600 to-emerald-500">
+                  <div className="flex items-center justify-between px-6 py-3 bg-gradient-to-r from-primary to-primary-pressed">
                     <div className="flex items-center gap-2">
-                      <span className="text-white/80 text-xs font-medium">Verse {currentSlide.ayahNumber}</span>
+                      <span className="text-on-primary/80 text-xs font-medium">Verse {currentSlide.ayahNumber}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       {isPlayingFullVerse && (
-                        <span className="flex items-center gap-1.5 text-white/90 text-xs">
+                        <span className="flex items-center gap-1.5 text-on-primary/90 text-xs">
                           <FiVolume2 className="w-3 h-3 animate-pulse" />
                           Playing full verse
                         </span>
                       )}
                       {isAudioLoading && (
-                        <span className="flex items-center gap-1.5 text-white/90 text-xs">
+                        <span className="flex items-center gap-1.5 text-on-primary/90 text-xs">
                           <FiLoader className="w-3 h-3 animate-spin" />
                           Loading audio
                         </span>
@@ -698,15 +698,15 @@ export default function TajweedLearningOverlay({
                   </div>
 
                   {/* Main Content */}
-                  <div className="flex-1 flex flex-col items-center justify-center p-8 bg-gradient-to-b from-slate-50 to-white dark:from-slate-800 dark:to-slate-850">
+                  <div className="flex-1 flex flex-col items-center justify-center p-8 bg-gradient-to-b from-surface-2 to-surface">
                     {isPlayingFullVerse ? (
                       /* Full Verse Display */
                       <div className="text-center space-y-6">
-                        <p className="quran-text text-4xl sm:text-5xl md:text-6xl text-slate-800 dark:text-slate-100 leading-relaxed">
+                        <p className="quran-text text-4xl sm:text-5xl md:text-6xl text-text leading-relaxed">
                           {actualWords.map((word) => word.text).join(' ')}
                         </p>
-                        <div className="flex items-center justify-center gap-2 text-emerald-600">
-                          <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                        <div className="flex items-center justify-center gap-2 text-primary">
+                          <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
                           <span className="text-sm font-medium">Playing recitation...</span>
                         </div>
                       </div>
@@ -715,19 +715,19 @@ export default function TajweedLearningOverlay({
                       <div className="text-center space-y-6 w-full">
                         {/* Arabic Word - Main Focus */}
                         <div className="relative">
-                          <div className="absolute inset-0 blur-3xl bg-emerald-500/10 rounded-full" />
-                          <p className="arabic relative text-6xl sm:text-7xl md:text-8xl text-slate-800 dark:text-white font-bold leading-normal">
+                          <div className="absolute inset-0 blur-3xl bg-primary/10 rounded-full" />
+                          <p className="arabic relative text-6xl sm:text-7xl md:text-8xl text-text font-bold leading-normal">
                             {displayWord.text}
                           </p>
                         </div>
 
                         {/* Translation */}
                         <div className="space-y-2">
-                          <p className="text-2xl sm:text-3xl text-slate-700 dark:text-slate-200 font-medium">
+                          <p className="text-2xl sm:text-3xl text-text font-medium">
                             {displayWord.translation || 'Translation not available'}
                           </p>
                           {displayWord.transliteration && (
-                            <p className="text-lg text-slate-500 dark:text-slate-400 italic">
+                            <p className="text-lg text-text-muted italic">
                               {displayWord.transliteration}
                             </p>
                           )}
@@ -737,28 +737,28 @@ export default function TajweedLearningOverlay({
                   </div>
 
                   {/* Slide Footer - Word Progress */}
-                  <div className="px-6 py-3 bg-slate-100 dark:bg-slate-700/50 border-t border-slate-200 dark:border-slate-600">
+                  <div className="px-6 py-3 bg-surface-2 border-t border-border">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs text-slate-500 dark:text-slate-400">
+                      <span className="text-xs text-text-muted">
                         Word {currentWordIndex + 1} of {actualWords.length}
                       </span>
-                      <div className="h-1 flex-1 mx-4 bg-slate-200 dark:bg-slate-600 rounded-full overflow-hidden">
+                      <div className="h-1 flex-1 mx-4 bg-surface rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-emerald-500 rounded-full transition-all duration-300"
+                          className="h-full bg-primary rounded-full transition-all duration-300"
                           style={{ width: `${wordProgressRatio * 100}%` }}
                         />
                       </div>
                     </div>
-                    <p className="quran-text text-sm text-slate-600 dark:text-slate-300 leading-relaxed" dir="rtl">
+                    <p className="quran-text text-sm text-text leading-relaxed" dir="rtl">
                       {actualWords.map((word, idx) => (
                         <span
                           key={idx}
                           className={`inline mx-0.5 transition-all duration-200 ${
                             idx === currentWordIndex
-                              ? 'text-emerald-600 dark:text-emerald-400 font-bold'
+                              ? 'text-primary font-bold'
                               : idx < currentWordIndex
-                              ? 'text-slate-400 dark:text-slate-500'
-                              : 'text-slate-500 dark:text-slate-400'
+                              ? 'text-text-muted/50'
+                              : 'text-text-muted'
                           }`}
                         >
                           {word.text}
@@ -774,7 +774,7 @@ export default function TajweedLearningOverlay({
       </div>
 
       {/* Bottom Controls - Presenter Style */}
-      <footer className="flex-shrink-0 bg-slate-800/95 backdrop-blur-sm border-t border-slate-700/50">
+      <footer className="flex-shrink-0 bg-surface-2 border-t border-border">
         <div className="flex items-center justify-between px-4 py-3">
           {/* Mobile Slide Selector */}
           <div className="lg:hidden flex items-center gap-2 overflow-x-auto max-w-[40%]">
@@ -787,8 +787,8 @@ export default function TajweedLearningOverlay({
                   onClick={() => handleVerseChange(actualIndex)}
                   className={`shrink-0 w-8 h-8 rounded-lg text-xs font-medium transition-all ${
                     actualIndex === currentVerseIndex
-                      ? 'bg-emerald-500 text-white'
-                      : 'bg-slate-700 text-slate-400 hover:bg-slate-600'
+                      ? 'bg-primary text-on-primary'
+                      : 'bg-surface-2 text-text-muted hover:bg-surface'
                   }`}
                 >
                   {actualIndex + 1}
@@ -804,7 +804,7 @@ export default function TajweedLearningOverlay({
               type="button"
               onClick={retreatWord}
               disabled={currentVerseIndex === 0 && currentWordIndex === 0}
-              className="p-3 rounded-xl bg-slate-700/50 hover:bg-slate-600/50 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-slate-300 hover:text-white"
+              className="p-3 rounded-xl bg-surface-2 hover:bg-surface-2 hover:border-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all text-text-muted"
               aria-label="Previous word"
             >
               <FiChevronRight className="w-6 h-6" />
@@ -816,8 +816,8 @@ export default function TajweedLearningOverlay({
               onClick={togglePlayback}
               className={`p-4 rounded-2xl transition-all shadow-lg ${
                 isPlaying 
-                  ? 'bg-emerald-500 hover:bg-emerald-400 text-white' 
-                  : 'bg-amber-500 hover:bg-amber-400 text-white'
+                  ? 'bg-primary hover:bg-primary-hover text-on-primary' 
+                  : 'bg-accent hover:bg-accent text-on-accent'
               }`}
               aria-label={isPlaying ? 'Pause' : 'Play'}
             >
@@ -836,7 +836,7 @@ export default function TajweedLearningOverlay({
                 currentVerseIndex === slides.length - 1 &&
                 currentWordIndex === actualWords.length - 1
               }
-              className="p-3 rounded-xl bg-slate-700/50 hover:bg-slate-600/50 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-slate-300 hover:text-white"
+              className="p-3 rounded-xl bg-surface-2 hover:bg-surface-2 hover:border-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all text-text-muted"
               aria-label="Next word"
             >
               <FiChevronLeft className="w-6 h-6" />
@@ -845,23 +845,23 @@ export default function TajweedLearningOverlay({
 
           {/* Status Info */}
           <div className="hidden sm:flex items-center gap-4 text-sm">
-            <span className="text-slate-400">
-              Slide <span className="text-white font-medium">{currentVerseIndex + 1}</span> of <span className="text-slate-300">{slides.length}</span>
+            <span className="text-text-muted">
+              Slide <span className="text-text font-medium">{currentVerseIndex + 1}</span> of <span className="text-text-muted">{slides.length}</span>
             </span>
-            <div className="h-4 w-px bg-slate-600" />
-            <span className="text-slate-400">
-              Word <span className="text-white font-medium">{currentWordIndex + 1}</span> of <span className="text-slate-300">{actualWords.length}</span>
+            <div className="h-4 w-px bg-border" />
+            <span className="text-text-muted">
+              Word <span className="text-text font-medium">{currentWordIndex + 1}</span> of <span className="text-text-muted">{actualWords.length}</span>
             </span>
           </div>
         </div>
 
         {/* Keyboard Shortcuts Hint */}
-        <div className="hidden md:flex items-center justify-center gap-6 pb-2 text-xs text-slate-500">
-          <span><kbd className="px-1.5 py-0.5 rounded bg-slate-700 text-slate-400">←</kbd> Next</span>
-          <span><kbd className="px-1.5 py-0.5 rounded bg-slate-700 text-slate-400">→</kbd> Previous</span>
-          <span><kbd className="px-1.5 py-0.5 rounded bg-slate-700 text-slate-400">Space</kbd> Play/Pause</span>
-          <span><kbd className="px-1.5 py-0.5 rounded bg-slate-700 text-slate-400">F</kbd> Fullscreen</span>
-          <span><kbd className="px-1.5 py-0.5 rounded bg-slate-700 text-slate-400">Esc</kbd> Close</span>
+        <div className="hidden md:flex items-center justify-center gap-6 pb-2 text-xs text-text-muted">
+          <span><kbd className="px-1.5 py-0.5 rounded bg-surface-2 text-text-muted">←</kbd> Next</span>
+          <span><kbd className="px-1.5 py-0.5 rounded bg-surface-2 text-text-muted">→</kbd> Previous</span>
+          <span><kbd className="px-1.5 py-0.5 rounded bg-surface-2 text-text-muted">Space</kbd> Play/Pause</span>
+          <span><kbd className="px-1.5 py-0.5 rounded bg-surface-2 text-text-muted">F</kbd> Fullscreen</span>
+          <span><kbd className="px-1.5 py-0.5 rounded bg-surface-2 text-text-muted">Esc</kbd> Close</span>
         </div>
       </footer>
     </div>
