@@ -38,7 +38,8 @@
     --color-danger: #B91C1C;
 
     --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
-    --font-arabic: 'Noto Naskh Arabic', 'Quran', serif;
+    /* --font-arabic: 'Noto Naskh Arabic', 'Quran', serif; */
+    --font-arabic: 'Quran';
   }
 
   .dark, .dark :host {
