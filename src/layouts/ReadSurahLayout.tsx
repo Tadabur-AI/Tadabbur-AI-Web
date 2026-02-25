@@ -270,7 +270,8 @@ export default function ReadSurahLayout({
             <div className="card mb-6">
               {/* Arabic Text */}
               <div className="bg-surface-2 rounded-lg p-4 mb-4 text-right">
-                <p className="arabic text-2xl sm:text-3xl text-text">
+                
+                <p className="arabic text-2xl sm:text-3xl text-text leading-12">
                   {currentVerse.text}
                 </p>
               </div>
@@ -413,7 +414,7 @@ export default function ReadSurahLayout({
 
         {/* Bottom Player */}
         {selectedRecitation && (
-          <div className="fixed bottom-0 left-0 right-0 h-[72px] z-player bg-surface border-t border-border px-4 flex items-center gap-4">
+          <div className="fixed bottom-0 left-0 right-0 lg:left-[var(--sidebar-width)] h-[72px] z-player bg-surface border-t border-border px-4 flex items-center gap-4">
             <div className="flex items-center gap-2 lg:hidden">
               <button
                 onClick={goToPreviousVerse}

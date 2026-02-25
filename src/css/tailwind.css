@@ -316,7 +316,7 @@
     font-family: var(--font-arabic);
     direction: rtl;
     text-align: right;
-    line-height: 2;
+    word-spacing: 0.75em !important;
   }
 }
 
