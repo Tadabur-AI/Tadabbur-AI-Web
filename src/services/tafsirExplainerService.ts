@@ -21,14 +21,18 @@ interface ExplainTafsirRawResponse {
 /**
  * Explain tafsir for a specific verse in modern, easy-to-understand English.
  */
-export async function explainTafsir(tafseerText: string): Promise<ExplainTafsirResponse> {
+export async function explainTafsir(
+  tafseerText: string,
+  verse?: string,
+  tafseerAuthor?: string,
+): Promise<ExplainTafsirResponse> {
   try {
     const response = await fetch('https://tadabbur-be.eng-sharjeel-baig.workers.dev/generate-explanation', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ tafseerText }),
+      body: JSON.stringify({ tafseerText, verse, tafseerAuthor }),
     });
 
     if (!response.ok) {

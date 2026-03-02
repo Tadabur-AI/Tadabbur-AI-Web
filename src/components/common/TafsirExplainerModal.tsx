@@ -10,6 +10,8 @@ interface TafsirExplainerModalProps {
   ayahNumber: number;
   tafsirId: number;
   tafsirHtml?: string | null;
+  verse?: string;
+  tafseerAuthor?: string;
 }
 
 const stripHtml = (input: string): string =>
@@ -26,6 +28,8 @@ export default function TafsirExplainerModal({
   ayahNumber,
   tafsirId,
   tafsirHtml,
+  verse,
+  tafseerAuthor,
 }: TafsirExplainerModalProps) {
   const [explanation, setExplanation] = useState<ExplainTafsirResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -58,7 +62,7 @@ export default function TafsirExplainerModal({
 
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       try {
-        const result = await explainTafsir(plainTafsir);
+        const result = await explainTafsir(plainTafsir, verse, tafseerAuthor);
         setExplanation(result);
         setHasRequested(true);
         setLoading(false);
@@ -75,7 +79,7 @@ export default function TafsirExplainerModal({
         }
       }
     }
-  }, [explanation, hasRequested, plainTafsir]);
+  }, [explanation, hasRequested, plainTafsir, verse, tafseerAuthor]);
 
   useEffect(() => {
     if (!isOpen) {

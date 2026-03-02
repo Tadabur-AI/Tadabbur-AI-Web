@@ -456,6 +456,9 @@ export default function ReadSurahLayout({
           surahNumber={currentVerse.surah_id}
           ayahNumber={currentVerseIndex + 1}
           tafsirId={selectedTafsir}
+          tafsirHtml={tafsirText}
+          verse={`${currentVerse.surah_id}:${currentVerseIndex + 1}`}
+          tafseerAuthor={tafsirOptions.find((t) => t.id === selectedTafsir)?.name}
         />
       )}
     </div>
