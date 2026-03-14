@@ -56,11 +56,11 @@ export default function DashboardLayout({
         `}
       >
         {/* Sidebar Header */}
-        <div className="h-[56px] flex items-center justify-between px-4 border-b border-border">
+        <div className="relative h-[56px] flex items-center justify-center px-4 border-b border-border">
           <LogoPotrait />
           <button
             onClick={() => setIsSidebarOpen(false)}
-            className="btn-ghost p-2 sm:hidden"
+            className="btn-ghost p-2 sm:hidden absolute right-4"
             aria-label="Close sidebar"
           >
             <FiX size={20} />
