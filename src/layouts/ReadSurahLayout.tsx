@@ -384,7 +384,7 @@ export default function ReadSurahLayout({
               )}
 
               {aiExplanation && !isExplanationLoading && (
-                <div className="prose prose-sm max-w-none">
+                <div className="prose prose-sm max-w-none break-words w-full overflow-x-auto">
                   <ReactMarkdown>{aiExplanation.explanation}</ReactMarkdown>
                 </div>
               )}
@@ -416,7 +416,7 @@ export default function ReadSurahLayout({
                 )}
                 {!isTafsirLoading && tafsirText && (
                   <div
-                    className="prose prose-sm max-w-none text-sm"
+                    className="prose prose-sm max-w-none text-sm break-words w-full overflow-x-auto"
                     dangerouslySetInnerHTML={{ __html: tafsirText }}
                   />
                 )}
