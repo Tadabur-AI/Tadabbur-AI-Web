@@ -131,6 +131,7 @@ export default function ReadSurahPage() {
     return saved ? Number(saved) : 169;
   });
   const [isExplainerOpen, setIsExplainerOpen] = useState(false);
+  const [isReportOpen, setIsReportOpen] = useState(false);
   
   const [tafsirOptions, setTafsirOptions] = useState<Array<{ id: number; name: string; languageName: string }>>([]);
   const [translationOptions, setTranslationOptions] = useState<Array<{ id: number; name: string; languageName: string }>>([]);
@@ -482,7 +483,8 @@ export default function ReadSurahPage() {
 
       for (let attempt = 0; attempt < maxRetries; attempt++) {
         try {
-          const result = await explainTafsir(plainTafsir);
+          const tafsirAuthorName = tafsirOptions.find(t => t.id === selectedTafsir)?.name || 'Unknown';
+          const result = await explainTafsir(plainTafsir, currentVerse.verse_key, tafsirAuthorName);
           if (ignore) return;
 
           explanationCache.current.set(cacheKey, result);
@@ -510,7 +512,7 @@ export default function ReadSurahPage() {
     return () => {
       ignore = true;
     };
-  }, [selectedTafsir, currentVerseIndex, verses, tafsirText, isTafsirLoading]);
+  }, [selectedTafsir, currentVerseIndex, verses, tafsirText, isTafsirLoading, tafsirOptions]);
 
   const goToPreviousVerse = () => {
     setCurrentVerseIndex((i) => Math.max(0, i - 1));
@@ -558,10 +560,12 @@ export default function ReadSurahPage() {
   selectedTranslation={selectedTranslation}
       selectedTafsir={selectedTafsir}
       onRecitationChange={handleRecitationChange}
-  onTranslationChange={handleTranslationChange}
+      onTranslationChange={handleTranslationChange}
       onTafsirChange={handleTafsirChange}
       isExplainerOpen={isExplainerOpen}
       onExplainerToggle={() => setIsExplainerOpen(!isExplainerOpen)}
+      isReportModalOpen={isReportOpen}
+      onReportModalToggle={setIsReportOpen}
       tafsirText={tafsirText}
       isTafsirLoading={isTafsirLoading}
       tafsirOptions={tafsirOptions}

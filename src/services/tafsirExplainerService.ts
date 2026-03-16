@@ -1,6 +1,7 @@
 export interface ExplainTafsirResponse {
   explanation: string;
   keyTerms?: ExplainTafsirKeyTerm[];
+  cached?: boolean;
 }
 
 interface ExplainTafsirKeyTerm {
@@ -14,6 +15,7 @@ type ExplainTafsirRawKeyTerm =
 
 interface ExplainTafsirRawResponse {
   explanation: string;
+  cached?: boolean;
   keyTerms?: ExplainTafsirRawKeyTerm[] | Record<string, string>;
   key_terms?: ExplainTafsirRawKeyTerm[] | Record<string, string>;
 }
@@ -83,9 +85,53 @@ export async function explainTafsir(
     return {
       explanation: payload.explanation,
       keyTerms: keyTerms && keyTerms.length > 0 ? keyTerms : undefined,
+      cached: payload.cached ?? false,
     };
   } catch (error) {
     console.error('Error generating tafsir explanation:', error);
+    throw error;
+  }
+}
+
+/**
+ * Report an issue with the generated tafsir explanation.
+ */
+export async function reportWrongTafsir(
+  tafseerText: string,
+  verse: string,
+  tafseerAuthor: string,
+  originalExplanation: string,
+  userComplaint: string
+): Promise<{
+  success: boolean;
+  status: string;
+  isCorrected: boolean;
+  explanation: string;
+  correctionReasoning?: string;
+}> {
+  try {
+    const response = await fetch('https://tadabbur-be.eng-sharjeel-baig.workers.dev/report-wrong', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ 
+        sourceText: tafseerText, 
+        verse, 
+        tafsirAuthor: tafseerAuthor,
+        originalExplanation,
+        userComplaint
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ error: response.statusText }));
+      throw new Error(error.error || `Failed to report tafsir: ${response.statusText}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error reporting tafsir explanation:', error);
     throw error;
   }
 }

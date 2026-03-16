@@ -4,6 +4,7 @@ import { FiChevronLeft, FiChevronRight, FiX, FiArrowLeft, FiMenu, FiCopy, FiBook
 import ReactMarkdown from 'react-markdown';
 import AudioPlayer from '../components/common/AudioPlayer';
 import TafsirExplainerModal from '../components/common/TafsirExplainerModal';
+import ReportWrongModal from '../components/common/ReportWrongModal';
 import ThemeToggle from '../components/common/ThemeToggle';
 import WordByWord from '../components/common/WordByWord';
 import TajweedLearningButton from '../components/TajweedLearning/TajweedLearningButton';
@@ -47,10 +48,12 @@ interface Props {
   onExplainerToggle?: () => void;
   tafsirText?: string | null;
   isTafsirLoading?: boolean;
-  tafsirOptions?: Array<{ id: number; name: string; languageName: string }>;
+  tafsirOptions?: Array<{ id: number; name: string }>; // Changed languageName to be consistent with Tafsir options
   aiExplanation?: ExplainTafsirResponse | null;
   isExplanationLoading?: boolean;
   recitations?: Recitation[];
+  isReportModalOpen?: boolean;
+  onReportModalToggle?: (open: boolean) => void;
 }
 
 export default function ReadSurahLayout({
@@ -75,6 +78,8 @@ export default function ReadSurahLayout({
   aiExplanation,
   isExplanationLoading,
   recitations = [],
+  isReportModalOpen = false,
+  onReportModalToggle,
 }: Props) {
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -347,12 +352,23 @@ export default function ReadSurahLayout({
             </div>
 
             {/* AI Explanation */}
-            <div className="card mb-6">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                  <span className="text-primary text-sm">AI</span>
+            <div className="card mb-6 group">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                    <span className="text-primary text-sm">AI</span>
+                  </div>
+                  <span className="text-sm font-medium text-text">AI Explanation</span>
                 </div>
-                <span className="text-sm font-medium text-text">AI Explanation</span>
+                
+                {/* {aiExplanation && !isExplanationLoading && (
+                  <button
+                    onClick={() => onReportModalToggle?.(true)}
+                    className="btn-ghost text-xs text-text-muted hover:text-danger opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1"
+                  >
+                    Report Wrong
+                  </button>
+                )} */}
               </div>
 
               {isExplanationLoading && (
@@ -459,6 +475,17 @@ export default function ReadSurahLayout({
           tafsirHtml={tafsirText}
           verse={`${currentVerse.surah_id}:${currentVerseIndex + 1}`}
           tafseerAuthor={tafsirOptions.find((t) => t.id === selectedTafsir)?.name}
+        />
+      )}
+      
+      {aiExplanation && selectedTafsir && onReportModalToggle && (
+        <ReportWrongModal
+          isOpen={isReportModalOpen}
+          onClose={() => onReportModalToggle(false)}
+          tafsirText={tafsirText ?? ''}
+          verse={`${currentVerse.surah_id}:${currentVerseIndex + 1}`}
+          tafsirAuthor={tafsirOptions.find((t) => t.id === selectedTafsir)?.name || 'Unknown'}
+          originalExplanation={aiExplanation.explanation}
         />
       )}
     </div>
