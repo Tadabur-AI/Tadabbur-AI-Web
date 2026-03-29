@@ -13,7 +13,6 @@ Tadabbur AI is a spiritual companion app that combines traditional Islamic study
 - Browse and read all 114 Surahs of the Quran
 - Get AI-powered spiritual reflections on verses
 - Take markdown notes during their study
-- Chat with an Islamic AI assistant
 - Have a clean, distraction-free reading experience
 
 ## 🚀 Quick Start
@@ -67,7 +66,6 @@ frontend/
 │   │   └── ReadSurahLayout.tsx   # Special layout for reading Quran
 │   ├── pages/             # All page components
 │   │   ├── authentication/       # Login/signup pages
-│   │   ├── chat/                 # AI chat functionality
 │   │   ├── homepage/             # Dashboard/home page
 │   │   ├── notes/                # Note-taking feature
 │   │   ├── surahs/               # Quran reading pages
@@ -113,12 +111,11 @@ We use a Islamic-inspired color palette:
 - **`ListSurahsPage`**: Browse all 114 Surahs of the Quran
 - **`ReadSurahPage`**: Read verses with AI-powered reflections
 - **`NotesPage`**: Markdown editor with live preview for study notes
-- **`ChatPage`**: AI chat for Islamic guidance and questions
 - **`AuthenticationPage`**: Login and authentication
 
 ### Routing
 - **Public Routes**: Accessible without login (Surahs, login page)
-- **Private Routes**: Require authentication (notes, chat, profile)
+- **Private Routes**: Require authentication (homepage, profile)
 - **Route Protection**: Automatically redirects to login if not authenticated
 
 ## 🛠️ Technologies Used
@@ -135,7 +132,7 @@ We use a Islamic-inspired color palette:
 - **Custom CSS Variables**: Consistent theming
 
 ### Special Features
-- **react-markdown**: Render markdown in notes and chat
+- **react-markdown**: Render markdown in notes
 - **quran-english**: Package for Quran data and translations
 - **remark-gfm**: GitHub-flavored markdown support
 
@@ -153,13 +150,7 @@ We use a Islamic-inspired color palette:
 - Rich text formatting support
 - Easy organization and search
 
-### 3. AI Chat
-- Streams responses from AI API
-- Islamic context and knowledge base
-- Real-time typing indicators
-- Conversation history
-
-### 4. Authentication
+### 3. Authentication
 - Route protection system
 - Currently set up for future auth integration
 - Redirects and state management

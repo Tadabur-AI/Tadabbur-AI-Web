@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { FiSearch, FiBookmark, FiBookOpen } from 'react-icons/fi';
+import { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { FiSearch, FiBookmark, FiBookOpen, FiFileText } from 'react-icons/fi';
 import DashboardLayout from '../../layouts/DashboardLayout';
+import ThemeToggle from '../../components/common/ThemeToggle';
 import PlayPleasentlyButton from '../../components/PleasentPlay/PlayPleasentlyButton';
 import ReadWithTafsserButton from '../../components/PleasentPlay/ReadWithTafsserButton';
 import { listSurahs, type SurahSummary } from '../../services/apis';
@@ -15,10 +16,24 @@ export default function ListSurahsPage() {
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [revelationFilter, setRevelationFilter] = useState<'all' | 'makkah' | 'madinah'>('all');
-  const [activeTab, setActiveTab] = useState<'surahs' | 'juz' | 'saved'>('surahs');
   const [savedVerses, setSavedVerses] = useState<BookmarkedVerse[]>([]);
   const { startExperience, isLoading: isPleasantlyLoading, isActive: isPleasantlyActive } = usePlayPleasantly();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const deferredSearchQuery = useDeferredValue(searchQuery);
+  const activeTabParam = searchParams.get('tab');
+  const activeTab: 'surahs' | 'juz' | 'saved' =
+    activeTabParam === 'juz' || activeTabParam === 'saved' ? activeTabParam : 'surahs';
+
+  const selectTab = useCallback((nextTab: 'surahs' | 'juz' | 'saved') => {
+    const nextSearchParams = new URLSearchParams(searchParams);
+    if (nextTab === 'surahs') {
+      nextSearchParams.delete('tab');
+    } else {
+      nextSearchParams.set('tab', nextTab);
+    }
+    setSearchParams(nextSearchParams, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   useEffect(() => {
     setSavedVerses(getBookmarks());
@@ -48,7 +63,7 @@ export default function ListSurahsPage() {
   }, [chapters]);
 
   const filteredChapters = useMemo(() => {
-    const query = searchQuery.toLowerCase().trim();
+    const query = deferredSearchQuery.toLowerCase().trim();
     return chapters.filter((chapter) => {
       const matchesSearch =
         !query ||
@@ -61,10 +76,10 @@ export default function ListSurahsPage() {
         chapter.revelationPlace === revelationFilter;
       return matchesSearch && matchesRevelation;
     });
-  }, [chapters, revelationFilter, searchQuery]);
+  }, [chapters, deferredSearchQuery, revelationFilter]);
 
   const filteredJuz = useMemo(() => {
-    const query = searchQuery.toLowerCase().trim();
+    const query = deferredSearchQuery.toLowerCase().trim();
     if (!query) return JUZ_METADATA;
 
     return JUZ_METADATA.filter((juz) => {
@@ -76,78 +91,94 @@ export default function ListSurahsPage() {
       });
       return numberMatch || nameMatch || sectionMatch;
     });
-  }, [chaptersById, searchQuery]);
+  }, [chaptersById, deferredSearchQuery]);
+
+  const headerContent = (
+    <div className="flex min-w-0 flex-1 flex-wrap items-center gap-3 lg:flex-nowrap">
+      <h1 className="shrink-0 text-base font-semibold text-text">Quran</h1>
+
+      <div className="flex shrink-0 flex-wrap gap-2">
+        <button
+          onClick={() => selectTab('surahs')}
+          className={`btn-secondary ${activeTab === 'surahs' ? 'bg-surface-2 border-primary' : ''}`}
+        >
+          Surahs
+        </button>
+        <button
+          onClick={() => selectTab('juz')}
+          className={`btn-secondary ${activeTab === 'juz' ? 'bg-surface-2 border-primary' : ''}`}
+        >
+          Juz
+        </button>
+        <button
+          onClick={() => selectTab('saved')}
+          className={`btn-secondary ${activeTab === 'saved' ? 'bg-surface-2 border-primary' : ''}`}
+        >
+          Saved
+        </button>
+      </div>
+
+      {activeTab !== 'saved' && (
+        <div className="min-w-[220px] flex-1">
+          <div className="relative">
+            <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" size={18} />
+            <input
+              type="text"
+              placeholder="Search by name or number..."
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              className="w-full pl-10 pr-4"
+            />
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'surahs' && (
+        <div className="flex shrink-0 flex-wrap gap-2">
+          {(['all', 'makkah', 'madinah'] as const).map((filter) => (
+            <button
+              key={filter}
+              onClick={() => setRevelationFilter(filter)}
+              className={`btn-secondary ${revelationFilter === filter ? 'bg-surface-2 border-primary' : ''}`}
+            >
+              {filter === 'all' ? 'All' : filter === 'makkah' ? 'Meccan' : 'Medinan'}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <div className="ml-auto shrink-0">
+        <ThemeToggle />
+      </div>
+    </div>
+  );
 
   return (
-    <DashboardLayout
+      <DashboardLayout
       sidebarItems={[
-        { label: "Surahs", icon: <FiBookOpen size={18} />, path: "/surahs" },
-        { label: "Saved", icon: <FiBookmark size={18} />, onClick: () => setActiveTab('saved') },
+        { label: "Surahs", icon: <FiBookOpen size={18} />, onClick: () => selectTab('surahs') },
+        { label: "Saved", icon: <FiBookmark size={18} />, onClick: () => selectTab('saved') },
+        { label: "Notes", icon: <FiFileText size={18} />, path: "/notes" },
       ]}
-      screenTitle="Quran"
+      headerContent={headerContent}
     >
-      <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-          <div className="flex gap-2">
-            <button
-              onClick={() => setActiveTab('surahs')}
-              className={`btn-secondary ${activeTab === 'surahs' ? 'bg-surface-2 border-primary' : ''}`}
-            >
-              Surahs
-            </button>
-            <button
-              onClick={() => setActiveTab('juz')}
-              className={`btn-secondary ${activeTab === 'juz' ? 'bg-surface-2 border-primary' : ''}`}
-            >
-              Juz
-            </button>
-            <button
-              onClick={() => setActiveTab('saved')}
-              className={`btn-secondary ${activeTab === 'saved' ? 'bg-surface-2 border-primary' : ''}`}
-            >
-              Saved
-            </button>
-          </div>
-
-          {activeTab !== 'saved' && (
-            <div className="flex-1">
-              <div className="relative">
-                <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" size={18} />
-                <input
-                  type="text"
-                  placeholder="Search by name or number..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4"
-                />
-              </div>
-            </div>
-          )}
-        </div>
-
-        {activeTab === 'surahs' && (
-          <div className="flex gap-2">
-            {(['all', 'makkah', 'madinah'] as const).map((filter) => (
-              <button
-                key={filter}
-                onClick={() => setRevelationFilter(filter)}
-                className={`btn-secondary ${revelationFilter === filter ? 'bg-surface-2 border-primary' : ''}`}
-              >
-                {filter === 'all' ? 'All' : filter === 'makkah' ? 'Meccan' : 'Medinan'}
-              </button>
-            ))}
-          </div>
-        )}
-
+      <div className="space-y-4">
         {loading && (
-          <div className="space-y-3">
+          <div className="grid gap-4 lg:grid-cols-3">
             {[...Array(5)].map((_, i) => (
               <div key={i} className="card">
                 <div className="flex items-center gap-4">
-                  <div className="skeleton w-7 h-7 rounded-full" />
-                  <div className="flex-1 space-y-2">
+                  <div className="skeleton h-7 w-7 rounded-full shrink-0" />
+                  <div className="flex-1 space-y-2 min-w-0">
                     <div className="skeleton h-4 w-32" />
-                    <div className="skeleton h-3 w-48" />
+                    <div className="skeleton h-3 w-40" />
+                  </div>
+                  <div className="hidden shrink-0 items-center gap-2 sm:flex">
+                    <div className="skeleton h-6 w-20" />
+                    <div className="flex gap-2">
+                      <div className="skeleton h-10 w-24 rounded-xl" />
+                      <div className="skeleton h-10 w-24 rounded-xl" />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -165,23 +196,24 @@ export default function ListSurahsPage() {
         )}
 
         {!loading && !error && activeTab === 'surahs' && (
-          <div className="space-y-2">
+          <div className="grid gap-4 lg:grid-cols-3">
             {filteredChapters.map((chapter) => (
               <div key={chapter.id} className="card">
                 <div className="flex items-center gap-4">
                   <Link
                     to={`/surah/${chapter.id}`}
-                    className="flex items-center gap-4 flex-1 min-w-0"
+                    className="flex min-w-0 flex-1 items-center gap-4"
                   >
-                    <span className="badge-number">{chapter.id}</span>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-text truncate">{chapter.nameSimple}</p>
+                    <span className="badge-number shrink-0">{chapter.id}</span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-medium text-text">{chapter.nameSimple}</p>
                       <p className="text-sm text-text-muted">
                         {chapter.versesCount} verses · {chapter.revelationPlace === 'makkah' ? 'Meccan' : 'Medinan'}
                       </p>
                     </div>
                     <span className="arabic text-lg text-primary hidden sm:block">{chapter.nameArabic}</span>
                   </Link>
+
                   <div className="flex items-center gap-2 shrink-0">
                     <PlayPleasentlyButton
                       onClick={() => startExperience({
@@ -200,8 +232,8 @@ export default function ListSurahsPage() {
             ))}
 
             {filteredChapters.length === 0 && (
-              <div className="card text-center py-8 text-text-muted">
-                No surahs found for "{searchQuery}"
+              <div className="card py-8 text-center text-text-muted lg:col-span-3">
+                No surahs found for "{deferredSearchQuery}"
               </div>
             )}
           </div>

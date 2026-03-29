@@ -1,4 +1,4 @@
-import { FiBookOpen, FiHome, FiMessageCircle } from "react-icons/fi";
+import { FiBookOpen, FiHome } from "react-icons/fi";
 import DashboardLayout, { type SidebarItem } from "../../layouts/DashboardLayout";
 import { useEffect, useState } from "react";
 import { listSurahs, type SurahSummary } from "../../services/apis";
@@ -27,11 +27,6 @@ export default function Homepage() {
             label: "Read Quran",
             icon: <FiBookOpen className="text-xl" />,
             path: "/read-quran"
-        },
-        {
-            label: "Chat",
-            icon: <FiMessageCircle className="text-xl" />,
-            path: "/chat"
         }
     ]
   return (

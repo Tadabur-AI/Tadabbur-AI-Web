@@ -16,6 +16,8 @@ interface DashboardLayoutProps {
   children?: React.ReactNode;
   screenTitle?: string | React.ReactNode;
   userProfile?: React.ReactNode;
+  toolbar?: React.ReactNode;
+  headerContent?: React.ReactNode;
 }
 
 export default function DashboardLayout({
@@ -23,6 +25,8 @@ export default function DashboardLayout({
   children,
   screenTitle,
   userProfile,
+  toolbar,
+  headerContent,
 }: DashboardLayoutProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const navigate = useNavigate();
@@ -85,31 +89,60 @@ export default function DashboardLayout({
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
-        <header className="sticky top-0 h-[56px] z-sticky bg-surface border-b border-border px-4 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3 min-w-0">
-            <button
-              onClick={() => setIsSidebarOpen(true)}
-              className="btn-ghost p-2 sm:hidden"
-              aria-label="Open sidebar"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <line x1="3" y1="6" x2="21" y2="6" />
-                <line x1="3" y1="12" x2="21" y2="12" />
-                <line x1="3" y1="18" x2="21" y2="18" />
-              </svg>
-            </button>
-            <h1 className="text-base font-semibold truncate">{screenTitle}</h1>
-          </div>
+        {headerContent ? (
+          <header className="sticky top-0 z-sticky bg-surface border-b border-border px-4 py-3">
+            <div className="max-w-[1200px] mx-auto flex items-start gap-3">
+              <button
+                onClick={() => setIsSidebarOpen(true)}
+                className="btn-ghost p-2 sm:hidden shrink-0"
+                aria-label="Open sidebar"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="3" y1="6" x2="21" y2="6" />
+                  <line x1="3" y1="12" x2="21" y2="12" />
+                  <line x1="3" y1="18" x2="21" y2="18" />
+                </svg>
+              </button>
+              <div className="min-w-0 flex-1">
+                {headerContent}
+              </div>
+            </div>
+          </header>
+        ) : (
+          <header className="sticky top-0 h-[56px] z-sticky bg-surface border-b border-border px-4 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3 min-w-0">
+              <button
+                onClick={() => setIsSidebarOpen(true)}
+                className="btn-ghost p-2 sm:hidden"
+                aria-label="Open sidebar"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="3" y1="6" x2="21" y2="6" />
+                  <line x1="3" y1="12" x2="21" y2="12" />
+                  <line x1="3" y1="18" x2="21" y2="18" />
+                </svg>
+              </button>
+              <h1 className="text-base font-semibold truncate">{screenTitle}</h1>
+            </div>
 
-          <div className="flex items-center gap-2">
-            <ThemeToggle />
-            {userProfile}
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              {userProfile}
+            </div>
+          </header>
+        )}
+
+        {toolbar && (
+          <div className="shrink-0 bg-surface border-b border-border px-4 py-4">
+            <div className="max-w-[1200px] mx-auto">
+              {toolbar}
+            </div>
           </div>
-        </header>
+        )}
 
         {/* Content */}
         <main className="flex-1 overflow-y-auto bg-background">
-          <div className="max-w-[1200px] mx-auto p-4 sm:p-6">
+          <div className={`max-w-[1200px] mx-auto ${toolbar ? 'p-4 sm:px-6 sm:pb-6' : 'p-4 sm:p-6'}`}>
             {children}
           </div>
         </main>

@@ -1,3 +1,5 @@
+import { buildApiUrl } from '../utils/apiBaseUrl';
+
 export interface ExplainTafsirResponse {
   explanation: string;
   keyTerms?: ExplainTafsirKeyTerm[];
@@ -29,7 +31,7 @@ export async function explainTafsir(
   tafseerAuthor?: string,
 ): Promise<ExplainTafsirResponse> {
   try {
-    const response = await fetch('https://tadabbur-be.eng-sharjeel-baig.workers.dev/generate-explanation', {
+    const response = await fetch(buildApiUrl('/generate-explanation'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -110,7 +112,7 @@ export async function reportWrongTafsir(
   correctionReasoning?: string;
 }> {
   try {
-    const response = await fetch('https://tadabbur-be.eng-sharjeel-baig.workers.dev/report-wrong', {
+    const response = await fetch(buildApiUrl('/report-wrong'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

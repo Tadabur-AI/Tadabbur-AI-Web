@@ -1,5 +1,4 @@
-// API Configuration
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+import { buildApiUrl } from '../utils/apiBaseUrl';
 
 export interface Chapter {
   id: number;
@@ -57,7 +56,7 @@ const defaultHeaders = {
  */
 export async function fetchChapter(chapterId: number): Promise<Chapter> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/chapters/${chapterId}`, {
+    const response = await fetch(buildApiUrl(`/api/chapters/${chapterId}`), {
       headers: defaultHeaders,
     });
     if (!response.ok) {
@@ -75,7 +74,7 @@ export async function fetchChapter(chapterId: number): Promise<Chapter> {
  */
 export async function fetchRecitations(): Promise<Recitation[]> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/recitations`, {
+    const response = await fetch(buildApiUrl('/api/recitations'), {
       headers: defaultHeaders,
     });
     if (!response.ok) {
@@ -94,9 +93,9 @@ export async function fetchRecitations(): Promise<Recitation[]> {
  */
 export async function fetchTranslations(language?: string): Promise<Translation[]> {
   try {
-    const url = language 
-      ? `${API_BASE_URL}/api/translations?language=${language}`
-      : `${API_BASE_URL}/api/translations`;
+    const url = language
+      ? buildApiUrl(`/api/translations?language=${encodeURIComponent(language)}`)
+      : buildApiUrl('/api/translations');
     
     const response = await fetch(url, { headers: defaultHeaders });
     if (!response.ok) {
@@ -115,7 +114,7 @@ export async function fetchTranslations(language?: string): Promise<Translation[
  */
 export async function fetchLanguages(): Promise<Language[]> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/languages`, { headers: defaultHeaders });
+    const response = await fetch(buildApiUrl('/api/languages'), { headers: defaultHeaders });
     if (!response.ok) {
       throw new Error(`Failed to fetch languages: ${response.statusText}`);
     }

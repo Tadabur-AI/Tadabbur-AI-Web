@@ -1,3 +1,5 @@
+import { buildApiUrl } from '../utils/apiBaseUrl';
+
 export interface SurahSummary {
   id: number;
   revelationPlace: 'makkah' | 'madinah' | string;
@@ -20,7 +22,7 @@ export async function listSurahs(): Promise<SurahSummary[]> {
     redirect: 'follow' as RequestRedirect,
   };
 
-  const response = await fetch('https://tadabbur-be.eng-sharjeel-baig.workers.dev/list-surahs', requestOptions);
+  const response = await fetch(buildApiUrl('/list-surahs'), requestOptions);
   if (!response.ok) {
     throw new Error(`Failed to list surahs: ${response.status} ${response.statusText}`);
   }
@@ -61,7 +63,7 @@ export async function retrieveSurah(payload: RetrieveSurahPayload): Promise<Retr
     redirect: 'follow' as RequestRedirect,
   };
 
-  const res = await fetch('https://tadabbur-be.eng-sharjeel-baig.workers.dev/retrieve-surah', requestOptions);
+  const res = await fetch(buildApiUrl('/retrieve-surah'), requestOptions);
   if (!res.ok) {
     throw new Error(`Failed to retrieve surah: ${res.status} ${res.statusText}`);
   }
@@ -98,7 +100,7 @@ export async function retrieveTafseer(payload: RetrieveTafseerPayload): Promise<
     redirect: 'follow' as RequestRedirect,
   };
 
-  const res = await fetch('https://tadabbur-be.eng-sharjeel-baig.workers.dev/retrieve-tafseer', requestOptions);
+  const res = await fetch(buildApiUrl('/retrieve-tafseer'), requestOptions);
   if (!res.ok) {
     throw new Error(`Failed to retrieve tafseer: ${res.status} ${res.statusText}`);
   }
@@ -131,7 +133,7 @@ export async function retrieveRecitation(payload: RetrieveRecitationPayload): Pr
     redirect: 'follow' as RequestRedirect,
   };
 
-  const res = await fetch('https://tadabbur-be.eng-sharjeel-baig.workers.dev/retrieve-recitation', requestOptions);
+  const res = await fetch(buildApiUrl('/retrieve-recitation'), requestOptions);
   if (!res.ok) {
     throw new Error(`Failed to retrieve recitation: ${res.status} ${res.statusText}`);
   }
@@ -157,7 +159,7 @@ export interface TafseerSummary {
 }
 
 export async function listTafseers(): Promise<TafseerSummary[]> {
-  const response = await fetch('https://tadabbur-be.eng-sharjeel-baig.workers.dev/list-tafseers', {
+  const response = await fetch(buildApiUrl('/list-tafseers'), {
     method: 'GET',
     redirect: 'follow' as RequestRedirect,
   });
@@ -187,7 +189,7 @@ export interface TranslationSummary {
 }
 
 export async function listTranslations(): Promise<TranslationSummary[]> {
-  const response = await fetch('https://tadabbur-be.eng-sharjeel-baig.workers.dev/list-translations', {
+  const response = await fetch(buildApiUrl('/list-translations'), {
     method: 'GET',
     redirect: 'follow' as RequestRedirect,
   });
@@ -215,7 +217,7 @@ export interface ReciterSummary {
 }
 
 export async function listReciters(): Promise<ReciterSummary[]> {
-  const response = await fetch('https://tadabbur-be.eng-sharjeel-baig.workers.dev/list-reciters', {
+  const response = await fetch(buildApiUrl('/list-reciters'), {
     method: 'GET',
     redirect: 'follow' as RequestRedirect,
   });
@@ -231,5 +233,4 @@ export async function listReciters(): Promise<ReciterSummary[]> {
 
   return data as ReciterSummary[];
 }
-
 

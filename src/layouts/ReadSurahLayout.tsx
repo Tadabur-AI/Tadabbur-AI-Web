@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiChevronLeft, FiChevronRight, FiX, FiArrowLeft, FiMenu, FiCopy, FiBookmark } from 'react-icons/fi';
-import ReactMarkdown from 'react-markdown';
+import { FiChevronLeft, FiChevronRight, FiX, FiArrowLeft, FiMenu, FiCopy, FiBookmark, FiEdit3, FiFileText, FiSave } from 'react-icons/fi';
 import AudioPlayer from '../components/common/AudioPlayer';
+import MarkdownContent from '../components/common/MarkdownContent';
 import TafsirExplainerModal from '../components/common/TafsirExplainerModal';
 import ReportWrongModal from '../components/common/ReportWrongModal';
 import ThemeToggle from '../components/common/ThemeToggle';
@@ -12,6 +12,10 @@ import { type ExplainTafsirResponse } from '../services/tafsirExplainerService';
 import { type WordTranslation } from '../services/apis';
 import { type Recitation } from '../services/quranResourcesService';
 import { isBookmarked, toggleBookmark } from '../utils/quranLocalStorage';
+import { type VerseStudyNote } from '../utils/studyNotes';
+import type { VerseChatContext } from '../types/verseChat';
+
+const VerseChatBubble = lazy(() => import('../components/reader/VerseChatBubble'));
 
 interface Verse {
   id: number;
@@ -54,6 +58,10 @@ interface Props {
   recitations?: Recitation[];
   isReportModalOpen?: boolean;
   onReportModalToggle?: (open: boolean) => void;
+  currentVerseNote?: VerseStudyNote | null;
+  onSaveVerseNote?: (userMarkdown: string) => void;
+  onSaveAiToNotes?: () => void;
+  tafsirPlainText?: string | null;
 }
 
 export default function ReadSurahLayout({
@@ -80,11 +88,17 @@ export default function ReadSurahLayout({
   recitations = [],
   isReportModalOpen = false,
   onReportModalToggle,
+  currentVerseNote = null,
+  onSaveVerseNote,
+  onSaveAiToNotes,
+  tafsirPlainText = null,
 }: Props) {
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
+  const [isNoteEditorOpen, setIsNoteEditorOpen] = useState(false);
+  const [noteDraft, setNoteDraft] = useState('');
   const [isWordByWordEnabled, setIsWordByWordEnabled] = useState(() => {
     if (typeof window === 'undefined') return false;
     return localStorage.getItem('tadabbur_word_by_word') === 'true';
@@ -102,6 +116,34 @@ export default function ReadSurahLayout({
       setBookmarked(isBookmarked(currentVerse.verse_key));
     }
   }, [currentVerse]);
+
+  useEffect(() => {
+    setNoteDraft(currentVerseNote?.userMarkdown ?? '');
+    setIsNoteEditorOpen(false);
+  }, [currentVerse?.verse_key, currentVerseNote?.userMarkdown]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const preload = () => {
+      void import('../components/reader/VerseChatBubble');
+    };
+
+    const windowWithIdleCallback = window as Window & {
+      requestIdleCallback?: (callback: IdleRequestCallback) => number;
+      cancelIdleCallback?: (handle: number) => void;
+    };
+
+    if (typeof windowWithIdleCallback.requestIdleCallback === 'function') {
+      const idleId = windowWithIdleCallback.requestIdleCallback(preload);
+      return () => windowWithIdleCallback.cancelIdleCallback?.(idleId);
+    }
+
+    const timeoutId = window.setTimeout(preload, 1200);
+    return () => window.clearTimeout(timeoutId);
+  }, []);
 
   const handleCopy = async (verse: Verse, surahName: string) => {
     const text = `${verse.text}\n\n${verse.translation}\n\n— ${surahName} ${verse.verse_key}`;
@@ -128,6 +170,28 @@ export default function ReadSurahLayout({
     });
     setBookmarked(isNowBookmarked);
   };
+
+  const hasSavedReflection = (currentVerseNote?.userMarkdown.trim().length ?? 0) > 0;
+  const hasSavedAiExplanation = (currentVerseNote?.aiExplanationMarkdown?.trim().length ?? 0) > 0;
+  const isCurrentAiSaved =
+    Boolean(aiExplanation) &&
+    currentVerseNote?.aiExplanationMarkdown === aiExplanation?.explanation &&
+    currentVerseNote?.aiExplanationSource?.tafsirId === selectedTafsir;
+  const aiSaveLabel = isCurrentAiSaved ? 'AI Saved' : hasSavedAiExplanation ? 'Update Saved AI' : 'Save AI to Notes';
+  const noteActionLabel = hasSavedReflection ? 'Edit Note' : hasSavedAiExplanation ? 'Add Reflection' : 'Add Note';
+  const selectedTafsirName =
+    tafsirOptions.find((tafsirOption) => tafsirOption.id === selectedTafsir)?.name ??
+    (selectedTafsir ? `Tafsir ${selectedTafsir}` : null);
+  const previousVerseKey = currentVerseIndex > 0 ? verses[currentVerseIndex - 1]?.verse_key ?? null : null;
+  const verseChatContext: VerseChatContext | null = surah && currentVerse
+    ? {
+        verseKey: currentVerse.verse_key,
+        surahId: currentVerse.surah_id,
+        ayahNumber: currentVerse.id,
+        arabicText: currentVerse.text,
+        translationText: currentVerse.translation,
+      }
+    : null;
 
   if (!surah || verses.length === 0 || !isValidVerseIndex || !currentVerse) {
     return (
@@ -314,6 +378,13 @@ export default function ReadSurahLayout({
                   <FiBookmark size={14} fill={bookmarked ? 'currentColor' : 'none'} />
                   {bookmarked ? 'Saved' : 'Save'}
                 </button>
+                <button
+                  onClick={() => setIsNoteEditorOpen((open) => !open)}
+                  className="btn-ghost text-xs gap-1"
+                >
+                  <FiFileText size={14} />
+                  {noteActionLabel}
+                </button>
               </div>
             </div>
 
@@ -351,6 +422,127 @@ export default function ReadSurahLayout({
               )}
             </div>
 
+            {/* From Notes */}
+            <div className="card mb-6">
+              <div className="flex items-center justify-between gap-3 mb-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center">
+                    <FiFileText className="text-accent" size={14} />
+                  </div>
+                  <span className="text-sm font-medium text-text">From Notes</span>
+                </div>
+
+                <button
+                  onClick={() => setIsNoteEditorOpen(true)}
+                  className="btn-secondary py-1.5 px-3 text-xs"
+                >
+                  <FiEdit3 size={14} />
+                  {noteActionLabel}
+                </button>
+              </div>
+
+              {currentVerseNote ? (
+                <div className="space-y-4">
+                  {hasSavedReflection ? (
+                    <div>
+                      <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wide mb-2">
+                        Your Reflection
+                      </h4>
+                      <MarkdownContent content={currentVerseNote.userMarkdown} />
+                    </div>
+                  ) : (
+                    <p className="text-sm text-text-muted">No personal reflection saved for this verse yet.</p>
+                  )}
+
+                  {hasSavedAiExplanation && (
+                    <div className={hasSavedReflection ? 'pt-4 border-t border-border' : ''}>
+                      <div className="flex flex-wrap items-center gap-2 mb-2">
+                        <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wide">
+                          Saved AI Explanation
+                        </h4>
+                        {currentVerseNote.aiExplanationSource && (
+                          <span className="text-xs text-text-muted">
+                            {currentVerseNote.aiExplanationSource.tafsirName}
+                          </span>
+                        )}
+                      </div>
+
+                      <MarkdownContent content={currentVerseNote.aiExplanationMarkdown ?? ''} />
+
+                      {currentVerseNote.aiExplanationSource && (
+                        <p className="mt-3 text-xs text-text-muted">
+                          Saved from {currentVerseNote.aiExplanationSource.tafsirName} on{' '}
+                          {new Date(currentVerseNote.aiExplanationSource.savedAt).toLocaleDateString()}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="rounded-lg border border-dashed border-border p-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-text">No note saved for this verse yet.</p>
+                    <p className="text-sm text-text-muted">
+                      Add your reflection here. Saved AI explanations stay separate from the live explanation below.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setIsNoteEditorOpen(true)}
+                    className="btn-primary py-1.5 px-3 text-sm"
+                  >
+                    Add Note
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {isNoteEditorOpen && (
+              <div className="card mb-6">
+                <div className="flex items-center justify-between gap-3 mb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                      <FiEdit3 className="text-primary" size={14} />
+                    </div>
+                    <span className="text-sm font-medium text-text">Verse Reflection</span>
+                  </div>
+                </div>
+
+                <textarea
+                  value={noteDraft}
+                  onChange={(event) => setNoteDraft(event.target.value)}
+                  className="w-full min-h-[180px] resize-y"
+                  placeholder="Write what stands out to you in this ayah..."
+                />
+
+                <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="text-xs text-text-muted">
+                    This editor only changes your reflection. Any saved AI explanation remains read-only.
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => {
+                        setNoteDraft(currentVerseNote?.userMarkdown ?? '');
+                        setIsNoteEditorOpen(false);
+                      }}
+                      className="btn-secondary py-1.5 px-3 text-sm"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => {
+                        onSaveVerseNote?.(noteDraft);
+                        setIsNoteEditorOpen(false);
+                      }}
+                      className="btn-primary py-1.5 px-3 text-sm"
+                    >
+                      <FiSave size={14} />
+                      Save Reflection
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* AI Explanation */}
             <div className="card mb-6 group">
               <div className="flex items-center justify-between mb-3">
@@ -360,15 +552,17 @@ export default function ReadSurahLayout({
                   </div>
                   <span className="text-sm font-medium text-text">AI Explanation</span>
                 </div>
-                
-                {/* {aiExplanation && !isExplanationLoading && (
+
+                {aiExplanation && !isExplanationLoading && onSaveAiToNotes && (
                   <button
-                    onClick={() => onReportModalToggle?.(true)}
-                    className="btn-ghost text-xs text-text-muted hover:text-danger opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1"
+                    onClick={onSaveAiToNotes}
+                    disabled={isCurrentAiSaved}
+                    className="btn-secondary py-1.5 px-3 text-xs disabled:opacity-60"
                   >
-                    Report Wrong
+                    <FiSave size={14} />
+                    {aiSaveLabel}
                   </button>
-                )} */}
+                )}
               </div>
 
               {isExplanationLoading && (
@@ -384,9 +578,7 @@ export default function ReadSurahLayout({
               )}
 
               {aiExplanation && !isExplanationLoading && (
-                <div className="prose prose-sm max-w-none break-words w-full overflow-x-auto">
-                  <ReactMarkdown>{aiExplanation.explanation}</ReactMarkdown>
-                </div>
+                <MarkdownContent content={aiExplanation.explanation} />
               )}
 
               {aiExplanation?.keyTerms && aiExplanation.keyTerms.length > 0 && (
@@ -487,6 +679,20 @@ export default function ReadSurahLayout({
           tafsirAuthor={tafsirOptions.find((t) => t.id === selectedTafsir)?.name || 'Unknown'}
           originalExplanation={aiExplanation.explanation}
         />
+      )}
+
+      {verseChatContext && (
+        <Suspense fallback={null}>
+          <VerseChatBubble
+            verseContext={verseChatContext}
+            previousVerseKey={previousVerseKey}
+            tafsirPlainText={tafsirPlainText}
+            selectedTafsirId={selectedTafsir ?? null}
+            selectedTafsirName={selectedTafsirName}
+            isTafsirLoading={isTafsirLoading}
+            hasAudioPlayer={Boolean(selectedRecitation)}
+          />
+        </Suspense>
       )}
     </div>
   );

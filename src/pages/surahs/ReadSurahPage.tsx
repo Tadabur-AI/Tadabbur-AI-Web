@@ -1,9 +1,16 @@
-import { useEffect, useRef, useState } from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useLocation, useParams } from 'react-router-dom';
 import ReadSurahLayout from '../../layouts/ReadSurahLayout';
 import { fetchRecitations, type Recitation } from '../../services/quranResourcesService';
 import { explainTafsir, type ExplainTafsirResponse } from '../../services/tafsirExplainerService';
 import { listSurahs, listTafseers, listTranslations, retrieveSurah, retrieveTafseer, type RetrieveSurahVerse, type RetrieveTafseerItem, type SurahSummary, type TranslationSummary, type WordTranslation } from '../../services/apis';
+import {
+  getVerseStudyNote,
+  saveVerseStudyNoteReflection,
+  syncVerseAiExplanation,
+  type VerseReference,
+  type VerseStudyNote,
+} from '../../utils/studyNotes';
 
 interface Verse {
   id: number;
@@ -108,15 +115,18 @@ const selectBestTafsirEntry = (entries: RetrieveTafseerItem[], verse: Verse): Re
 
 export default function ReadSurahPage() {
   const { id } = useParams();
-  const [searchParams] = useSearchParams();
+  const location = useLocation();
   const [surah, setSurah] = useState<Surah | null>(null);
-  const [verses, setVerses] = useState<Verse[]>([]);
   const [currentVerseIndex, setCurrentVerseIndex] = useState(0);
   const [allVerses, setAllVerses] = useState<Verse[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const startAyah = parseAyahParam(searchParams.get('start'));
-  const endAyah = parseAyahParam(searchParams.get('end'));
-  const ayahParam = parseAyahParam(searchParams.get('ayah'));
+  const currentSearch = typeof window !== 'undefined' ? window.location.search : location.search;
+  const currentPathname = typeof window !== 'undefined' ? window.location.pathname : location.pathname;
+  const currentHash = typeof window !== 'undefined' ? window.location.hash : location.hash;
+  const urlSearchParams = new URLSearchParams(currentSearch);
+  const startAyah = parseAyahParam(urlSearchParams.get('start'));
+  const endAyah = parseAyahParam(urlSearchParams.get('end'));
+  const ayahParam = parseAyahParam(urlSearchParams.get('ayah'));
   
   const [selectedRecitation, setSelectedRecitation] = useState<number | null>(() => {
     const saved = localStorage.getItem('tadabbur_recitation');
@@ -145,6 +155,22 @@ export default function ReadSurahPage() {
   
   const [aiExplanation, setAiExplanation] = useState<ExplainTafsirResponse | null>(null);
   const [isExplanationLoading, setIsExplanationLoading] = useState(false);
+  const [currentVerseNote, setCurrentVerseNote] = useState<VerseStudyNote | null>(null);
+  const displayedVerses = useMemo(() => {
+    if (allVerses.length === 0) {
+      return [];
+    }
+
+    const filteredVerses = allVerses.filter((verse) => {
+      if (startAyah && verse.id < startAyah) return false;
+      if (endAyah && verse.id > endAyah) return false;
+      return true;
+    });
+
+    return filteredVerses.length > 0 ? filteredVerses : allVerses;
+  }, [allVerses, endAyah, startAyah]);
+  const currentVerse = displayedVerses[currentVerseIndex] ?? null;
+  const normalizedTafsirText = useMemo(() => (tafsirText ? stripHtml(tafsirText) : ''), [tafsirText]);
 
   useEffect(() => {
     if (selectedTranslation) {
@@ -190,15 +216,18 @@ export default function ReadSurahPage() {
 
     const applyRecitations = (recitationsData: Recitation[]) => {
       setRecitations(recitationsData);
+      setSelectedRecitation((currentSelectedRecitation) => {
+        if (
+          recitationsData.length === 0 ||
+          (currentSelectedRecitation && recitationsData.some((item) => item.id === currentSelectedRecitation))
+        ) {
+          return currentSelectedRecitation;
+        }
 
-      if (
-        recitationsData.length > 0 &&
-        (!selectedRecitation || !recitationsData.some((item) => item.id === selectedRecitation))
-      ) {
         const defaultReciterId = recitationsData[0].id;
-        setSelectedRecitation(defaultReciterId);
         localStorage.setItem('tadabbur_recitation', String(defaultReciterId));
-      }
+        return defaultReciterId;
+      });
     };
 
     const loadRecitations = async () => {
@@ -319,7 +348,6 @@ export default function ReadSurahPage() {
         setLoadError(error instanceof Error ? error.message : 'Failed to load surah');
         setSurah(null);
         setAllVerses([]);
-        setVerses([]);
       }
     };
 
@@ -327,38 +355,73 @@ export default function ReadSurahPage() {
   }, [id, selectedTranslation]);
 
   useEffect(() => {
-    if (allVerses.length === 0) {
-      setVerses([]);
+    if (displayedVerses.length === 0) {
+      if (currentVerseIndex !== 0) {
+        setCurrentVerseIndex(0);
+      }
       return;
     }
 
-    const filtered = allVerses.filter((verse) => {
-      if (startAyah && verse.id < startAyah) return false;
-      if (endAyah && verse.id > endAyah) return false;
-      return true;
-    });
-
-    const nextVerses = filtered.length > 0 ? filtered : allVerses;
-    setVerses(nextVerses);
-
-    // Determine initial verse index based on ayah param or default to 0
+    let nextIndex = 0;
     if (ayahParam) {
-      const ayahIndex = nextVerses.findIndex((verse) => verse.id === ayahParam);
+      const ayahIndex = displayedVerses.findIndex((verse) => verse.id === ayahParam);
       if (ayahIndex !== -1) {
-        setCurrentVerseIndex(ayahIndex);
-      } else {
-        setCurrentVerseIndex(0);
+        nextIndex = ayahIndex;
       }
-    } else {
-      setCurrentVerseIndex(0);
     }
-  }, [allVerses, startAyah, endAyah, ayahParam]);
+
+    if (currentVerseIndex !== nextIndex) {
+      setCurrentVerseIndex(nextIndex);
+    }
+  }, [ayahParam, currentVerseIndex, displayedVerses]);
+
+  const syncAyahInUrl = useCallback((ayahNumber: number) => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const nextParams = new URLSearchParams(window.location.search);
+    if (parseAyahParam(nextParams.get('ayah')) === ayahNumber) {
+      return;
+    }
+
+    nextParams.set('ayah', String(ayahNumber));
+    const nextSearch = nextParams.toString();
+    const nextUrl = `${currentPathname}${nextSearch ? `?${nextSearch}` : ''}${currentHash}`;
+    window.history.replaceState(window.history.state, '', nextUrl);
+  }, [currentHash, currentPathname]);
+
+  useEffect(() => {
+    if (!currentVerse) {
+      return;
+    }
+
+    syncAyahInUrl(currentVerse.id);
+  }, [currentVerse, syncAyahInUrl]);
+
+  const selectVerseIndex = useCallback((nextIndex: number) => {
+    if (displayedVerses.length === 0) {
+      return;
+    }
+
+    const clampedIndex = Math.max(0, Math.min(displayedVerses.length - 1, nextIndex));
+    const nextVerse = displayedVerses[clampedIndex];
+    if (!nextVerse) {
+      return;
+    }
+
+    syncAyahInUrl(nextVerse.id);
+
+    if (currentVerseIndex !== clampedIndex) {
+      setCurrentVerseIndex(clampedIndex);
+    }
+  }, [currentVerseIndex, displayedVerses, syncAyahInUrl]);
 
   useEffect(() => {
     let ignore = false;
 
     const loadTafsirText = async () => {
-      if (!selectedTafsir || !verses[currentVerseIndex]) {
+      if (!selectedTafsir || !currentVerse) {
         if (!ignore) {
           tafsirTextForVerseRef.current = null;
           setTafsirText(null);
@@ -372,7 +435,6 @@ export default function ReadSurahPage() {
         setTafsirText(null);
       }
 
-      const currentVerse = verses[currentVerseIndex];
       const cacheKey = `${currentVerse.surah_id}-${selectedTafsir}`;
 
       const cachedEntries = tafseerCache.current.get(cacheKey);
@@ -426,13 +488,13 @@ export default function ReadSurahPage() {
     return () => {
       ignore = true;
     };
-  }, [selectedTafsir, currentVerseIndex, verses]);
+  }, [currentVerse, selectedTafsir]);
 
   useEffect(() => {
     let ignore = false;
 
     const generateExplanation = async () => {
-      if (!selectedTafsir || !verses[currentVerseIndex] || !tafsirText) {
+      if (!selectedTafsir || !currentVerse || !tafsirText) {
         if (!ignore) {
           setAiExplanation(null);
         }
@@ -442,8 +504,6 @@ export default function ReadSurahPage() {
       if (isTafsirLoading) {
         return;
       }
-
-      const currentVerse = verses[currentVerseIndex];
 
       if (tafsirTextForVerseRef.current !== currentVerse.verse_key) {
         if (!ignore) {
@@ -512,30 +572,79 @@ export default function ReadSurahPage() {
     return () => {
       ignore = true;
     };
-  }, [selectedTafsir, currentVerseIndex, verses, tafsirText, isTafsirLoading, tafsirOptions]);
+  }, [currentVerse, selectedTafsir, tafsirText, isTafsirLoading, tafsirOptions]);
 
-  const goToPreviousVerse = () => {
-    setCurrentVerseIndex((i) => Math.max(0, i - 1));
+  useEffect(() => {
+    if (!surah || !currentVerse) {
+      setCurrentVerseNote(null);
+      return;
+    }
+
+    setCurrentVerseNote(getVerseStudyNote(currentVerse.verse_key));
+  }, [currentVerse, surah]);
+
+  const buildVerseReference = (): VerseReference | null => {
+    if (!surah || !currentVerse) {
+      return null;
+    }
+
+    return {
+      verseKey: currentVerse.verse_key,
+      surahId: currentVerse.surah_id,
+      surahName: surah.name_english,
+      surahNameArabic: surah.name_arabic,
+      ayahNumber: currentVerse.id,
+      arabicText: currentVerse.text,
+      translation: currentVerse.translation,
+    };
   };
+
+  const handleSaveVerseNote = (userMarkdown: string) => {
+    const verseReference = buildVerseReference();
+    if (!verseReference) {
+      return;
+    }
+
+    setCurrentVerseNote(saveVerseStudyNoteReflection(verseReference, userMarkdown));
+  };
+
+  const handleSaveAiToNotes = () => {
+    const verseReference = buildVerseReference();
+    if (!verseReference || !aiExplanation || !selectedTafsir) {
+      return;
+    }
+
+    const tafsirName = tafsirOptions.find((tafsir) => tafsir.id === selectedTafsir)?.name ?? 'Unknown';
+    setCurrentVerseNote(
+      syncVerseAiExplanation(verseReference, aiExplanation.explanation, {
+        tafsirId: selectedTafsir,
+        tafsirName,
+      }),
+    );
+  };
+
+  const goToPreviousVerse = useCallback(() => {
+    selectVerseIndex(currentVerseIndex - 1);
+  }, [currentVerseIndex, selectVerseIndex]);
   
-  const goToNextVerse = () => {
-    setCurrentVerseIndex((i) => Math.min(verses.length - 1, i + 1));
-  };
+  const goToNextVerse = useCallback(() => {
+    selectVerseIndex(currentVerseIndex + 1);
+  }, [currentVerseIndex, selectVerseIndex]);
 
-  const handleRecitationChange = (id: number) => {
+  const handleRecitationChange = useCallback((id: number) => {
     setSelectedRecitation(id);
     localStorage.setItem('tadabbur_recitation', String(id));
-  };
+  }, []);
 
-  const handleTranslationChange = (id: number) => {
+  const handleTranslationChange = useCallback((id: number) => {
     setSelectedTranslation(id);
     localStorage.setItem('tadabbur_translation', String(id));
-  };
+  }, []);
 
-  const handleTafsirChange = (id: number) => {
+  const handleTafsirChange = useCallback((id: number) => {
     setSelectedTafsir(id);
     localStorage.setItem('tadabbur_tafsir', String(id));
-  };
+  }, []);
 
   if (loadError) {
     return (
@@ -551,13 +660,13 @@ export default function ReadSurahPage() {
   return (
     <ReadSurahLayout
       surah={surah}
-      verses={verses}
+      verses={displayedVerses}
       currentVerseIndex={currentVerseIndex}
-      setCurrentVerseIndex={setCurrentVerseIndex}
+      setCurrentVerseIndex={selectVerseIndex}
       goToPreviousVerse={goToPreviousVerse}
       goToNextVerse={goToNextVerse}
-  selectedRecitation={selectedRecitation}
-  selectedTranslation={selectedTranslation}
+      selectedRecitation={selectedRecitation}
+      selectedTranslation={selectedTranslation}
       selectedTafsir={selectedTafsir}
       onRecitationChange={handleRecitationChange}
       onTranslationChange={handleTranslationChange}
@@ -569,10 +678,14 @@ export default function ReadSurahPage() {
       tafsirText={tafsirText}
       isTafsirLoading={isTafsirLoading}
       tafsirOptions={tafsirOptions}
-  translationOptions={translationOptions}
+      translationOptions={translationOptions}
       aiExplanation={aiExplanation}
       isExplanationLoading={isExplanationLoading}
       recitations={recitations}
+      currentVerseNote={currentVerseNote}
+      onSaveVerseNote={handleSaveVerseNote}
+      onSaveAiToNotes={handleSaveAiToNotes}
+      tafsirPlainText={normalizedTafsirText}
     />
   );
 }

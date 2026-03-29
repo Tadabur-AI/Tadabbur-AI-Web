@@ -1,5 +1,7 @@
+import { lazy } from 'react'
 import { Navigate, Outlet, Route, useLocation } from 'react-router-dom'
-import { ChatPage, Homepage, NotesPage } from '../../pages'
+
+const Homepage = lazy(() => import('../../pages/homepage/homepage'))
 
 const ProtectedRoutes = () => {
   // Replace with your real auth hook/context, e.g.:
@@ -17,8 +19,6 @@ const ProtectedRoutes = () => {
 const PrivateRoutes = (
   <Route element={<ProtectedRoutes />}>
     <Route element={<Homepage />} path="/home" />
-    <Route element={<NotesPage />} path="/notes" />
-    <Route element={<ChatPage />} path="/chat" />
   </Route>
 )
 
