@@ -76,7 +76,7 @@ export default function DashboardLayout({
       {/* Sidebar */}
       <aside
         className={`
-          fixed sm:sticky top-0 left-0 h-screen w-[260px] z-sticky
+          fixed sm:sticky top-0 left-0 h-[100dvh] sm:h-screen w-[260px] z-modal sm:z-sticky
           bg-surface border-r border-border flex flex-col
           transition-transform duration-200 ease-out
           ${isSidebarOpen ? "translate-x-0" : "-translate-x-full sm:translate-x-0"}
