@@ -17,7 +17,10 @@ interface DashboardLayoutProps {
   screenTitle?: string | React.ReactNode;
   userProfile?: React.ReactNode;
   toolbar?: React.ReactNode;
-  headerContent?: React.ReactNode;
+  headerContent?: React.ReactNode | ((props: {
+    openSidebar: () => void;
+    mobileMenuButton: React.ReactNode;
+  }) => React.ReactNode);
 }
 
 export default function DashboardLayout({
@@ -30,6 +33,7 @@ export default function DashboardLayout({
 }: DashboardLayoutProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const navigate = useNavigate();
+  const openSidebar = () => setIsSidebarOpen(true);
 
   const handleItemClick = (item: SidebarItem) => {
     if (item.onClick) {
@@ -39,6 +43,25 @@ export default function DashboardLayout({
     }
     setIsSidebarOpen(false);
   };
+
+  const mobileMenuButton = (
+    <button
+      onClick={openSidebar}
+      className="btn-ghost p-2 sm:hidden shrink-0"
+      aria-label="Open sidebar"
+    >
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <line x1="3" y1="6" x2="21" y2="6" />
+        <line x1="3" y1="12" x2="21" y2="12" />
+        <line x1="3" y1="18" x2="21" y2="18" />
+      </svg>
+    </button>
+  );
+
+  const resolvedHeaderContent =
+    typeof headerContent === 'function'
+      ? headerContent({ openSidebar, mobileMenuButton })
+      : headerContent;
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-background">
@@ -91,37 +114,23 @@ export default function DashboardLayout({
         {/* Header */}
         {headerContent ? (
           <header className="sticky top-0 z-sticky bg-surface border-b border-border px-4 py-3">
-            <div className="max-w-[1200px] mx-auto flex items-start gap-3">
-              <button
-                onClick={() => setIsSidebarOpen(true)}
-                className="btn-ghost p-2 sm:hidden shrink-0"
-                aria-label="Open sidebar"
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <line x1="3" y1="6" x2="21" y2="6" />
-                  <line x1="3" y1="12" x2="21" y2="12" />
-                  <line x1="3" y1="18" x2="21" y2="18" />
-                </svg>
-              </button>
-              <div className="min-w-0 flex-1">
-                {headerContent}
+            {typeof headerContent === 'function' ? (
+              <div className="max-w-[1200px] mx-auto">
+                {resolvedHeaderContent}
               </div>
-            </div>
+            ) : (
+              <div className="max-w-[1200px] mx-auto flex items-start gap-3">
+                {mobileMenuButton}
+                <div className="min-w-0 flex-1">
+                  {resolvedHeaderContent}
+                </div>
+              </div>
+            )}
           </header>
         ) : (
           <header className="sticky top-0 h-[56px] z-sticky bg-surface border-b border-border px-4 flex items-center justify-between gap-4">
             <div className="flex items-center gap-3 min-w-0">
-              <button
-                onClick={() => setIsSidebarOpen(true)}
-                className="btn-ghost p-2 sm:hidden"
-                aria-label="Open sidebar"
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <line x1="3" y1="6" x2="21" y2="6" />
-                  <line x1="3" y1="12" x2="21" y2="12" />
-                  <line x1="3" y1="18" x2="21" y2="18" />
-                </svg>
-              </button>
+              {mobileMenuButton}
               <h1 className="text-base font-semibold truncate">{screenTitle}</h1>
             </div>
 
