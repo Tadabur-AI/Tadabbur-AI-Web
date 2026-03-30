@@ -149,6 +149,25 @@ export default function ReadSurahLayout({
     return () => window.clearTimeout(timeoutId);
   }, []);
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement || event.target instanceof HTMLSelectElement) {
+        return;
+      }
+
+      if (event.key === 'ArrowLeft') {
+        event.preventDefault();
+        goToPreviousVerse();
+      } else if (event.key === 'ArrowRight') {
+        event.preventDefault();
+        goToNextVerse();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [goToPreviousVerse, goToNextVerse]);
+
   const handleCopy = async (verse: Verse, surahName: string) => {
     const text = `${verse.text}\n\n${verse.translation}\n\n— ${surahName} ${verse.verse_key}`;
     
