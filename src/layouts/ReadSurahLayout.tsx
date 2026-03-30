@@ -62,6 +62,8 @@ interface Props {
   onSaveVerseNote?: (userMarkdown: string) => void;
   onSaveAiToNotes?: () => void;
   tafsirPlainText?: string | null;
+  disablePrevAyah?: boolean;
+  disableNextAyah?: boolean;
 }
 
 export default function ReadSurahLayout({
@@ -92,6 +94,8 @@ export default function ReadSurahLayout({
   onSaveVerseNote,
   onSaveAiToNotes,
   tafsirPlainText = null,
+  disablePrevAyah,
+  disableNextAyah,
 }: Props) {
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -297,7 +301,7 @@ export default function ReadSurahLayout({
           <div className="hidden sm:flex items-center gap-2">
             <button
               onClick={goToPreviousVerse}
-              disabled={currentVerseIndex === 0}
+              disabled={disablePrevAyah ?? currentVerseIndex === 0}
               className="btn-secondary py-1.5 px-3 disabled:opacity-50"
             >
               <FiChevronLeft size={16} />
@@ -308,7 +312,7 @@ export default function ReadSurahLayout({
             </span>
             <button
               onClick={goToNextVerse}
-              disabled={currentVerseIndex === verses.length - 1}
+              disabled={disableNextAyah ?? currentVerseIndex === verses.length - 1}
               className="btn-secondary py-1.5 px-3 disabled:opacity-50"
             >
               <span>Next</span>
@@ -626,7 +630,7 @@ export default function ReadSurahLayout({
             <div className="flex items-center gap-2 lg:hidden">
               <button
                 onClick={goToPreviousVerse}
-                disabled={currentVerseIndex === 0}
+                disabled={disablePrevAyah ?? currentVerseIndex === 0}
                 className="btn-ghost p-2 disabled:opacity-50"
               >
                 <FiChevronLeft size={20} />
@@ -646,7 +650,7 @@ export default function ReadSurahLayout({
             <div className="flex items-center gap-2 lg:hidden">
               <button
                 onClick={goToNextVerse}
-                disabled={currentVerseIndex === verses.length - 1}
+                disabled={disableNextAyah ?? currentVerseIndex === verses.length - 1}
                 className="btn-ghost p-2 disabled:opacity-50"
               >
                 <FiChevronRight size={20} />

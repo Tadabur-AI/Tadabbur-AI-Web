@@ -313,7 +313,7 @@ export default function ListSurahsPage() {
                     return (
                       <Link
                         key={`${juz.number}-${section.surahId}`}
-                        to={`/surah/${section.surahId}?start=${section.startAyah}&end=${section.endAyah}`}
+                        to={`/surah/${section.surahId}?start=${section.startAyah}&end=${section.endAyah}&juz=${juz.number}`}
                         className="flex items-center justify-between gap-4 p-2 rounded-lg hover:bg-surface-2 transition-colors"
                       >
                         <div className="flex items-center gap-3">

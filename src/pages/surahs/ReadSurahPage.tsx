@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useLocation, useParams } from 'react-router-dom';
+import { useLocation, useParams, useNavigate } from 'react-router-dom';
 import ReadSurahLayout from '../../layouts/ReadSurahLayout';
 import { fetchRecitations, type Recitation } from '../../services/quranResourcesService';
 import { explainTafsir, type ExplainTafsirResponse } from '../../services/tafsirExplainerService';
@@ -11,6 +11,7 @@ import {
   type VerseReference,
   type VerseStudyNote,
 } from '../../utils/studyNotes';
+import { JUZ_METADATA } from '../../data/juz';
 
 interface Verse {
   id: number;
@@ -116,6 +117,7 @@ const selectBestTafsirEntry = (entries: RetrieveTafseerItem[], verse: Verse): Re
 export default function ReadSurahPage() {
   const { id } = useParams();
   const location = useLocation();
+  const navigate = useNavigate();
   const [surah, setSurah] = useState<Surah | null>(null);
   const [currentVerseIndex, setCurrentVerseIndex] = useState(0);
   const [allVerses, setAllVerses] = useState<Verse[]>([]);
@@ -127,6 +129,7 @@ export default function ReadSurahPage() {
   const startAyah = parseAyahParam(urlSearchParams.get('start'));
   const endAyah = parseAyahParam(urlSearchParams.get('end'));
   const ayahParam = parseAyahParam(urlSearchParams.get('ayah'));
+  const juzParam = parseAyahParam(urlSearchParams.get('juz'));
   
   const [selectedRecitation, setSelectedRecitation] = useState<number | null>(() => {
     const saved = localStorage.getItem('tadabbur_recitation');
@@ -391,14 +394,6 @@ export default function ReadSurahPage() {
     window.history.replaceState(window.history.state, '', nextUrl);
   }, [currentHash, currentPathname]);
 
-  useEffect(() => {
-    if (!currentVerse) {
-      return;
-    }
-
-    syncAyahInUrl(currentVerse.id);
-  }, [currentVerse, syncAyahInUrl]);
-
   const selectVerseIndex = useCallback((nextIndex: number) => {
     if (displayedVerses.length === 0) {
       return;
@@ -623,13 +618,49 @@ export default function ReadSurahPage() {
     );
   };
 
+  const juzContext = useMemo(() => {
+    if (!juzParam || !surah) return null;
+    const juz = JUZ_METADATA.find((j) => j.number === juzParam);
+    if (!juz) return null;
+    
+    const currentSectionIndex = juz.sections.findIndex((s) => s.surahId === surah.id);
+    if (currentSectionIndex === -1) return null;
+
+    return {
+      juzNumber: juz.number,
+      currentSectionIndex,
+      sections: juz.sections,
+      hasPrevSection: currentSectionIndex > 0,
+      hasNextSection: currentSectionIndex < juz.sections.length - 1,
+      prevSection: currentSectionIndex > 0 ? juz.sections[currentSectionIndex - 1] : null,
+      nextSection: currentSectionIndex < juz.sections.length - 1 ? juz.sections[currentSectionIndex + 1] : null,
+    };
+  }, [juzParam, surah]);
+
+  const disablePrevAyah = currentVerseIndex === 0 && !juzContext?.hasPrevSection;
+  const disableNextAyah = displayedVerses.length > 0 && currentVerseIndex === displayedVerses.length - 1 && !juzContext?.hasNextSection;
+
   const goToPreviousVerse = useCallback(() => {
-    selectVerseIndex(currentVerseIndex - 1);
-  }, [currentVerseIndex, selectVerseIndex]);
+    if (currentVerseIndex === 0) {
+      if (juzContext?.prevSection) {
+        const { surahId, startAyah, endAyah } = juzContext.prevSection;
+        navigate(`/surah/${surahId}?start=${startAyah}&end=${endAyah}&juz=${juzContext.juzNumber}&ayah=${endAyah}`);
+      }
+    } else {
+      selectVerseIndex(currentVerseIndex - 1);
+    }
+  }, [currentVerseIndex, selectVerseIndex, juzContext, navigate]);
   
   const goToNextVerse = useCallback(() => {
-    selectVerseIndex(currentVerseIndex + 1);
-  }, [currentVerseIndex, selectVerseIndex]);
+    if (currentVerseIndex === displayedVerses.length - 1) {
+      if (juzContext?.nextSection) {
+        const { surahId, startAyah, endAyah } = juzContext.nextSection;
+        navigate(`/surah/${surahId}?start=${startAyah}&end=${endAyah}&juz=${juzContext.juzNumber}&ayah=${startAyah}`);
+      }
+    } else {
+      selectVerseIndex(currentVerseIndex + 1);
+    }
+  }, [currentVerseIndex, displayedVerses.length, selectVerseIndex, juzContext, navigate]);
 
   const handleRecitationChange = useCallback((id: number) => {
     setSelectedRecitation(id);
@@ -686,6 +717,8 @@ export default function ReadSurahPage() {
       onSaveVerseNote={handleSaveVerseNote}
       onSaveAiToNotes={handleSaveAiToNotes}
       tafsirPlainText={normalizedTafsirText}
+      disablePrevAyah={disablePrevAyah}
+      disableNextAyah={disableNextAyah}
     />
   );
 }
