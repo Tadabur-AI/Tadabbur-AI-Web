@@ -16,6 +16,7 @@ import {
 import '../../css/verseChat.css';
 import { streamVerseChatResponse } from '../../services/verseChatService';
 import type { VerseChatContext, VerseChatSource, VerseChatThread, VerseChatTurn } from '../../types/verseChat';
+import { OPEN_VERSE_CHAT_EVENT, type OpenVerseChatDetail } from '../../utils/verseChatEvents';
 import {
   buildVerseChatMessagePayload,
   buildVerseChatSummary,
@@ -402,6 +403,41 @@ export default function VerseChatBubble({
       abortControllerRef.current = null;
     }
   }, [commitAssistantTurn, isReady, persistThread, previousVerseSummary, selectedTafsirId, selectedTafsirName, tafsirPlainText, verseContext]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const handleOpenRequest = (event: Event) => {
+      const detail = (event as CustomEvent<OpenVerseChatDetail>).detail;
+      if (!detail || detail.verseKey !== verseContext.verseKey) {
+        return;
+      }
+
+      setIsOpen(true);
+      setErrorMessage(null);
+
+      const prompt = detail.prompt?.trim();
+      if (!prompt) {
+        window.setTimeout(() => composerRef.current?.focus(), 30);
+        return;
+      }
+
+      if (detail.autoSend && isReady && !isStreaming) {
+        void sendPrompt(prompt);
+        return;
+      }
+
+      setDraft(prompt);
+      window.setTimeout(() => composerRef.current?.focus(), 30);
+    };
+
+    window.addEventListener(OPEN_VERSE_CHAT_EVENT, handleOpenRequest as EventListener);
+    return () => {
+      window.removeEventListener(OPEN_VERSE_CHAT_EVENT, handleOpenRequest as EventListener);
+    };
+  }, [isReady, isStreaming, sendPrompt, verseContext.verseKey]);
 
   const handleSubmit = useCallback(async () => {
     await sendPrompt(draft);

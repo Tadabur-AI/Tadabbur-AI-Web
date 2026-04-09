@@ -3,8 +3,6 @@ import { Link } from 'react-router-dom';
 import {
   FiArrowLeft,
   FiBookmark,
-  FiChevronLeft,
-  FiChevronRight,
   FiCopy,
   FiEdit3,
   FiFlag,
@@ -33,6 +31,7 @@ import { buttonClassName } from '../components/ui/buttonClassName';
 import { formatDate } from '../utils/formatting';
 import { isBookmarked, toggleBookmark } from '../utils/quranLocalStorage';
 import { type VerseStudyNote } from '../utils/studyNotes';
+import { requestVerseChatOpen } from '../utils/verseChatEvents';
 import { type ExplainTafsirResponse } from '../services/tafsirExplainerService';
 import { type WordTranslation } from '../services/apis';
 import { type Recitation } from '../services/quranResourcesService';
@@ -143,47 +142,6 @@ const VerseRail = memo(function VerseRail({ verses, currentVerseIndex, onSelectV
   );
 });
 
-interface ReaderNavigationPanelProps {
-  currentVerseId: number;
-  currentVerseIndex: number;
-  verseCount: number;
-  onPrevious: () => void;
-  onNext: () => void;
-  disablePrevious: boolean;
-  disableNext: boolean;
-}
-
-const ReaderNavigationPanel = memo(function ReaderNavigationPanel({
-  currentVerseId,
-  currentVerseIndex,
-  verseCount,
-  onPrevious,
-  onNext,
-  disablePrevious,
-  disableNext,
-}: ReaderNavigationPanelProps) {
-  return (
-    <Panel title="Navigation" description="Move through the current reading range one ayah at a time.">
-      <div className="grid gap-3 sm:grid-cols-[1fr_auto_1fr] sm:items-center">
-        <ActionButton variant="secondary" onClick={onPrevious} disabled={disablePrevious}>
-          <FiChevronLeft aria-hidden="true" />
-          Previous
-        </ActionButton>
-        <div className="text-center">
-          <p className="text-sm font-semibold text-text">Ayah {currentVerseId}</p>
-          <p className="text-xs text-text-muted">
-            {currentVerseIndex + 1} of {verseCount} in this view
-          </p>
-        </div>
-        <ActionButton variant="secondary" onClick={onNext} disabled={disableNext}>
-          Next
-          <FiChevronRight aria-hidden="true" />
-        </ActionButton>
-      </div>
-    </Panel>
-  );
-});
-
 interface ReaderSourcesPanelProps {
   selectedTranslation?: number | null;
   onTranslationChange?: (id: number) => void;
@@ -291,7 +249,7 @@ const SecondaryModesPanel = memo(function SecondaryModesPanel({
   lastVerseId,
 }: SecondaryModesPanelProps) {
   return (
-    <Panel title="Secondary Modes" description="Launch immersive modes without changing the current theme or source settings.">
+    <Panel title="More Mods" description="Launch immersive modes without changing the current theme or source settings.">
       <div className="flex flex-wrap gap-3">
         <ActionButton onClick={onStartPleasantly} disabled={isPleasantlyLoading || isPleasantlyActive}>
           Play Pleasantly
@@ -421,6 +379,7 @@ interface ExplanationTabsPanelProps {
   onReportModalToggle?: (open: boolean) => void;
   isTafsirLoading?: boolean;
   tafsirText?: string | null;
+  onAskVerseChatFallback?: (prompt: string) => void;
 }
 
 const ExplanationTabsPanel = memo(function ExplanationTabsPanel({
@@ -437,9 +396,12 @@ const ExplanationTabsPanel = memo(function ExplanationTabsPanel({
   onReportModalToggle,
   isTafsirLoading,
   tafsirText,
+  onAskVerseChatFallback,
 }: ExplanationTabsPanelProps) {
   const tabGroupId = useId();
   const activeTabPanelId = `${tabGroupId}-${activeView}-panel`;
+  const isVerseChatFallback = aiExplanation?.fallbackMode === 'verse_chat';
+  const fallbackPrompt = aiExplanation?.suggestedPrompt?.trim() || 'What does this verse say?';
 
   const tabButtonClassName = (isActive: boolean) =>
     `inline-flex min-h-[44px] items-center justify-center rounded-full px-4 py-2 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
@@ -490,13 +452,19 @@ const ExplanationTabsPanel = memo(function ExplanationTabsPanel({
 
             {activeView === 'ai' ? (
               <div className="flex flex-wrap gap-2">
-                {selectedTafsir && onExplainerToggle ? (
+                {isVerseChatFallback && onAskVerseChatFallback ? (
+                  <ActionButton variant="secondary" size="sm" onClick={() => onAskVerseChatFallback(fallbackPrompt)}>
+                    <FiMessageSquare aria-hidden="true" />
+                    Ask in Verse Chat
+                  </ActionButton>
+                ) : null}
+                {selectedTafsir && onExplainerToggle && !isVerseChatFallback ? (
                   <ActionButton variant="ghost" size="sm" onClick={onExplainerToggle}>
                     <FiMessageSquare aria-hidden="true" />
                     Open Explainer
                   </ActionButton>
                 ) : null}
-                {aiExplanation && !isExplanationLoading && onSaveAiToNotes ? (
+                {aiExplanation && !isExplanationLoading && onSaveAiToNotes && !isVerseChatFallback ? (
                   <ActionButton variant="secondary" size="sm" onClick={onSaveAiToNotes} disabled={isCurrentAiSaved}>
                     <FiSave aria-hidden="true" />
                     {aiSaveLabel}
@@ -522,11 +490,28 @@ const ExplanationTabsPanel = memo(function ExplanationTabsPanel({
               <p className="text-sm leading-7 text-text-muted">Select a tafsir to generate an explanation for this ayah.</p>
             ) : aiExplanation ? (
               <div className="space-y-4">
-                <Suspense fallback={<MarkdownFallback label="Loading AI explanation…" />}>
-                  <MarkdownContent content={aiExplanation.explanation} />
-                </Suspense>
+                {isVerseChatFallback ? (
+                  <div className="rounded-[20px] border border-accent/30 bg-accent/5 p-4">
+                    <h3 className="text-sm font-semibold text-text">Use verse chat for this ayah</h3>
+                    <p className="mt-2 text-sm leading-7 text-text-muted">
+                      The structured explainer is unavailable right now, but the grounded verse chat can still answer from the current ayah and selected tafsir.
+                    </p>
+                    {onAskVerseChatFallback ? (
+                      <div className="mt-4">
+                        <ActionButton onClick={() => onAskVerseChatFallback(fallbackPrompt)}>
+                          <FiMessageSquare aria-hidden="true" />
+                          Ask “{fallbackPrompt}”
+                        </ActionButton>
+                      </div>
+                    ) : null}
+                  </div>
+                ) : (
+                  <Suspense fallback={<MarkdownFallback label="Loading AI explanation…" />}>
+                    <MarkdownContent content={aiExplanation.explanation} />
+                  </Suspense>
+                )}
 
-                {aiExplanation.keyTerms && aiExplanation.keyTerms.length > 0 ? (
+                {aiExplanation.keyTerms && aiExplanation.keyTerms.length > 0 && !isVerseChatFallback ? (
                   <div className="border-t border-border pt-4">
                     <h3 className="text-sm font-semibold text-text">Key Terms</h3>
                     <ul className="mt-3 space-y-2">
@@ -539,7 +524,7 @@ const ExplanationTabsPanel = memo(function ExplanationTabsPanel({
                   </div>
                 ) : null}
 
-                {onReportModalToggle ? (
+                {onReportModalToggle && !isVerseChatFallback ? (
                   <div className="border-t border-border pt-4">
                     <ActionButton variant="ghost" size="sm" onClick={() => onReportModalToggle(true)}>
                       <FiFlag aria-hidden="true" />
@@ -731,6 +716,19 @@ export default function ReadSurahLayout({
     announce('AI explanation saved to notes.');
   };
 
+  const handleAskVerseChatFallback = (prompt: string) => {
+    if (!currentVerse) {
+      return;
+    }
+
+    requestVerseChatOpen({
+      verseKey: currentVerse.verse_key,
+      prompt,
+      autoSend: true,
+    });
+    announce('Opened verse chat with a fallback prompt.');
+  };
+
   const hasSavedReflection = (currentVerseNote?.userMarkdown.trim().length ?? 0) > 0;
   const hasSavedAiExplanation = (currentVerseNote?.aiExplanationMarkdown?.trim().length ?? 0) > 0;
   const isCurrentAiSaved =
@@ -785,18 +783,6 @@ export default function ReadSurahLayout({
       </div>
     );
   }
-
-  const navigationPanel = (
-    <ReaderNavigationPanel
-      currentVerseId={currentVerse.id}
-      currentVerseIndex={currentVerseIndex}
-      verseCount={verses.length}
-      onPrevious={goToPreviousVerse}
-      onNext={goToNextVerse}
-      disablePrevious={disablePrevAyah ?? currentVerseIndex === 0}
-      disableNext={disableNextAyah ?? currentVerseIndex === verses.length - 1}
-    />
-  );
 
   const sourcesPanel = (
     <ReaderSourcesPanel
@@ -855,6 +841,7 @@ export default function ReadSurahLayout({
       onReportModalToggle={onReportModalToggle}
       isTafsirLoading={isTafsirLoading}
       tafsirText={tafsirText}
+      onAskVerseChatFallback={handleAskVerseChatFallback}
     />
   );
 
@@ -1011,21 +998,19 @@ export default function ReadSurahLayout({
             {explanationTabsPanel}
 
             <div className="space-y-6 lg:hidden">
-              {navigationPanel}
+              {secondaryModesPanel}
               {sourcesPanel}
               {listeningPanel}
               {notesPanel}
-              {secondaryModesPanel}
             </div>
           </main>
 
           <aside className="hidden lg:block">
             <div className="sticky top-[96px] space-y-6">
-              {navigationPanel}
+              {secondaryModesPanel}
               {sourcesPanel}
               {listeningPanel}
               {notesPanel}
-              {secondaryModesPanel}
             </div>
           </aside>
         </div>

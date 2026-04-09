@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { FiLoader, FiX } from 'react-icons/fi';
+import { FiLoader, FiMessageSquare, FiX } from 'react-icons/fi';
 import ReactMarkdown from 'react-markdown';
 import { explainTafsir, type ExplainTafsirResponse } from '../../services/tafsirExplainerService';
+import { requestVerseChatOpen } from '../../utils/verseChatEvents';
 import Overlay from '../ui/Overlay';
 
 interface TafsirExplainerModalProps {
@@ -32,6 +33,7 @@ export default function TafsirExplainerModal({
   verse,
   tafseerAuthor,
 }: TafsirExplainerModalProps) {
+  const verseKey = verse || `${surahNumber}:${ayahNumber}`;
   const [explanation, setExplanation] = useState<ExplainTafsirResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -41,6 +43,18 @@ export default function TafsirExplainerModal({
     if (!tafsirHtml) return '';
     return stripHtml(tafsirHtml);
   }, [tafsirHtml]);
+
+  const fallbackPrompt = explanation?.suggestedPrompt?.trim() || 'What does this verse say?';
+  const isVerseChatFallback = explanation?.fallbackMode === 'verse_chat';
+
+  const openVerseChatFallback = useCallback(() => {
+    requestVerseChatOpen({
+      verseKey,
+      prompt: fallbackPrompt,
+      autoSend: true,
+    });
+    onClose();
+  }, [fallbackPrompt, onClose, verseKey]);
 
   const requestExplanation = useCallback(async () => {
     if (hasRequested && explanation) {
@@ -63,7 +77,7 @@ export default function TafsirExplainerModal({
 
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       try {
-        const result = await explainTafsir(plainTafsir, verse, tafseerAuthor);
+        const result = await explainTafsir(plainTafsir, verse, tafseerAuthor, tafsirId);
         setExplanation(result);
         setHasRequested(true);
         setLoading(false);
@@ -143,12 +157,21 @@ export default function TafsirExplainerModal({
           {error && (
             <div className="rounded-lg border border-danger/30 bg-danger/10 p-4">
               <p className="text-danger">{error}</p>
-              <button
-                onClick={requestExplanation}
-                className="mt-2 text-sm text-danger hover:underline"
-              >
-                Try again
-              </button>
+              <div className="mt-3 flex flex-wrap gap-3">
+                <button
+                  onClick={requestExplanation}
+                  className="text-sm text-danger hover:underline"
+                >
+                  Try again
+                </button>
+                <button
+                  onClick={openVerseChatFallback}
+                  className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
+                >
+                  <FiMessageSquare className="h-4 w-4" aria-hidden="true" />
+                  Ask in Verse Chat
+                </button>
+              </div>
             </div>
           )}
 
@@ -159,11 +182,35 @@ export default function TafsirExplainerModal({
                 <p className="text-sm text-text-muted mt-1">Tafsir ID: {tafsirId}</p>
               </div>
 
-              <div className="prose prose-sm max-w-none text-text">
-                <ReactMarkdown>{explanation.explanation}</ReactMarkdown>
-              </div>
+              {isVerseChatFallback ? (
+                <div className="rounded-lg border border-accent/30 bg-accent/5 p-4">
+                  <h3 className="font-semibold text-text">Verse chat fallback is available</h3>
+                  <p className="mt-2 text-sm leading-7 text-text-muted">
+                    The structured explainer is unavailable right now, but you can still ask the current ayah and selected tafsir directly in verse chat.
+                  </p>
+                  <div className="mt-4 flex flex-wrap gap-3">
+                    <button
+                      onClick={openVerseChatFallback}
+                      className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-on-primary transition-colors hover:bg-primary-hover"
+                    >
+                      <FiMessageSquare className="h-4 w-4" aria-hidden="true" />
+                      Ask “{fallbackPrompt}”
+                    </button>
+                    <button
+                      onClick={requestExplanation}
+                      className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-text transition-colors hover:bg-surface-2"
+                    >
+                      Try explainer again
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="prose prose-sm max-w-none text-text">
+                  <ReactMarkdown>{explanation.explanation}</ReactMarkdown>
+                </div>
+              )}
 
-              {explanation.keyTerms && explanation.keyTerms.length > 0 && (
+              {explanation.keyTerms && explanation.keyTerms.length > 0 && !isVerseChatFallback && (
                 <div className="rounded-lg border border-accent/30 bg-accent/5 p-4">
                   <h4 className="text-sm font-semibold text-accent">Key Terms</h4>
                   <ul className="mt-3 space-y-2 text-sm text-text">

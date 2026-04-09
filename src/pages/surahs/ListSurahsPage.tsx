@@ -31,6 +31,7 @@ const revelationFilters = [
 ] as const;
 
 const tadabburVerse = 'أَفَلَا يَتَدَبَّرُونَ ٱلْقُرْءَانَ أَمْ عَلَىٰ قُلُوبٍ أَقْفَالُهَآ';
+const tadabburVerseTranslation = "Then do they not reflect upon the Qur'an, or are there locks upon [their] hearts?";
 
 export default function ListSurahsPage() {
   const searchFieldId = useId();
@@ -157,12 +158,17 @@ export default function ListSurahsPage() {
                   Tadabbur-AI
                 </h1>
               </div>
-              <p
-                className="quran-text max-w-4xl text-2xl leading-[2.6rem] text-text sm:text-[2rem] sm:leading-[3.2rem]"
-                dir="rtl"
-              >
-                {tadabburVerse}
-              </p>
+              <div className="surahs-hero-copy max-w-4xl space-y-3">
+                <p
+                  className="surahs-hero-verse quran-text"
+                  dir="rtl"
+                >
+                  <span className="surahs-hero-verse__text">{tadabburVerse}</span>
+                </p>
+                <p className="surahs-hero-translation">
+                  {tadabburVerseTranslation}
+                </p>
+              </div>
             </div>
           </header>
 

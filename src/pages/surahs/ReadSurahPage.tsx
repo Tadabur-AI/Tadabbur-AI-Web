@@ -520,7 +520,7 @@ export default function ReadSurahPage() {
       }
 
       const cachedExplanation = explanationCache.current.get(cacheKey);
-      if (cachedExplanation) {
+      if (cachedExplanation && cachedExplanation.fallbackMode !== 'verse_chat') {
         if (!ignore) {
           setAiExplanation(cachedExplanation);
           setIsExplanationLoading(false);
@@ -539,10 +539,12 @@ export default function ReadSurahPage() {
       for (let attempt = 0; attempt < maxRetries; attempt++) {
         try {
           const tafsirAuthorName = tafsirOptions.find(t => t.id === selectedTafsir)?.name || 'Unknown';
-          const result = await explainTafsir(plainTafsir, currentVerse.verse_key, tafsirAuthorName);
+          const result = await explainTafsir(plainTafsir, currentVerse.verse_key, tafsirAuthorName, selectedTafsir);
           if (ignore) return;
 
-          explanationCache.current.set(cacheKey, result);
+          if (result.fallbackMode !== 'verse_chat') {
+            explanationCache.current.set(cacheKey, result);
+          }
           setAiExplanation(result);
           setIsExplanationLoading(false);
           return;

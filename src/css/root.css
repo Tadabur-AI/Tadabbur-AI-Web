@@ -238,12 +238,55 @@ html.dark .surah-wheel-badge::after {
   background: radial-gradient(circle, rgba(11, 19, 16, 0.96) 0%, rgba(15, 27, 22, 0.9) 68%, rgba(15, 27, 22, 0) 100%);
 }
 
+.surahs-hero-copy {
+  position: relative;
+}
+
+.surahs-hero-verse {
+  max-width: min(100%, 52rem);
+  color: var(--color-gold-400);
+  text-shadow: 0 0 18px rgba(212, 167, 44, 0.16);
+}
+
+.surahs-hero-verse__text {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  clip-path: inset(0 0 0 100%);
+  animation: surahs-hero-type 3.1s steps(26, end) 0.2s forwards;
+}
+
+.surahs-hero-translation {
+  max-width: 42rem;
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: color-mix(in srgb, var(--color-gold-400) 60%, var(--color-text) 40%);
+}
+
+html.dark .surahs-hero-verse {
+  color: var(--color-gold-200);
+  text-shadow: 0 0 20px rgba(246, 196, 83, 0.2);
+}
+
+html.dark .surahs-hero-translation {
+  color: color-mix(in srgb, var(--color-gold-200) 72%, var(--color-text) 28%);
+}
+
 @keyframes surahs-cover-spin {
   from {
     transform: translateY(-50%) rotate(0deg);
   }
   to {
     transform: translateY(-50%) rotate(360deg);
+  }
+}
+
+@keyframes surahs-hero-type {
+  from {
+    clip-path: inset(0 0 0 100%);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
   }
 }
 
@@ -254,6 +297,10 @@ html.dark .surah-wheel-badge::after {
   .surahs-cover-orbit {
     left: -9.5rem;
     height: 82vh;
+  }
+
+  .surahs-hero-translation {
+    font-size: 0.85rem;
   }
 }
 
@@ -267,6 +314,17 @@ html.dark .surah-wheel-badge::after {
   .surahs-cover-orbit {
     left: clamp(-16rem, -12vw, -7rem);
     height: min(96vh, 72rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .surahs-cover-orbit {
+    animation: none;
+  }
+
+  .surahs-hero-verse__text {
+    clip-path: inset(0 0 0 0);
+    animation: none;
   }
 }
 
