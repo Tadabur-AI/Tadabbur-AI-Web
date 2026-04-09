@@ -28,22 +28,26 @@ function getStoredTheme(): Theme {
   return 'light';
 }
 
+function resolveTheme(theme: Theme): 'light' | 'dark' {
+  if (theme === 'system') {
+    return getSystemTheme();
+  }
+
+  return theme;
+}
+
 interface ThemeProviderProps {
   children: ReactNode;
 }
 
 export function ThemeProvider({ children }: ThemeProviderProps) {
   const [theme, setThemeState] = useState<Theme>(getStoredTheme);
-  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('light');
+  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>(() => resolveTheme(getStoredTheme()));
 
   // Resolve the actual theme (accounting for 'system' preference)
   useEffect(() => {
     const updateResolvedTheme = () => {
-      if (theme === 'system') {
-        setResolvedTheme(getSystemTheme());
-      } else {
-        setResolvedTheme(theme);
-      }
+      setResolvedTheme(resolveTheme(theme));
     };
 
     updateResolvedTheme();
@@ -63,10 +67,15 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   // Apply theme class to document
   useEffect(() => {
     const root = document.documentElement;
+    const themeColor = document.querySelector('meta[name="theme-color"]');
     if (resolvedTheme === 'dark') {
       root.classList.add('dark');
+      root.style.colorScheme = 'dark';
+      themeColor?.setAttribute('content', '#0B1310');
     } else {
       root.classList.remove('dark');
+      root.style.colorScheme = 'light';
+      themeColor?.setAttribute('content', '#FBFAF7');
     }
   }, [resolvedTheme]);
 

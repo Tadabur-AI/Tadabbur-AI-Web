@@ -630,7 +630,7 @@ export default function VerseChatBubble({
               )}
               <button
                 type="button"
-                className="btn-primary rounded-full p-2.5 max-[360px]:p-2 max-[300px]:p-1.5 md:p-3"
+                className="btn-primary inline-flex h-10 w-10 shrink-0 aspect-square items-center justify-center rounded-full p-0 max-[360px]:h-9 max-[360px]:w-9 max-[300px]:h-8 max-[300px]:w-8 md:h-11 md:w-11"
                 onClick={() => void handleSubmit()}
                 disabled={!draft.trim() || !isReady || isStreaming}
                 aria-label="Send verse chat message"
@@ -664,7 +664,7 @@ export default function VerseChatBubble({
 
       <div
         className="fixed right-4 z-player"
-        style={{ bottom: launcherBottom }}
+        style={{ bottom: launcherBottom, right: 'max(0.75rem, env(safe-area-inset-right))' }}
       >
         {!isMobile && isOpen && (
           <div
@@ -690,7 +690,7 @@ export default function VerseChatBubble({
             ref={launcherRef}
             type="button"
             aria-label={`Open verse chat for ayah ${verseContext.verseKey}`}
-            className="verse-chat-launcher btn-primary h-12 w-12 rounded-full p-0 max-[360px]:h-11 max-[360px]:w-11 max-[300px]:h-10 max-[300px]:w-10 md:h-14 md:w-14"
+            className="verse-chat-launcher flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary p-0 text-on-primary transition-colors hover:bg-primary-hover max-[300px]:h-11 max-[300px]:w-11 md:h-14 md:w-14"
             onClick={() => setIsOpen((open) => !open)}
           >
             <FiMessageCircle size={isMobile ? 19 : 22} />

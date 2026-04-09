@@ -1,5 +1,6 @@
 import { FiBookOpen } from 'react-icons/fi';
 import { useTajweedLearning, type TajweedLearningRequest } from './TajweedLearningProvider';
+import { ActionButton } from '../ui/primitives';
 
 interface TajweedLearningButtonProps {
   surahId: number;
@@ -32,15 +33,16 @@ export default function TajweedLearningButton({
   };
 
   return (
-    <button
+    <ActionButton
       type="button"
       onClick={handleClick}
       disabled={isLoading}
-      className={`btn-secondary ${className}`}
+      variant="secondary"
+      className={className}
       aria-label="Start Tajweed Learning Mode"
     >
-      <FiBookOpen size={16} />
+      <FiBookOpen size={16} aria-hidden="true" />
       <span>Tajweed</span>
-    </button>
+    </ActionButton>
   );
 }

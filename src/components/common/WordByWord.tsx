@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { FiVolume2 } from 'react-icons/fi';
 import { type WordTranslation } from '../../services/apis';
+import { ActionButton } from '../ui/primitives';
 
 interface WordByWordProps {
   words: WordTranslation[];
@@ -9,15 +10,14 @@ interface WordByWordProps {
 
 interface WordItemProps {
   word: WordTranslation;
-  index: number;
 }
 
-function WordItem({ word, index }: WordItemProps) {
+function WordItem({ word }: WordItemProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  const playAudio = async (e: React.MouseEvent) => {
+  const playAudio = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
     if (!word.audio || isPlaying) return;
 
@@ -41,14 +41,11 @@ function WordItem({ word, index }: WordItemProps) {
   return (
     <div
       className={`
-        relative flex flex-col items-center p-2 rounded-lg cursor-pointer transition-colors
+        relative flex flex-col items-center rounded-[18px] border border-transparent p-3 transition-colors
         ${isHovered ? 'bg-surface-2' : 'hover:bg-surface-2'}
       `}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      role="button"
-      tabIndex={0}
-      aria-label={`Word ${index + 1}: ${word.text}`}
     >
       <span className="arabic text-lg sm:text-xl text-text">
         {word.text}
@@ -67,18 +64,18 @@ function WordItem({ word, index }: WordItemProps) {
       )}
 
       {word.audio && isHovered && (
-        <button
-          type="button"
+        <ActionButton
+          size="icon"
           onClick={playAudio}
           disabled={isPlaying}
           className={`
-            absolute -top-1 -right-1 p-1 rounded-full transition-colors
+            absolute -right-2 -top-2 h-8 w-8 rounded-full
             ${isPlaying ? 'bg-primary text-on-primary animate-pulse' : 'bg-primary/80 text-on-primary hover:bg-primary'}
           `}
           aria-label="Play word pronunciation"
         >
           <FiVolume2 className="h-3 w-3" />
-        </button>
+        </ActionButton>
       )}
     </div>
   );
@@ -96,7 +93,7 @@ export default function WordByWord({ words, className = '' }: WordByWordProps) {
   return (
     <div className={className}>
       <p className="text-xs text-text-muted mb-2">
-        Word by Word ({words.length} words) — hover for audio
+        Word-by-Word ({words.length} words) - hover for audio
       </p>
 
       <div
@@ -107,7 +104,6 @@ export default function WordByWord({ words, className = '' }: WordByWordProps) {
           <WordItem
             key={`${word.text}-${index}`}
             word={word}
-            index={index}
           />
         ))}
       </div>

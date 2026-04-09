@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FiLoader, FiX } from 'react-icons/fi';
 import ReactMarkdown from 'react-markdown';
 import { explainTafsir, type ExplainTafsirResponse } from '../../services/tafsirExplainerService';
+import Overlay from '../ui/Overlay';
 
 interface TafsirExplainerModalProps {
   isOpen: boolean;
@@ -104,25 +105,36 @@ export default function TafsirExplainerModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="max-w-4xl w-full max-h-[90vh] rounded-lg bg-surface shadow-xl overflow-hidden flex flex-col">
+    <Overlay
+      open={isOpen}
+      onClose={onClose}
+      labelledBy="tafsir-explainer-title"
+      describedBy="tafsir-explainer-description"
+      surfaceClassName="flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-[28px] border border-border bg-surface shadow-xl"
+    >
+      <div>
         <div className="flex items-center justify-between border-b border-border p-4">
-          <h2 className="text-xl font-bold text-text">
-            Tafsir Explanation - Surah {surahNumber}:{ayahNumber}
-          </h2>
+          <div>
+            <h2 id="tafsir-explainer-title" className="text-xl font-bold text-text">
+              Tafsir Explanation - Surah {surahNumber}:{ayahNumber}
+            </h2>
+            <p id="tafsir-explainer-description" className="mt-1 text-sm text-text-muted">
+              Review the modern explanation, related key terms, and the original tafsir in one place.
+            </p>
+          </div>
           <button
             onClick={onClose}
             className="rounded-lg p-2 text-text-muted hover:bg-surface-2 hover:text-text transition-colors"
             aria-label="Close tafsir explanation"
           >
-            <FiX className="h-5 w-5" />
+            <FiX className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
 
         <div className="flex-1 overflow-y-auto p-6">
           {loading && (
-            <div className="flex flex-col items-center justify-center py-12">
-              <FiLoader className="h-8 w-8 animate-spin text-primary" />
+            <div className="flex flex-col items-center justify-center py-12" aria-live="polite">
+              <FiLoader className="h-8 w-8 animate-spin text-primary" aria-hidden="true" />
               <p className="mt-4 text-text-muted">Generating modern English explanation...</p>
               <p className="mt-2 text-sm text-text-muted">This may take 15-30 seconds</p>
             </div>
@@ -200,6 +212,6 @@ export default function TafsirExplainerModal({
           )}
         </div>
       </div>
-    </div>
+    </Overlay>
   );
 }

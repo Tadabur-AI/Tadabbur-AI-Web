@@ -1,5 +1,6 @@
 import type { ButtonHTMLAttributes } from 'react';
 import { FiPlay } from 'react-icons/fi';
+import { ActionButton } from '../ui/primitives';
 
 interface PlayPleasentlyButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   label?: string;
@@ -12,13 +13,14 @@ export default function PlayPleasentlyButton({
   ...rest 
 }: PlayPleasentlyButtonProps) {
   return (
-    <button
+    <ActionButton
       type={type}
-      className={`btn-primary ${className}`}
+      variant="primary"
+      className={className}
       {...rest}
     >
-      <FiPlay size={16} />
+      <FiPlay size={16} aria-hidden="true" />
       {label}
-    </button>
+    </ActionButton>
   );
 }

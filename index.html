@@ -4,10 +4,35 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/images/product-logo.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#FBFAF7" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@400;500;600;700&display=swap"
+    />
     <title>Tadabbur AI</title>
-    <style>
-      
-    </style>
+    <script>
+      (() => {
+        const storageKey = 'tadabbur_theme';
+        const root = document.documentElement;
+        const storedTheme = localStorage.getItem(storageKey);
+        const resolvedTheme =
+          storedTheme === 'dark' ||
+          (storedTheme === 'system' &&
+            window.matchMedia('(prefers-color-scheme: dark)').matches)
+            ? 'dark'
+            : 'light';
+
+        if (resolvedTheme === 'dark') {
+          root.classList.add('dark');
+          root.style.colorScheme = 'dark';
+        } else {
+          root.classList.remove('dark');
+          root.style.colorScheme = 'light';
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

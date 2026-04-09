@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { FiX, FiAlertTriangle } from 'react-icons/fi';
 import { reportWrongTafsir } from '../../services/tafsirExplainerService';
+import { ActionButton, IconButton, TextAreaField } from '../ui/primitives';
+import Overlay from '../ui/Overlay';
 
 interface Props {
   isOpen: boolean;
@@ -45,7 +47,7 @@ export default function ReportWrongModal({
       if (result.success) {
         setSuccess(
           result.isCorrected 
-            ? 'Thank you! The AI has processed your report and corrected the explanation. You may need to refresh to see the changes.' 
+            ? 'Thank you. The AI processed your report and corrected the explanation. Refresh if you do not see the update yet.' 
             : 'Thank you! We have flagged this for manual review.'
         );
         setTimeout(() => {
@@ -62,42 +64,49 @@ export default function ReportWrongModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className="bg-surface w-full max-w-lg rounded-xl shadow-xl overflow-hidden border border-border flex flex-col max-h-[90vh]">
+    <Overlay
+      open={isOpen}
+      onClose={isSubmitting ? () => undefined : onClose}
+      labelledBy="report-wrong-modal-title"
+      describedBy="report-wrong-modal-description"
+      surfaceClassName="flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-[28px] border border-border bg-surface shadow-xl"
+    >
+      <div>
         {/* Header */}
         <div className="flex items-center justify-between p-4 flex-shrink-0 border-b border-border">
           <div className="flex items-center gap-2 text-danger">
-            <FiAlertTriangle size={20} />
-            <h2 className="text-lg font-semibold">Report Issue with AI Explanation</h2>
+            <FiAlertTriangle size={20} aria-hidden="true" />
+            <h2 id="report-wrong-modal-title" className="text-lg font-semibold">Report an AI Issue</h2>
           </div>
-          <button
+          <IconButton
+            label="Close report dialog"
             onClick={onClose}
-            className="p-2 -mr-2 text-text-muted hover:text-text rounded-lg hover:bg-surface-2 transition-colors disabled:opacity-50"
             disabled={isSubmitting}
           >
             <FiX size={20} />
-          </button>
+          </IconButton>
         </div>
 
         {/* Content */}
         <div className="p-4 sm:p-6 overflow-y-auto">
+          <p id="report-wrong-modal-description" className="sr-only">
+            Describe the problem in the AI explanation so it can be reviewed or corrected.
+          </p>
           {success ? (
-            <div className="bg-success/10 text-success p-4 rounded-lg flex items-start gap-3">
+            <div className="rounded-lg bg-success/10 p-4 text-success" aria-live="polite">
               <p className="text-sm">{success}</p>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="flex flex-col h-full gap-4">
               <p className="text-sm text-text-muted">
-                Has the AI hallucinated, produced incorrect information, or mistranslated the original tafseer? Please describe the issue below so we can fix it.
+                If the AI hallucinated, misstated the tafsir, or mistranslated the source, describe the problem clearly below.
               </p>
               
               <div className="flex-1">
-                <label className="block text-sm font-medium text-text mb-2">
-                  What's wrong?
-                </label>
-                <textarea
-                  className="w-full h-32 p-3 bg-surface-2 border border-border rounded-lg text-text focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none transition-shadow"
-                  placeholder="e.g. The AI incorrectly stated that..."
+                <TextAreaField
+                  label="What is wrong?"
+                  className="h-32"
+                  placeholder="For example, the AI incorrectly stated that…"
                   value={complaint}
                   onChange={(e) => setComplaint(e.target.value)}
                   disabled={isSubmitting}
@@ -112,18 +121,18 @@ export default function ReportWrongModal({
               )}
 
               <div className="flex justify-end gap-3 pt-4 border-t border-border mt-auto">
-                <button
-                  type="button"
+                <ActionButton
+                  variant="ghost"
                   onClick={onClose}
                   disabled={isSubmitting}
-                  className="px-4 py-2 font-medium text-text-muted hover:text-text hover:bg-surface-2 rounded-lg transition-colors disabled:opacity-50"
                 >
                   Cancel
-                </button>
-                <button
+                </ActionButton>
+                <ActionButton
                   type="submit"
+                  variant="danger"
                   disabled={isSubmitting || !complaint.trim()}
-                  className="px-6 py-2 bg-danger hover:bg-danger/90 text-white font-medium rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center min-w-[120px]"
+                  className="min-w-[140px]"
                 >
                   {isSubmitting ? (
                     <div className="flex gap-1">
@@ -134,12 +143,12 @@ export default function ReportWrongModal({
                   ) : (
                     'Submit Report'
                   )}
-                </button>
+                </ActionButton>
               </div>
             </form>
           )}
         </div>
       </div>
-    </div>
+    </Overlay>
   );
 }

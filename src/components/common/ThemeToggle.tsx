@@ -52,11 +52,13 @@ export default function ThemeToggle({ className = '', showLabel = false }: Theme
     <button
       type="button"
       onClick={toggleTheme}
-      className={`flex items-center justify-center gap-2 rounded-lg border border-border p-2 text-sm font-medium transition-colors hover:border-primary hover:bg-surface-2 ${className}`}
+      className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-border p-0 text-sm font-medium transition-colors hover:border-primary hover:bg-surface-2 ${className}`}
       title={getTitle()}
       aria-label={getTitle()}
     >
-      {getIcon()}
+      <span aria-hidden="true" className="inline-flex items-center justify-center">
+        {getIcon()}
+      </span>
       {showLabel && <span className="hidden sm:inline">{getLabel()}</span>}
     </button>
   );
