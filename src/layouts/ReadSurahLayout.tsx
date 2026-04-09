@@ -883,15 +883,15 @@ export default function ReadSurahLayout({
   );
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="relative min-h-screen overflow-x-hidden bg-background">
       <a href="#reader-main" className="skip-link">
         Skip to main content
       </a>
 
       <PoliteLiveRegion message={statusMessage} />
 
-      <header className="sticky top-0 z-sticky border-b border-border/80 bg-background/95 backdrop-blur">
-        <div className="mx-auto flex min-h-[72px] max-w-[1600px] items-center gap-3 px-4 sm:px-6 xl:px-8">
+      <header className="sticky top-0 z-sticky bg-background/70 px-4 pb-2 pt-3 backdrop-blur sm:px-6 xl:px-8">
+        <div className="mx-auto flex max-w-[1600px] items-center gap-3 rounded-[28px] border border-border/80 bg-surface/95 px-4 py-3 shadow-[0_16px_40px_rgba(20,20,18,0.08)] backdrop-blur sm:px-5">
           <div className="flex items-center gap-2">
             <IconButton label="Open verse list" className="lg:hidden" onClick={() => setIsVerseRailOpen(true)}>
               <FiMenu size={18} />

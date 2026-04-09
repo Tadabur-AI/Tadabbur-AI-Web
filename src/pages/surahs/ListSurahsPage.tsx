@@ -138,83 +138,86 @@ export default function ListSurahsPage() {
 
   return (
     <AppShell activeNav="quran">
-      <div className="space-y-6">
-        <header className="page-header">
-          <div className="min-w-0 space-y-3">
-            <div className="flex items-center gap-3">
-              <img
-                src="/images/product-logo.svg"
-                alt=""
-                aria-hidden="true"
-                width="48"
-                height="48"
-                className="h-12 w-12 shrink-0"
-              />
-              <h1 className="text-3xl font-semibold tracking-tight text-text text-balance sm:text-4xl">
-                Tadabbur-AI
-              </h1>
-            </div>
-            <p
-              className="quran-text max-w-4xl text-2xl leading-[2.6rem] text-text sm:text-[2rem] sm:leading-[3.2rem]"
-              dir="rtl"
-            >
-              {tadabburVerse}
-            </p>
-          </div>
-        </header>
+      <div className="relative overflow-x-hidden">
+        <div aria-hidden="true" className="surahs-cover-orbit" />
 
-        <Panel>
-          <div role="search" aria-label="Quran browse filters" className="space-y-4">
-            <div className="max-w-3xl">
-              <Field
-                label="Search"
-                htmlFor={searchFieldId}
-                labelHidden
-              >
-                <div className="relative">
-                  <FiSearch
-                    className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-text-muted"
-                    aria-hidden="true"
-                    size={18}
-                  />
-                  <input
-                    id={searchFieldId}
-                    type="search"
-                    name="quran_search"
-                    autoComplete="off"
-                    inputMode="search"
-                    value={searchQuery}
-                    onChange={(event) => setSearchQuery(event.target.value)}
-                    placeholder="Search surahs, juz, or saved ayat…"
-                    className="field-control pl-11"
-                  />
-                </div>
-              </Field>
-            </div>
-
-            <div className="flex flex-wrap gap-4">
-              <SegmentedControl
-                label="Browse"
-                labelHidden
-                value={activeTab}
-                items={quranTabs}
-                onChange={selectTab}
-              />
-
-              {activeTab === 'surahs' ? (
-                <SegmentedControl
-                  label="Revelation Place"
-                  labelHidden
-                  value={revelationFilter}
-                  items={revelationFilters.map((item) => ({ value: item.value, label: item.label }))}
-                  onChange={setRevelationFilter}
+        <div className="relative z-[1] space-y-6">
+          <header className="page-header">
+            <div className="min-w-0 space-y-3">
+              <div className="flex items-center gap-3">
+                <img
+                  src="/images/product-logo.svg"
+                  alt=""
+                  aria-hidden="true"
+                  width="48"
+                  height="48"
+                  className="h-12 w-12 shrink-0"
                 />
-              ) : null}
+                <h1 className="text-3xl font-semibold tracking-tight text-text text-balance sm:text-4xl">
+                  Tadabbur-AI
+                </h1>
+              </div>
+              <p
+                className="quran-text max-w-4xl text-2xl leading-[2.6rem] text-text sm:text-[2rem] sm:leading-[3.2rem]"
+                dir="rtl"
+              >
+                {tadabburVerse}
+              </p>
             </div>
-          </div>
-        </Panel>
+          </header>
 
-        {loading ? (
+          <Panel>
+            <div role="search" aria-label="Quran browse filters" className="space-y-4">
+              <div className="max-w-3xl">
+                <Field
+                  label="Search"
+                  htmlFor={searchFieldId}
+                  labelHidden
+                >
+                  <div className="relative">
+                    <FiSearch
+                      className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-text-muted"
+                      aria-hidden="true"
+                      size={18}
+                    />
+                    <input
+                      id={searchFieldId}
+                      type="search"
+                      name="quran_search"
+                      autoComplete="off"
+                      inputMode="search"
+                      value={searchQuery}
+                      onChange={(event) => setSearchQuery(event.target.value)}
+                      placeholder="Search surahs, juz, or saved ayat…"
+                      className="field-control pl-11"
+                    />
+                  </div>
+                </Field>
+              </div>
+
+              <div className="flex flex-wrap gap-4">
+                <SegmentedControl
+                  labelHidden
+                  label="Browse"
+                  value={activeTab}
+                  items={quranTabs}
+                  onChange={selectTab}
+                />
+
+                {activeTab === 'surahs' ? (
+                  <SegmentedControl
+                    label="Revelation Place"
+                    labelHidden
+                    value={revelationFilter}
+                    items={revelationFilters.map((item) => ({ value: item.value, label: item.label }))}
+                    onChange={setRevelationFilter}
+                  />
+                ) : null}
+              </div>
+            </div>
+          </Panel>
+
+          {loading ? (
           <Panel title="Loading surahs" description="Fetching the list.">
             <div className="space-y-3" aria-live="polite">
               {[...Array(6)].map((_, index) => (
@@ -229,9 +232,9 @@ export default function ListSurahsPage() {
               ))}
             </div>
           </Panel>
-        ) : null}
+          ) : null}
 
-        {error ? (
+          {error ? (
           <EmptyState
             title="Could not load surahs"
             description={error}
@@ -242,9 +245,9 @@ export default function ListSurahsPage() {
               </ActionButton>
             }
           />
-        ) : null}
+          ) : null}
 
-        {!loading && !error && activeTab === 'surahs' ? (
+          {!loading && !error && activeTab === 'surahs' ? (
           filteredChapters.length > 0 ? (
             <section aria-labelledby="surah-results-heading" className="space-y-3">
               <h2 id="surah-results-heading" className="sr-only">
@@ -258,7 +261,9 @@ export default function ListSurahsPage() {
                         to={`/surah/${chapter.id}`}
                         className="group flex min-w-0 items-start gap-4 rounded-[20px] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
                       >
-                        <span className="badge-number mt-1">{chapter.id}</span>
+                        <span className="surah-wheel-badge mt-1" aria-label={`Surah ${chapter.id}`}>
+                          {chapter.id}
+                        </span>
                         <div className="min-w-0 flex-1 space-y-2">
                           <div className="flex min-w-0 flex-wrap items-baseline gap-3">
                             <h3 className="truncate text-lg font-semibold text-text group-hover:text-primary">
@@ -309,9 +314,9 @@ export default function ListSurahsPage() {
               icon={<FiSearch size={20} />}
             />
           )
-        ) : null}
+          ) : null}
 
-        {!loading && !error && activeTab === 'juz' ? (
+          {!loading && !error && activeTab === 'juz' ? (
           filteredJuz.length > 0 ? (
             <section aria-labelledby="juz-results-heading" className="space-y-4">
               <h2 id="juz-results-heading" className="sr-only">
@@ -387,9 +392,9 @@ export default function ListSurahsPage() {
               icon={<FiSearch size={20} />}
             />
           )
-        ) : null}
+          ) : null}
 
-        {!loading && !error && activeTab === 'saved' ? (
+          {!loading && !error && activeTab === 'saved' ? (
           savedVerses.length > 0 ? (
             <section aria-labelledby="saved-verses-heading" className="space-y-3">
               <h2 id="saved-verses-heading" className="sr-only">
@@ -427,7 +432,8 @@ export default function ListSurahsPage() {
               icon={<FiBookmark size={20} />}
             />
           )
-        ) : null}
+          ) : null}
+        </div>
       </div>
     </AppShell>
   );
