@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
+import * as Slider from '@radix-ui/react-slider';
 import { FiChevronLeft, FiChevronRight, FiPause, FiPlay } from 'react-icons/fi';
 import { retrieveRecitation, type RetrieveRecitationVerse } from '../../services/apis';
 
@@ -35,7 +36,6 @@ export default function AudioPlayer({
   const [isLoading, setIsLoading] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [isScrubbing, setIsScrubbing] = useState(false);
   const [scrubTime, setScrubTime] = useState<number | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const recitationCache = useRef<Map<string, RetrieveRecitationVerse[]>>(new Map());
@@ -135,6 +135,7 @@ export default function AudioPlayer({
     setIsPlaying(false);
     setCurrentTime(0);
     setDuration(0);
+    setScrubTime(null);
   }, [audioUrl]);
 
   useEffect(() => {
@@ -194,23 +195,14 @@ export default function AudioPlayer({
     }
     setCurrentTime(resolvedTime);
     setScrubTime(null);
-    setIsScrubbing(false);
   }, [currentTime, scrubTime]);
 
-  const handleSeekPreview = useCallback((nextTime: number) => {
+  const handleSeekPreview = useCallback((values: number[]) => {
+    const nextTime = values[0] ?? 0;
     setScrubTime(nextTime);
+  }, []);
 
-    if (!isScrubbing) {
-      const audio = audioRef.current;
-      if (audio) {
-        audio.currentTime = nextTime;
-      }
-      setCurrentTime(nextTime);
-    }
-  }, [isScrubbing]);
-
-  const sliderValue = isScrubbing && scrubTime !== null ? scrubTime : currentTime;
-  const progress = duration > 0 ? (sliderValue / duration) * 100 : 0;
+  const sliderValue = scrubTime ?? currentTime;
 
   const barContent = (
     <>
@@ -263,38 +255,22 @@ export default function AudioPlayer({
         </div>
 
         <div className="space-y-1">
-          <input
-            type="range"
-            min="0"
+          <Slider.Root
+            value={[sliderValue]}
+            min={0}
             max={duration || 0}
-            step="0.1"
-            value={sliderValue}
-            onInput={(event) => handleSeekPreview(Number.parseFloat(event.currentTarget.value))}
-            onPointerDown={() => {
-              setIsScrubbing(true);
-              setScrubTime(currentTime);
-            }}
-            onPointerUp={(event) => commitSeek(Number.parseFloat(event.currentTarget.value))}
-            onPointerCancel={() => commitSeek()}
-            onKeyDown={() => {
-              if (!isScrubbing) {
-                setIsScrubbing(true);
-                setScrubTime(sliderValue);
-              }
-            }}
-            onKeyUp={(event) => commitSeek(Number.parseFloat(event.currentTarget.value))}
-            onBlur={() => {
-              if (isScrubbing) {
-                commitSeek();
-              }
-            }}
+            step={0.1}
             disabled={!audioUrl || isLoading}
+            onValueChange={handleSeekPreview}
+            onValueCommit={(values) => commitSeek(values[0])}
             className="audio-seek"
-            style={{
-              background: `linear-gradient(to right, var(--color-primary) 0%, var(--color-primary) ${progress}%, var(--color-surface-2) ${progress}%, var(--color-surface-2) 100%)`,
-            }}
             aria-label="Seek verse audio"
-          />
+          >
+            <Slider.Track className="audio-seek__track">
+              <Slider.Range className="audio-seek__range" />
+            </Slider.Track>
+            <Slider.Thumb className="audio-seek__thumb" />
+          </Slider.Root>
 
           <div className="flex items-center justify-between gap-3 text-xs text-text-muted">
             <div className="flex items-center gap-3">
