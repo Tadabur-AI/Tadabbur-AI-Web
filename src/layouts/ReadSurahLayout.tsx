@@ -42,6 +42,8 @@ const TafsirExplainerModal = lazy(() => import('../components/common/TafsirExpla
 const ReportWrongModal = lazy(() => import('../components/common/ReportWrongModal'));
 const VerseChatBubble = lazy(() => import('../components/reader/VerseChatBubble'));
 
+const WORD_BY_WORD_STORAGE_KEY = 'tadabbur_word_by_word';
+
 interface Verse {
   id: number;
   verse_key: string;
@@ -444,7 +446,7 @@ const ExplanationTabsPanel = memo(function ExplanationTabsPanel({
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <p className="text-sm leading-7 text-text-muted">
               {activeView === 'ai'
-                ? 'This layer explains the selected tafsir without replacing the original source.'
+                ? 'This layer explains the tafsir grounded by the original source of Tafsir Author.'
                 : selectedTafsirName
                   ? `Source: ${selectedTafsirName}`
                   : 'Original source text for the current ayah.'}
@@ -592,8 +594,8 @@ export default function ReadSurahLayout({
   const [noteDraft, setNoteDraft] = useState('');
   const [activeExplanationView, setActiveExplanationView] = useState<ExplanationView>('ai');
   const [isWordByWordEnabled, setIsWordByWordEnabled] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    return localStorage.getItem('tadabbur_word_by_word') === 'true';
+    if (typeof window === 'undefined') return true;
+    return localStorage.getItem(WORD_BY_WORD_STORAGE_KEY) !== 'false';
   });
   const { message: statusMessage, announce } = usePoliteStatus();
 
@@ -603,7 +605,7 @@ export default function ReadSurahLayout({
   const lastVerseId = verses[verses.length - 1]?.id;
 
   useEffect(() => {
-    localStorage.setItem('tadabbur_word_by_word', String(isWordByWordEnabled));
+    localStorage.setItem(WORD_BY_WORD_STORAGE_KEY, String(isWordByWordEnabled));
   }, [isWordByWordEnabled]);
 
   useEffect(() => {
@@ -878,7 +880,7 @@ export default function ReadSurahLayout({
       <PoliteLiveRegion message={statusMessage} />
 
       <header className="sticky top-0 z-sticky bg-background/70 px-4 pb-2 pt-3 backdrop-blur sm:px-6 xl:px-8">
-        <div className="mx-auto flex max-w-[1600px] items-center gap-3 rounded-[28px] border border-border/80 bg-surface/95 px-4 py-3 shadow-[0_16px_40px_rgba(20,20,18,0.08)] backdrop-blur sm:px-5">
+        <div className="mx-auto flex max-w-[1600px] items-center gap-3 rounded-[28px] bg-surface/95 px-4 py-3 shadow-[0_16px_40px_rgba(20,20,18,0.08)] backdrop-blur sm:px-5">
           <div className="flex items-center gap-2">
             <IconButton label="Open verse list" className="lg:hidden" onClick={() => setIsVerseRailOpen(true)}>
               <FiMenu size={18} />

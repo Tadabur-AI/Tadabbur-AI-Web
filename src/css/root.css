@@ -167,16 +167,20 @@ button, input, select, textarea {
 .surahs-cover-orbit {
   position: fixed;
   left: clamp(-18rem, -18vw, -9rem);
-  top: 50%;
+  top: 100%;
   height: min(94vh, 64rem);
-  aspect-ratio: 451 / 553;
+  /* aspect-ratio: 451 / 553;  */
+  scale: 2;
+  aspect-ratio: 300 / 553;
   width: auto;
   pointer-events: none;
   z-index: 0;
-  opacity: 0.13;
-  background-image: url('/images/quran_cover_circle.png');
+  /* opacity: 0.13; */
+  opacity: 0.1;
+  /* background-image: url('/images/quran_cover_circle.png'); */
+  background-image: url('/images/quran_cover_circle_new.png');
   background-size: contain;
-  background-position: center;
+  background-position: left;
   background-repeat: no-repeat;
   transform-origin: center;
   animation: surahs-cover-spin 44s linear infinite;

@@ -113,7 +113,7 @@ export default function DashboardLayout({
       <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
         {headerContent ? (
-          <header className="sticky top-0 z-sticky bg-surface border-b border-border px-4 py-3">
+          <header className="sticky top-0 z-sticky bg-surface px-4 py-3">
             {typeof headerContent === 'function' ? (
               <div className="max-w-[1200px] mx-auto">
                 {resolvedHeaderContent}
@@ -128,7 +128,7 @@ export default function DashboardLayout({
             )}
           </header>
         ) : (
-          <header className="sticky top-0 h-[56px] z-sticky bg-surface border-b border-border px-4 flex items-center justify-between gap-4">
+          <header className="sticky top-0 h-[56px] z-sticky bg-surface px-4 flex items-center justify-between gap-4">
             <div className="flex items-center gap-3 min-w-0">
               {mobileMenuButton}
               <h1 className="text-base font-semibold truncate">{screenTitle}</h1>

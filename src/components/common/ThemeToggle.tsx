@@ -40,9 +40,9 @@ export default function ThemeToggle({ className = '', showLabel = false }: Theme
       case 'light':
         return 'Switch to dark mode';
       case 'dark':
-        return 'Switch to system preference';
-      case 'system':
         return 'Switch to light mode';
+      case 'system':
+        return 'Switch to dark mode';
       default:
         return 'Toggle theme';
     }

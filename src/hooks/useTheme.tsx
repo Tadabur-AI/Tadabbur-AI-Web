@@ -21,11 +21,7 @@ function getSystemTheme(): 'light' | 'dark' {
 function getStoredTheme(): Theme {
   if (typeof window === 'undefined') return 'light';
   const stored = localStorage.getItem(THEME_STORAGE_KEY);
-  if (stored === 'light' || stored === 'dark' || stored === 'system') {
-    return stored;
-  }
-  // Default to 'light' to preserve original site appearance
-  return 'light';
+  return stored === 'dark' ? 'dark' : 'light';
 }
 
 function resolveTheme(theme: Theme): 'light' | 'dark' {
@@ -85,13 +81,10 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   };
 
   const toggleTheme = () => {
-    // Cycle through: light -> dark -> system -> light
-    if (theme === 'light') {
-      setTheme('dark');
-    } else if (theme === 'dark') {
-      setTheme('system');
-    } else {
+    if (theme === 'dark') {
       setTheme('light');
+    } else {
+      setTheme('dark');
     }
   };
 
