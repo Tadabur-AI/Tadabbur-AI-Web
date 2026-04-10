@@ -1,6 +1,6 @@
 import { useCallback, useDeferredValue, useEffect, useId, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { FiBookmark, FiBookOpen, FiHeadphones, FiSearch } from 'react-icons/fi';
+import { FiBookmark, FiBookOpen, FiClock, FiHeadphones, FiSearch } from 'react-icons/fi';
 import AppShell from '../../layouts/AppShell';
 import {
   ActionButton,
@@ -14,7 +14,14 @@ import { buttonClassName } from '../../components/ui/buttonClassName';
 import { listSurahs, type SurahSummary } from '../../services/apis';
 import { JUZ_METADATA } from '../../data/juz';
 import { usePlayPleasantly } from '../../components/PleasentPlay/PlayPleasantlyProvider';
-import { getBookmarks, type BookmarkedVerse } from '../../utils/quranLocalStorage';
+import {
+  clearReadingProgress,
+  getBookmarks,
+  getReadingProgress,
+  type BookmarkedVerse,
+  type ReadingProgress,
+  type ReadingProgressEntry,
+} from '../../utils/quranLocalStorage';
 
 type QuranTab = 'surahs' | 'juz' | 'saved';
 
@@ -33,6 +40,21 @@ const revelationFilters = [
 const tadabburVerse = 'أَفَلَا يَتَدَبَّرُونَ ٱلْقُرْءَانَ أَمْ عَلَىٰ قُلُوبٍ أَقْفَالُهَآ';
 const tadabburVerseTranslation = "Then do they not reflect upon the Qur'an, or are there locks upon [their] hearts?";
 
+const todayKey = () => new Date().toISOString().slice(0, 10);
+
+const resolveVersesCount = (entry: ReadingProgressEntry, chapter?: SurahSummary) => {
+  if (chapter?.versesCount && Number.isFinite(chapter.versesCount) && chapter.versesCount > 0) {
+    return chapter.versesCount;
+  }
+
+  return entry.versesCount > 0 ? entry.versesCount : Math.max(entry.ayahNumber, 1);
+};
+
+const calculateSurahProgress = (entry: ReadingProgressEntry, chapter?: SurahSummary) => {
+  const versesCount = resolveVersesCount(entry, chapter);
+  return Math.min(100, Math.max(1, Math.round((entry.ayahNumber / versesCount) * 100)));
+};
+
 export default function ListSurahsPage() {
   const searchFieldId = useId();
   const [chapters, setChapters] = useState<SurahSummary[]>([]);
@@ -41,6 +63,7 @@ export default function ListSurahsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [revelationFilter, setRevelationFilter] = useState<'all' | 'makkah' | 'madinah'>('all');
   const [savedVerses, setSavedVerses] = useState<BookmarkedVerse[]>([]);
+  const [readingProgress, setReadingProgress] = useState<ReadingProgress>(() => getReadingProgress());
   const { startExperience, isLoading: isPleasantlyLoading, isActive: isPleasantlyActive } = usePlayPleasantly();
   const deferredSearchQuery = useDeferredValue(searchQuery);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -65,6 +88,10 @@ export default function ListSurahsPage() {
       setSavedVerses(getBookmarks());
     }
   }, [activeTab]);
+
+  useEffect(() => {
+    setReadingProgress(getReadingProgress());
+  }, [activeTab, deferredSearchQuery, revelationFilter]);
 
   useEffect(() => {
     let ignore = false;
@@ -137,10 +164,29 @@ export default function ListSurahsPage() {
     });
   }, [chaptersById, deferredSearchQuery]);
 
+  const handleClearReadingProgress = useCallback(() => {
+    setReadingProgress(clearReadingProgress());
+  }, []);
+
+  const lastRead = readingProgress.lastRead;
+  const lastReadChapter = lastRead ? chaptersById.get(lastRead.surahId) : undefined;
+  const lastReadProgress = lastRead ? calculateSurahProgress(lastRead, lastReadChapter) : 0;
+  const todayStats = readingProgress.dailyStats[todayKey()];
+  const recentReads = lastRead
+    ? readingProgress.recentReads
+        .filter((recentRead) => recentRead.verseKey !== lastRead.verseKey)
+        .slice(0, 4)
+    : [];
+
   return (
     <AppShell activeNav="quran">
       <div className="relative overflow-x-hidden">
-        <div aria-hidden="true" className="surahs-cover-orbit" />
+        <img
+          aria-hidden="true"
+          src="/images/left_orbit_design.svg"
+          alt=""
+          className="surahs-cover-orbit"
+        />
 
         <div className="relative z-[1] space-y-6">
           <header className="page-header">
@@ -222,6 +268,69 @@ export default function ListSurahsPage() {
               </div>
             </div>
           </Panel>
+
+          {lastRead ? (
+          <Panel
+            title="Continue Reading"
+            description={`Resume ${lastRead.surahName} from ayah ${lastRead.ayahNumber}.`}
+            actions={
+              <>
+                <Link
+                  to={`/surah/${lastRead.surahId}?ayah=${lastRead.ayahNumber}`}
+                  className={buttonClassName({ variant: 'primary', size: 'sm' })}
+                >
+                  Continue
+                </Link>
+                <ActionButton variant="ghost" size="sm" onClick={handleClearReadingProgress}>
+                  Clear
+                </ActionButton>
+              </>
+            }
+          >
+            <div className="space-y-4">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0 space-y-2">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span className="badge-number text-xs">{lastRead.surahId}</span>
+                    <span className="text-sm font-semibold text-text">{lastRead.surahName}</span>
+                    <span className="arabic-ui text-sm text-text-muted">{lastRead.surahNameArabic}</span>
+                    <span className="text-xs font-semibold uppercase tracking-[0.14em] text-text-muted">
+                      Ayah {lastRead.ayahNumber}
+                    </span>
+                  </div>
+                  <div className="max-w-2xl space-y-2">
+                    <div className="h-2 overflow-hidden rounded-full bg-surface-2">
+                      <div className="h-full rounded-full bg-primary" style={{ width: `${lastReadProgress}%` }} />
+                    </div>
+                    <p className="text-sm leading-6 text-text-muted">
+                      {lastReadProgress}% complete
+                      {todayStats ? ` · ${todayStats.ayatRead} ayat read today` : ''}
+                    </p>
+                  </div>
+                </div>
+                <FiClock className="hidden shrink-0 text-primary sm:block" size={28} aria-hidden="true" />
+              </div>
+
+              {recentReads.length > 0 ? (
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-text-muted">Recent Reads</p>
+                  <div className="flex flex-wrap gap-2">
+                    {recentReads.map((recentRead) => (
+                      <Link
+                        key={recentRead.verseKey}
+                        to={`/surah/${recentRead.surahId}?ayah=${recentRead.ayahNumber}`}
+                        className="inline-flex min-h-[36px] items-center gap-2 rounded-full bg-surface-2 px-3 py-1.5 text-sm font-medium text-text transition-colors hover:bg-primary/10 hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                      >
+                        <span>{recentRead.surahName}</span>
+                        <span className="text-xs text-text-muted">Ayah {recentRead.ayahNumber}</span>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          </Panel>
+          ) : null}
 
           {loading ? (
           <Panel title="Loading surahs" description="Fetching the list.">

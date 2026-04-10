@@ -47,8 +47,9 @@ export interface Language {
 }
 
 // Create a reusable headers object that includes the Vercel access token
+const env = (import.meta as ImportMeta & { env?: ImportMetaEnv }).env;
 const defaultHeaders = {
-  Authorization: `Bearer ${import.meta.env.VITE_VERCEL_ACCESS_TOKEN}`,
+  Authorization: `Bearer ${env?.VITE_VERCEL_ACCESS_TOKEN ?? ''}`,
 };
 
 /**

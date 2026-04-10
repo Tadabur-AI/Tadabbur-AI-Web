@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "npx tsx --test tests/studyNotes.test.ts"
+    "test": "npx tsx --test tests/*.test.ts"
   },
   "dependencies": {
     "@huggingface/inference": "^4.11.1",

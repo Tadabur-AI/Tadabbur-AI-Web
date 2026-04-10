@@ -11,6 +11,7 @@ import {
   type VerseReference,
   type VerseStudyNote,
 } from '../../utils/studyNotes';
+import { saveReadingProgress } from '../../utils/quranLocalStorage';
 import { JUZ_METADATA } from '../../data/juz';
 
 interface Verse {
@@ -578,6 +579,21 @@ export default function ReadSurahPage() {
     }
 
     setCurrentVerseNote(getVerseStudyNote(currentVerse.verse_key));
+  }, [currentVerse, surah]);
+
+  useEffect(() => {
+    if (!surah || !currentVerse) {
+      return;
+    }
+
+    saveReadingProgress({
+      verseKey: currentVerse.verse_key,
+      surahId: currentVerse.surah_id || surah.id,
+      surahName: surah.name_english,
+      surahNameArabic: surah.name_arabic,
+      ayahNumber: currentVerse.id,
+      versesCount: surah.verses_count,
+    });
   }, [currentVerse, surah]);
 
   const buildVerseReference = (): VerseReference | null => {

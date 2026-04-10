@@ -166,30 +166,16 @@ button, input, select, textarea {
 
 .surahs-cover-orbit {
   position: fixed;
-  left: clamp(-18rem, -18vw, -9rem);
-  top: 100%;
-  height: min(94vh, 64rem);
-  /* aspect-ratio: 451 / 553;  */
-  scale: 2;
-  aspect-ratio: 300 / 553;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  display: block;
+  height: min(300dvh, 700px);
   width: auto;
+  max-width: none;
+  opacity: 0.45;
   pointer-events: none;
   z-index: 0;
-  /* opacity: 0.13; */
-  opacity: 0.1;
-  /* background-image: url('/images/quran_cover_circle.png'); */
-  background-image: url('/images/quran_cover_circle_new.png');
-  background-size: contain;
-  background-position: left;
-  background-repeat: no-repeat;
-  transform-origin: center;
-  animation: surahs-cover-spin 44s linear infinite;
-  filter: saturate(0.9);
-}
-
-html.dark .surahs-cover-orbit {
-  opacity: 0.18;
-  filter: saturate(0.95) brightness(0.95);
 }
 
 .surah-wheel-badge {
@@ -276,15 +262,6 @@ html.dark .surahs-hero-translation {
   color: color-mix(in srgb, var(--color-gold-200) 72%, var(--color-text) 28%);
 }
 
-@keyframes surahs-cover-spin {
-  from {
-    transform: translateY(-50%) rotate(0deg);
-  }
-  to {
-    transform: translateY(-50%) rotate(360deg);
-  }
-}
-
 @keyframes surahs-hero-type {
   from {
     clip-path: inset(0 0 0 100%);
@@ -298,11 +275,6 @@ html.dark .surahs-hero-translation {
   body { font-size: 0.9rem; }
   button { padding: 0.375rem 0.75rem; }
 
-  .surahs-cover-orbit {
-    left: -9.5rem;
-    height: 82vh;
-  }
-
   .surahs-hero-translation {
     font-size: 0.85rem;
   }
@@ -314,18 +286,7 @@ html.dark .surahs-hero-translation {
   }
 }
 
-@media (min-width: 1024px) {
-  .surahs-cover-orbit {
-    left: clamp(-16rem, -12vw, -7rem);
-    height: min(96vh, 72rem);
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .surahs-cover-orbit {
-    animation: none;
-  }
-
   .surahs-hero-verse__text {
     clip-path: inset(0 0 0 0);
     animation: none;

@@ -8,6 +8,8 @@ const TRANSLATION_KEY = 'tadabbur_translation';
 const TAFSIRS_CACHE_KEY = 'tadabbur_tafsirs_cache';
 const TAFSIR_KEY = 'tadabbur_tafsir';
 const BOOKMARKS_KEY = 'tadabbur_bookmarks';
+const READING_PROGRESS_KEY = 'tadabbur_reading_progress_v1';
+const MAX_RECENT_READS = 5;
 
 const DEFAULT_TRANSLATION_ID = 20;
 const DEFAULT_TAFSIR_ID = 169;
@@ -27,6 +29,12 @@ interface StoredTafsir {
 type StoredRecitation = Recitation;
 
 const isBrowser = () => typeof window !== 'undefined' && typeof localStorage !== 'undefined';
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+
+const isNonEmptyString = (value: unknown): value is string =>
+  typeof value === 'string' && value.trim().length > 0;
 
 const safeParse = <T,>(value: string | null): T | null => {
   if (!value) {
@@ -215,6 +223,175 @@ export interface BookmarkedVerse {
   arabicText: string;
   translation: string;
   savedAt: string;
+}
+
+export interface ReadingProgressEntry {
+  verseKey: string;
+  surahId: number;
+  surahName: string;
+  surahNameArabic: string;
+  ayahNumber: number;
+  versesCount: number;
+  updatedAt: string;
+}
+
+export interface ReadingProgress {
+  lastRead: ReadingProgressEntry | null;
+  recentReads: ReadingProgressEntry[];
+  dailyStats: Record<string, { ayatRead: number; lastVerseKey: string }>;
+}
+
+export type ReadingProgressInput = Omit<ReadingProgressEntry, 'updatedAt'>;
+
+export const createEmptyReadingProgress = (): ReadingProgress => ({
+  lastRead: null,
+  recentReads: [],
+  dailyStats: {},
+});
+
+const isPositiveNumber = (value: unknown): value is number =>
+  typeof value === 'number' && Number.isFinite(value) && value > 0;
+
+const normalizeReadingProgressEntry = (value: unknown): ReadingProgressEntry | null => {
+  if (!isRecord(value)) {
+    return null;
+  }
+
+  const parsedDate = isNonEmptyString(value.updatedAt) ? new Date(value.updatedAt) : null;
+  if (
+    !isNonEmptyString(value.verseKey) ||
+    !isPositiveNumber(value.surahId) ||
+    !isNonEmptyString(value.surahName) ||
+    !isNonEmptyString(value.surahNameArabic) ||
+    !isPositiveNumber(value.ayahNumber) ||
+    !isPositiveNumber(value.versesCount) ||
+    !parsedDate ||
+    Number.isNaN(parsedDate.getTime())
+  ) {
+    return null;
+  }
+
+  return {
+    verseKey: value.verseKey,
+    surahId: Math.floor(value.surahId),
+    surahName: value.surahName,
+    surahNameArabic: value.surahNameArabic,
+    ayahNumber: Math.floor(value.ayahNumber),
+    versesCount: Math.floor(value.versesCount),
+    updatedAt: parsedDate.toISOString(),
+  };
+};
+
+const normalizeDailyStats = (value: unknown): ReadingProgress['dailyStats'] => {
+  if (!isRecord(value)) {
+    return {};
+  }
+
+  return Object.entries(value).reduce<ReadingProgress['dailyStats']>((stats, [dateKey, rawStat]) => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey) || !isRecord(rawStat)) {
+      return stats;
+    }
+
+    const ayatRead = rawStat.ayatRead;
+    const lastVerseKey = rawStat.lastVerseKey;
+    if (!isPositiveNumber(ayatRead) || !isNonEmptyString(lastVerseKey)) {
+      return stats;
+    }
+
+    stats[dateKey] = {
+      ayatRead: Math.floor(ayatRead),
+      lastVerseKey,
+    };
+    return stats;
+  }, {});
+};
+
+export const normalizeReadingProgress = (value: unknown): ReadingProgress => {
+  if (!isRecord(value)) {
+    return createEmptyReadingProgress();
+  }
+
+  const lastRead = normalizeReadingProgressEntry(value.lastRead);
+  const recentReads = Array.isArray(value.recentReads)
+    ? value.recentReads
+        .map(normalizeReadingProgressEntry)
+        .filter((entry): entry is ReadingProgressEntry => Boolean(entry))
+        .slice(0, MAX_RECENT_READS)
+    : [];
+
+  return {
+    lastRead,
+    recentReads,
+    dailyStats: normalizeDailyStats(value.dailyStats),
+  };
+};
+
+export const updateReadingProgress = (
+  currentProgress: ReadingProgress,
+  entry: ReadingProgressInput,
+  nowIso = new Date().toISOString(),
+): ReadingProgress => {
+  const updatedAt = new Date(nowIso).toISOString();
+  const nextEntry: ReadingProgressEntry = {
+    ...entry,
+    surahId: Math.floor(entry.surahId),
+    ayahNumber: Math.floor(entry.ayahNumber),
+    versesCount: Math.floor(entry.versesCount),
+    updatedAt,
+  };
+  const dateKey = updatedAt.slice(0, 10);
+  const currentDailyStat = currentProgress.dailyStats[dateKey];
+  const shouldIncrementToday = currentDailyStat?.lastVerseKey !== nextEntry.verseKey;
+
+  return {
+    lastRead: nextEntry,
+    recentReads: [
+      nextEntry,
+      ...currentProgress.recentReads.filter((recentRead) => recentRead.surahId !== nextEntry.surahId),
+    ].slice(0, MAX_RECENT_READS),
+    dailyStats: {
+      ...currentProgress.dailyStats,
+      [dateKey]: {
+        ayatRead: (currentDailyStat?.ayatRead ?? 0) + (shouldIncrementToday ? 1 : 0),
+        lastVerseKey: nextEntry.verseKey,
+      },
+    },
+  };
+};
+
+export function getReadingProgress(): ReadingProgress {
+  if (!isBrowser()) {
+    return createEmptyReadingProgress();
+  }
+
+  const rawValue = localStorage.getItem(READING_PROGRESS_KEY);
+  const progress = normalizeReadingProgress(safeParse<unknown>(rawValue));
+
+  if (rawValue && !progress.lastRead && progress.recentReads.length === 0 && Object.keys(progress.dailyStats).length === 0) {
+    localStorage.setItem(READING_PROGRESS_KEY, JSON.stringify(progress));
+  }
+
+  return progress;
+}
+
+export function saveReadingProgress(entry: ReadingProgressInput): ReadingProgress {
+  const nextProgress = updateReadingProgress(getReadingProgress(), entry);
+
+  if (isBrowser()) {
+    localStorage.setItem(READING_PROGRESS_KEY, JSON.stringify(nextProgress));
+  }
+
+  return nextProgress;
+}
+
+export function clearReadingProgress(): ReadingProgress {
+  const emptyProgress = createEmptyReadingProgress();
+
+  if (isBrowser()) {
+    localStorage.removeItem(READING_PROGRESS_KEY);
+  }
+
+  return emptyProgress;
 }
 
 export function getBookmarks(): BookmarkedVerse[] {
