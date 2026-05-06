@@ -1,6 +1,6 @@
 import { useCallback, useDeferredValue, useEffect, useId, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { FiBookmark, FiBookOpen, FiClock, FiHeadphones, FiSearch } from 'react-icons/fi';
+import { FiBookmark, FiBookOpen, FiClock, FiDownload, FiHeadphones, FiSearch } from 'react-icons/fi';
 import AppShell from '../../layouts/AppShell';
 import {
   ActionButton,
@@ -14,6 +14,8 @@ import { buttonClassName } from '../../components/ui/buttonClassName';
 import { listSurahs, type SurahSummary } from '../../services/apis';
 import { JUZ_METADATA } from '../../data/juz';
 import { usePlayPleasantly } from '../../components/PleasentPlay/PlayPleasantlyProvider';
+import { DEFAULT_TRANSLATION_ID } from '../../utils/quranPages';
+import { exportSurahWordByWordPdf } from '../../utils/quranPdfExport';
 import {
   clearReadingProgress,
   getBookmarks,
@@ -64,6 +66,8 @@ export default function ListSurahsPage() {
   const [revelationFilter, setRevelationFilter] = useState<'all' | 'makkah' | 'madinah'>('all');
   const [savedVerses, setSavedVerses] = useState<BookmarkedVerse[]>([]);
   const [readingProgress, setReadingProgress] = useState<ReadingProgress>(() => getReadingProgress());
+  const [exportingSurahId, setExportingSurahId] = useState<number | null>(null);
+  const [exportError, setExportError] = useState<string | null>(null);
   const { startExperience, isLoading: isPleasantlyLoading, isActive: isPleasantlyActive } = usePlayPleasantly();
   const deferredSearchQuery = useDeferredValue(searchQuery);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -166,6 +170,24 @@ export default function ListSurahsPage() {
 
   const handleClearReadingProgress = useCallback(() => {
     setReadingProgress(clearReadingProgress());
+  }, []);
+
+  const handleExportPdf = useCallback(async (chapter: SurahSummary) => {
+    const savedTranslation = Number(localStorage.getItem('tadabbur_translation'));
+    const translationId = Number.isFinite(savedTranslation) && savedTranslation > 0
+      ? savedTranslation
+      : DEFAULT_TRANSLATION_ID;
+
+    try {
+      setExportingSurahId(chapter.id);
+      setExportError(null);
+      await exportSurahWordByWordPdf({ chapter, translationId });
+    } catch (error) {
+      console.error('Failed to export word-by-word PDF:', error);
+      setExportError(error instanceof Error ? error.message : 'Failed to export PDF.');
+    } finally {
+      setExportingSurahId(null);
+    }
   }, []);
 
   const lastRead = readingProgress.lastRead;
@@ -362,6 +384,14 @@ export default function ListSurahsPage() {
           />
           ) : null}
 
+          {exportError ? (
+            <Panel title="PDF export failed" description={exportError}>
+              <ActionButton variant="ghost" size="sm" onClick={() => setExportError(null)}>
+                Dismiss
+              </ActionButton>
+            </Panel>
+          ) : null}
+
           {!loading && !error && activeTab === 'surahs' ? (
           filteredChapters.length > 0 ? (
             <section aria-labelledby="surah-results-heading" className="space-y-3">
@@ -414,6 +444,18 @@ export default function ListSurahsPage() {
                             className="inline-flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center border-l border-border bg-surface px-3 text-text transition-colors hover:bg-surface-2 focus-visible:relative focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-50"
                           >
                             <FiHeadphones size={16} aria-hidden="true" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              void handleExportPdf(chapter);
+                            }}
+                            disabled={exportingSurahId === chapter.id}
+                            aria-label={`Export ${chapter.nameSimple} word-by-word PDF`}
+                            title={`Export ${chapter.nameSimple} word-by-word PDF`}
+                            className="inline-flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center border-l border-border bg-surface px-3 text-text transition-colors hover:bg-surface-2 focus-visible:relative focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-wait disabled:opacity-50"
+                          >
+                            <FiDownload size={16} aria-hidden="true" />
                           </button>
                         </div>
                       </div>

@@ -1,8 +1,10 @@
-import { lazy, memo, Suspense, useEffect, useId, useMemo, useState } from 'react';
+import { lazy, memo, Suspense, useCallback, useEffect, useId, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   FiArrowLeft,
   FiBookmark,
+  FiChevronLeft,
+  FiChevronRight,
   FiCopy,
   FiEdit3,
   FiFlag,
@@ -12,6 +14,7 @@ import {
   FiX,
 } from 'react-icons/fi';
 import AudioPlayer from '../components/common/AudioPlayer';
+import MushafWordByWordPage from '../components/common/MushafWordByWordPage';
 import ThemeToggle from '../components/common/ThemeToggle';
 import WordByWord from '../components/common/WordByWord';
 import TajweedLearningButton from '../components/TajweedLearning/TajweedLearningButton';
@@ -23,6 +26,7 @@ import {
   IconButton,
   Panel,
   PoliteLiveRegion,
+  SegmentedControl,
   SelectField,
   TextAreaField,
   usePoliteStatus,
@@ -33,9 +37,13 @@ import { isBookmarked, toggleBookmark } from '../utils/quranLocalStorage';
 import { type VerseStudyNote } from '../utils/studyNotes';
 import { requestVerseChatOpen } from '../utils/verseChatEvents';
 import { type ExplainTafsirResponse } from '../services/tafsirExplainerService';
-import { type WordTranslation } from '../services/apis';
 import { type Recitation } from '../services/quranResourcesService';
 import type { VerseChatContext } from '../types/verseChat';
+import {
+  buildQuranPages,
+  findPageIndexForVerse,
+  type QuranReaderVerse,
+} from '../utils/quranPages';
 
 const MarkdownContent = lazy(() => import('../components/common/MarkdownContent'));
 const TafsirExplainerModal = lazy(() => import('../components/common/TafsirExplainerModal'));
@@ -44,21 +52,16 @@ const VerseChatBubble = lazy(() => import('../components/reader/VerseChatBubble'
 
 const WORD_BY_WORD_STORAGE_KEY = 'tadabbur_word_by_word';
 
-interface Verse {
-  id: number;
-  verse_key: string;
-  text: string;
-  translation: string;
-  translationHtml?: string;
-  surah_id: number;
-  word_translations?: WordTranslation[];
-}
+type Verse = QuranReaderVerse;
 
 interface Surah {
   id: number;
   name_english: string;
   name_arabic: string;
+  translated_name: string;
   verses_count: number;
+  pages?: [number, number];
+  bismillah_pre?: boolean;
 }
 
 interface Props {
@@ -94,6 +97,12 @@ interface Props {
 }
 
 type ExplanationView = 'ai' | 'original';
+type ReaderMode = 'verse' | 'page';
+
+const readerModeItems: Array<{ value: ReaderMode; label: string }> = [
+  { value: 'verse', label: 'Verse by Verse' },
+  { value: 'page', label: 'Page by Page' },
+];
 
 const MarkdownFallback = ({ label }: { label: string }) => (
   <p className="text-sm leading-7 text-text-muted">{label}</p>
@@ -593,6 +602,7 @@ export default function ReadSurahLayout({
   const [isNoteEditorOpen, setIsNoteEditorOpen] = useState(false);
   const [noteDraft, setNoteDraft] = useState('');
   const [activeExplanationView, setActiveExplanationView] = useState<ExplanationView>('ai');
+  const [readerMode, setReaderMode] = useState<ReaderMode>('verse');
   const [isWordByWordEnabled, setIsWordByWordEnabled] = useState(() => {
     if (typeof window === 'undefined') return true;
     return localStorage.getItem(WORD_BY_WORD_STORAGE_KEY) !== 'false';
@@ -603,6 +613,12 @@ export default function ReadSurahLayout({
   const currentVerse = isValidVerseIndex ? verses[currentVerseIndex] : null;
   const firstVerseId = verses[0]?.id;
   const lastVerseId = verses[verses.length - 1]?.id;
+  const quranPages = useMemo(() => buildQuranPages(verses, surah?.pages), [surah?.pages, verses]);
+  const currentPageIndex = useMemo(
+    () => findPageIndexForVerse(quranPages, currentVerse?.verse_key),
+    [currentVerse?.verse_key, quranPages],
+  );
+  const currentPage = quranPages[currentPageIndex] ?? null;
 
   useEffect(() => {
     localStorage.setItem(WORD_BY_WORD_STORAGE_KEY, String(isWordByWordEnabled));
@@ -706,6 +722,16 @@ export default function ReadSurahLayout({
     setCurrentVerseIndex(index);
     setIsVerseRailOpen(false);
   };
+
+  const handleSelectVerseKey = useCallback((verseKey: string) => {
+    const nextIndex = verses.findIndex((verse) => verse.verse_key === verseKey);
+    if (nextIndex === -1) {
+      return;
+    }
+
+    setCurrentVerseIndex(nextIndex);
+    announce(`Ayah ${verses[nextIndex].id} selected.`);
+  }, [announce, setCurrentVerseIndex, verses]);
 
   const handleSaveReflection = (nextDraft: string) => {
     onSaveVerseNote?.(nextDraft);
@@ -947,7 +973,7 @@ export default function ReadSurahLayout({
 
           <main id="reader-main" className="min-w-0 space-y-6">
             <Panel
-              title={`Ayah ${currentVerse.id}`}
+              title={readerMode === 'page' && currentPage ? `Page ${currentPage.pageNumber}` : `Ayah ${currentVerse.id}`}
               description={`${surah.name_english} · ${rangeSummary}`}
               actions={
                 <div className="flex flex-wrap gap-2">
@@ -975,19 +1001,68 @@ export default function ReadSurahLayout({
                 </div>
               }
             >
-              <div className="rounded-[28px] border border-border/80 bg-surface-2 px-5 py-6 sm:px-7 sm:py-8">
-                <p className="arabic text-[2rem] leading-[3.8rem] text-text sm:text-[2.5rem] sm:leading-[4.8rem]">
-                  {currentVerse.text}
-                </p>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <SegmentedControl
+                  label="Reader mode"
+                  labelHidden
+                  value={readerMode}
+                  items={readerModeItems}
+                  onChange={setReaderMode}
+                />
+
+                <div className="flex items-center gap-2 self-end sm:self-auto">
+                  <span className="text-xs font-semibold uppercase tracking-[0.16em] text-text-muted">
+                    {readerMode === 'page' && currentPage ? `Page ${currentPage.pageNumber}` : `Ayah ${currentVerse.id}`}
+                  </span>
+                  <IconButton
+                    label="Previous ayah"
+                    onClick={goToPreviousVerse}
+                    disabled={disablePrevAyah ?? currentVerseIndex === 0}
+                  >
+                    <FiChevronLeft size={18} />
+                  </IconButton>
+                  <IconButton
+                    label="Next ayah"
+                    onClick={goToNextVerse}
+                    disabled={disableNextAyah ?? currentVerseIndex === verses.length - 1}
+                  >
+                    <FiChevronRight size={18} />
+                  </IconButton>
+                </div>
               </div>
 
-              {isWordByWordEnabled && currentVerse.word_translations && currentVerse.word_translations.length > 0 ? (
-                <WordByWord words={currentVerse.word_translations} />
-              ) : null}
+              {readerMode === 'verse' ? (
+                <>
+                  <div className="rounded-[28px] border border-border/80 bg-surface-2 px-5 py-6 sm:px-7 sm:py-8">
+                    <p className="arabic text-[2rem] leading-[3.8rem] text-text sm:text-[2.5rem] sm:leading-[4.8rem]">
+                      {currentVerse.text}
+                    </p>
+                  </div>
+
+                  {isWordByWordEnabled && currentVerse.word_translations && currentVerse.word_translations.length > 0 ? (
+                    <WordByWord words={currentVerse.word_translations} />
+                  ) : null}
+                </>
+              ) : currentPage ? (
+                <div className="mushaf-page-scroll" aria-label="Page-by-page word-by-word Quran view" role="region">
+                  <MushafWordByWordPage
+                    page={currentPage}
+                    surahId={surah.id}
+                    surahNameEnglish={surah.name_english}
+                    surahNameArabic={surah.name_arabic}
+                    translatedName={surah.translated_name}
+                    showBismillah={Boolean(surah.bismillah_pre)}
+                    selectedVerseKey={currentVerse.verse_key}
+                    onSelectVerse={handleSelectVerseKey}
+                  />
+                </div>
+              ) : (
+                <p className="text-sm leading-7 text-text-muted">Page data is not available for this surah yet.</p>
+              )}
 
               <section className="space-y-3 border-t border-border pt-4" aria-labelledby="reader-translation-heading">
                 <h2 id="reader-translation-heading" className="text-sm font-semibold uppercase tracking-[0.18em] text-text-muted">
-                  Translation
+                  {readerMode === 'page' ? `Selected Ayah ${currentVerse.id} Translation` : 'Translation'}
                 </h2>
                 {currentVerse.translationHtml ? (
                   <div className="text-base leading-8 text-text" dangerouslySetInnerHTML={{ __html: currentVerse.translationHtml }} />

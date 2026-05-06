@@ -51,6 +51,8 @@ export interface RetrieveSurahVerse {
   word_audios: string[];
   word_translations: WordTranslation[];
   key: string;
+  page_number?: number;
+  juz_number?: number;
 }
 
 export async function retrieveSurah(payload: RetrieveSurahPayload): Promise<RetrieveSurahVerse[]> {
@@ -233,4 +235,3 @@ export async function listReciters(): Promise<ReciterSummary[]> {
 
   return data as ReciterSummary[];
 }
-

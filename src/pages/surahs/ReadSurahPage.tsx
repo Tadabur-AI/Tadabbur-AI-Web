@@ -3,7 +3,7 @@ import { useLocation, useParams, useNavigate } from 'react-router-dom';
 import ReadSurahLayout from '../../layouts/ReadSurahLayout';
 import { fetchRecitations, type Recitation } from '../../services/quranResourcesService';
 import { explainTafsir, type ExplainTafsirResponse } from '../../services/tafsirExplainerService';
-import { listSurahs, listTafseers, listTranslations, retrieveSurah, retrieveTafseer, type RetrieveSurahVerse, type RetrieveTafseerItem, type SurahSummary, type TranslationSummary, type WordTranslation } from '../../services/apis';
+import { listSurahs, listTafseers, listTranslations, retrieveSurah, retrieveTafseer, type RetrieveTafseerItem, type SurahSummary, type TranslationSummary } from '../../services/apis';
 import {
   getVerseStudyNote,
   saveVerseStudyNoteReflection,
@@ -13,53 +13,33 @@ import {
 } from '../../utils/studyNotes';
 import { saveReadingProgress } from '../../utils/quranLocalStorage';
 import { JUZ_METADATA } from '../../data/juz';
+import {
+  DEFAULT_TRANSLATION_ID,
+  mapRetrieveSurahVerse,
+  stripHtml,
+  type QuranReaderVerse,
+} from '../../utils/quranPages';
 
-interface Verse {
-  id: number;
-  verse_key: string;
-  text: string;
-  translation: string;
-  translationHtml?: string;
-  surah_id: number;
-  word_translations?: WordTranslation[];
-}
+type Verse = QuranReaderVerse;
 
 interface Surah {
   id: number;
   name_english: string;
   name_arabic: string;
+  translated_name: string;
   verses_count: number;
+  pages?: [number, number];
+  bismillah_pre?: boolean;
 }
-
-const DEFAULT_TRANSLATION_ID = 20;
-
-const stripHtml = (html: string) => html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-
-const stripTrailingArabicDigits = (text: string) => text.replace(/\s*[\u0660-\u0669]+$/u, '').trim();
-
-const mapToVerse = (data: RetrieveSurahVerse): Verse => {
-  const [surahIdStr, ayahStr] = data.key.split(':');
-  const surahId = Number(surahIdStr);
-  const ayah = Number(ayahStr);
-  const cleanedTranslation = stripHtml(data.translation);
-  const cleanedText = stripTrailingArabicDigits(data.verse) || data.verse;
-
-  return {
-    id: Number.isFinite(ayah) ? ayah : data.key.length,
-    verse_key: data.key,
-    text: cleanedText,
-    translation: cleanedTranslation,
-    translationHtml: data.translation,
-    surah_id: Number.isFinite(surahId) ? surahId : 0,
-    word_translations: data.word_translations || [],
-  };
-};
 
 const mapToSurah = (summary: SurahSummary | undefined, surahNumber: number, versesCount: number): Surah => ({
   id: surahNumber,
   name_english: summary?.nameSimple ?? `Surah ${surahNumber}`,
   name_arabic: summary?.nameArabic ?? '',
+  translated_name: summary?.translatedName.name ?? '',
   verses_count: summary?.versesCount ?? versesCount,
+  pages: summary?.pages,
+  bismillah_pre: summary?.bismillahPre,
 });
 
 const parseAyahParam = (value: string | null): number | null => {
@@ -343,7 +323,7 @@ export default function ReadSurahPage() {
         setSurah(mapToSurah(summary, surahNumber, versesResponse.length));
 
         const mappedVerses = versesResponse
-          .map(mapToVerse)
+          .map(mapRetrieveSurahVerse)
           .sort((a, b) => a.id - b.id);
 
         setAllVerses(mappedVerses);

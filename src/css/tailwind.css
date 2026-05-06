@@ -497,6 +497,313 @@
     word-spacing: 0.75em !important;
   }
 
+  .word-inline-flow {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 0.9rem 1.15rem;
+    border-radius: 16px;
+    background-color: var(--color-surface-2);
+    padding: 1rem;
+  }
+
+  .word-inline-item {
+    position: relative;
+    display: inline-flex;
+    min-width: 4.5rem;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.2rem;
+    padding: 0.15rem 0;
+    text-align: center;
+  }
+
+  .word-inline-item__arabic {
+    display: block;
+    color: var(--color-text);
+    font-family: var(--font-arabic);
+    font-size: 1.45rem;
+    line-height: 1.45;
+    white-space: nowrap;
+  }
+
+  .word-inline-item__translation {
+    display: block;
+    max-width: 7rem;
+    border-bottom: 2px solid color-mix(in srgb, var(--color-primary) 72%, var(--color-border));
+    color: var(--color-primary);
+    direction: ltr;
+    font-size: 0.78rem;
+    font-weight: 650;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+    padding-bottom: 0.2rem;
+    text-align: center;
+  }
+
+  .mushaf-page-scroll {
+    height: clamp(34rem, 76vh, 58rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border-radius: 8px;
+    border: 1px solid color-mix(in srgb, var(--color-border) 86%, var(--color-accent));
+    background: #fbf4e6;
+  }
+
+  .mushaf-page-scroll::-webkit-scrollbar {
+    width: 10px;
+  }
+
+  .mushaf-page-scroll::-webkit-scrollbar-thumb {
+    border: 3px solid #fbf4e6;
+    border-radius: 999px;
+    background-color: rgba(121, 104, 72, 0.36);
+  }
+
+  .mushaf-page {
+    min-height: 100%;
+    padding: clamp(1.1rem, 2vw, 2rem) clamp(0.9rem, 2.4vw, 2.25rem) 1.25rem;
+    background:
+      linear-gradient(180deg, rgba(255, 250, 241, 0.96), rgba(253, 244, 229, 0.98));
+    color: #15130f;
+  }
+
+  .mushaf-page__header {
+    margin-bottom: clamp(1rem, 2vw, 1.6rem);
+    text-align: center;
+  }
+
+  .mushaf-page__chapter {
+    display: inline-flex;
+    max-width: 100%;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: clamp(0.9rem, 2vw, 1.5rem);
+  }
+
+  .mushaf-page__arabic-title,
+  .mushaf-page__bismillah,
+  .mushaf-word__arabic {
+    font-family: var(--font-arabic);
+  }
+
+  .mushaf-page__arabic-title {
+    margin: 0;
+    color: #0e0d0a;
+    font-size: 2.9rem;
+    line-height: 1.1;
+  }
+
+  .mushaf-page__chapter-copy {
+    min-width: 0;
+    text-align: center;
+  }
+
+  .mushaf-page__latin-title {
+    margin: 0;
+    color: #15130f;
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: 0;
+  }
+
+  .mushaf-page__translation-title {
+    margin-top: 0.15rem;
+    color: #686058;
+    font-size: 0.98rem;
+    line-height: 1.35;
+  }
+
+  .mushaf-page__bismillah-block {
+    margin-top: 0.8rem;
+  }
+
+  .mushaf-page__bismillah {
+    color: #0e0d0a;
+    font-size: 1.6rem;
+    line-height: 1.3;
+  }
+
+  .mushaf-page__bismillah-translation {
+    color: #686058;
+    font-size: 0.82rem;
+    line-height: 1.5;
+  }
+
+  .mushaf-page__flow {
+    font-size: 0;
+    line-height: 2.12;
+    text-align: justify;
+    text-align-last: center;
+  }
+
+  .mushaf-verse {
+    display: inline;
+    min-height: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    font-family: inherit;
+    line-height: inherit;
+    padding: 0;
+    text-align: inherit;
+  }
+
+  .mushaf-verse:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 4px;
+  }
+
+  .mushaf-word {
+    display: inline-flex;
+    min-width: 4.4rem;
+    max-width: min-content;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    margin: 0 0.38rem 0.95rem;
+    vertical-align: top;
+  }
+
+  .mushaf-word__arabic {
+    display: block;
+    color: #0c0b09;
+    font-size: 2.05rem;
+    line-height: 1.25;
+    white-space: nowrap;
+  }
+
+  .mushaf-word__translation {
+    display: block;
+    max-width: 4.9rem;
+    border-bottom: 2px solid #087453;
+    color: #075f46;
+    direction: ltr;
+    font-size: 0.7rem;
+    font-weight: 650;
+    line-height: 1.18;
+    overflow-wrap: anywhere;
+    padding-bottom: 0.18rem;
+    text-align: center;
+  }
+
+  .mushaf-verse.is-selected .mushaf-word__arabic {
+    color: #6f5f3c;
+  }
+
+  .mushaf-verse.is-selected .mushaf-word__translation {
+    border-bottom-color: var(--color-accent);
+    color: #034c37;
+  }
+
+  .mushaf-ayah-marker {
+    width: 2.35rem;
+    height: 2.35rem;
+    margin: 0 0.42rem 0.95rem;
+    color: #463d2c;
+    direction: ltr;
+    font-size: 0.82rem;
+    vertical-align: middle;
+  }
+
+  .mushaf-page__footer {
+    margin-top: 1rem;
+    color: #716a62;
+    direction: ltr;
+    font-size: 1.1rem;
+    font-weight: 500;
+    text-align: center;
+  }
+
+  .dark .word-inline-flow {
+    background-color: color-mix(in srgb, var(--color-surface-2) 88%, #111 12%);
+  }
+
+  .dark .mushaf-page-scroll {
+    border-color: color-mix(in srgb, var(--color-border) 70%, var(--color-accent));
+    background: #14100b;
+  }
+
+  .dark .mushaf-page-scroll::-webkit-scrollbar-thumb {
+    border-color: #14100b;
+    background-color: rgba(246, 196, 83, 0.32);
+  }
+
+  .dark .mushaf-page {
+    background:
+      linear-gradient(180deg, rgba(30, 24, 16, 0.98), rgba(18, 15, 10, 0.98));
+    color: #f4efe6;
+  }
+
+  .dark .mushaf-page__arabic-title,
+  .dark .mushaf-page__latin-title,
+  .dark .mushaf-page__bismillah,
+  .dark .mushaf-word__arabic {
+    color: #f4efe6;
+  }
+
+  .dark .mushaf-page__translation-title,
+  .dark .mushaf-page__bismillah-translation,
+  .dark .mushaf-page__footer {
+    color: #c9bfae;
+  }
+
+  .dark .mushaf-word__translation {
+    border-bottom-color: #34d399;
+    color: #6ee7b7;
+  }
+
+  .dark .mushaf-verse.is-selected .mushaf-word__arabic {
+    color: #f6c453;
+  }
+
+  .dark .mushaf-verse.is-selected .mushaf-word__translation {
+    border-bottom-color: #f6c453;
+    color: #a7f3d0;
+  }
+
+  @media (min-width: 640px) {
+    .mushaf-page__chapter {
+      flex-wrap: nowrap;
+    }
+
+    .mushaf-page__chapter-copy {
+      text-align: left;
+    }
+
+    .mushaf-page__arabic-title {
+      font-size: 3.55rem;
+    }
+
+    .mushaf-page__latin-title {
+      font-size: 1.18rem;
+    }
+
+    .mushaf-page__translation-title {
+      font-size: 1.08rem;
+    }
+
+    .mushaf-page__bismillah {
+      font-size: 2rem;
+    }
+
+    .mushaf-word {
+      min-width: 5.6rem;
+    }
+
+    .mushaf-word__arabic {
+      font-size: 2.7rem;
+    }
+
+    .mushaf-word__translation {
+      max-width: 6.3rem;
+      font-size: 0.82rem;
+    }
+  }
+
   .content-auto-card {
     content-visibility: auto;
     contain-intrinsic-size: 180px;

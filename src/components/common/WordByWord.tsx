@@ -40,25 +40,16 @@ function WordItem({ word }: WordItemProps) {
 
   return (
     <div
-      className={`
-        relative flex flex-col items-center rounded-[18px] border border-transparent p-3 transition-colors
-        ${isHovered ? 'bg-surface-2' : 'hover:bg-surface-2'}
-      `}
+      className="word-inline-item"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <span className="arabic text-lg sm:text-xl text-text">
+      <span className="word-inline-item__arabic">
         {word.text}
       </span>
 
-      {word.transliteration && (
-        <span className="text-xs text-text-muted mt-0.5 italic">
-          {word.transliteration}
-        </span>
-      )}
-
       {word.translation && (
-        <span className="text-xs text-text-muted mt-0.5 text-center">
+        <span className="word-inline-item__translation">
           {word.translation}
         </span>
       )}
@@ -97,7 +88,7 @@ export default function WordByWord({ words, className = '' }: WordByWordProps) {
       </p>
 
       <div
-        className="flex flex-wrap gap-2 justify-end bg-surface-2 rounded-lg p-3"
+        className="word-inline-flow"
         dir="rtl"
       >
         {words.map((word, index) => (
