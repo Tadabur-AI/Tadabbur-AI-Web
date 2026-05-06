@@ -4,7 +4,7 @@ import LogoLandscape from '../components/common/LogoLandscape';
 import ThemeToggle from '../components/common/ThemeToggle';
 import { buttonClassName } from '../components/ui/buttonClassName';
 
-type PrimaryNav = 'quran' | 'notes';
+type PrimaryNav = 'quran' | 'notes' | 'settings';
 
 interface AppShellProps {
   activeNav: PrimaryNav;
@@ -16,6 +16,7 @@ interface AppShellProps {
 const navItems: Array<{ key: PrimaryNav; label: string; path: string }> = [
   { key: 'quran', label: 'Quran', path: '/surahs' },
   { key: 'notes', label: 'Notes', path: '/notes' },
+  { key: 'settings', label: 'Settings', path: '/settings' },
 ];
 
 export default function AppShell({

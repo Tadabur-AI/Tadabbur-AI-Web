@@ -1,7 +1,6 @@
 import { useCallback, useDeferredValue, useEffect, useId, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { FiBookmark, FiBookOpen, FiClock, FiDownload, FiHeadphones, FiSearch } from 'react-icons/fi';
-import ReaderSettingsMenu from '../../components/common/ReaderSettingsMenu';
 import AppShell from '../../layouts/AppShell';
 import {
   ActionButton,
@@ -223,7 +222,7 @@ export default function ListSurahsPage() {
     : [];
 
   return (
-    <AppShell activeNav="quran" headerAccessory={<ReaderSettingsMenu />}>
+    <AppShell activeNav="quran">
       <div className="relative overflow-x-hidden">
         <img
           aria-hidden="true"

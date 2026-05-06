@@ -4,6 +4,7 @@ import PlayPleasentlyButton from "../../components/PleasentPlay/PlayPleasentlyBu
 
 const AuthenticationPage = lazy(() => import("../../pages/authentication/authentication"));
 const NotesPage = lazy(() => import("../../pages/notes/NotesPage"));
+const SettingsPage = lazy(() => import("../../pages/settings/SettingsPage"));
 const ListSurahsRoute = lazy(() => import("../routes/ListSurahsRoute"));
 const ReadSurahRoute = lazy(() => import("../routes/ReadSurahRoute"));
 
@@ -16,6 +17,7 @@ const PublicRoutes = (
     <Route element={<ListSurahsRoute />} path="/surahs" />
     <Route element={<ReadSurahRoute />} path="/surah/:id" />
     <Route element={<NotesPage />} path="/notes" />
+    <Route element={<SettingsPage />} path="/settings" />
     {/* catch-all: redirect unknown paths to /surahs (replace with NotFound later) */}
     <Route path="*" element={<Navigate to="/surahs" replace />} />
     <Route path="/development-test" element={<PlayPleasentlyButton />} />
