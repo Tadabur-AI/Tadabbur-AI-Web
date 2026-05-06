@@ -1,6 +1,7 @@
 import { useCallback, useDeferredValue, useEffect, useId, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { FiBookmark, FiBookOpen, FiClock, FiDownload, FiHeadphones, FiSearch } from 'react-icons/fi';
+import ReaderSettingsMenu from '../../components/common/ReaderSettingsMenu';
 import AppShell from '../../layouts/AppShell';
 import {
   ActionButton,
@@ -177,11 +178,32 @@ export default function ListSurahsPage() {
     const translationId = Number.isFinite(savedTranslation) && savedTranslation > 0
       ? savedTranslation
       : DEFAULT_TRANSLATION_ID;
+    let translationName: string | undefined;
+    let translationLanguageName: string | undefined;
+
+    try {
+      const cachedTranslations = JSON.parse(localStorage.getItem('tadabbur_translations_cache') ?? '[]');
+      if (Array.isArray(cachedTranslations)) {
+        const selectedTranslationMeta = cachedTranslations.find((item: { id?: number }) => item.id === translationId);
+        if (selectedTranslationMeta) {
+          translationName = selectedTranslationMeta.translatedName?.name ?? selectedTranslationMeta.name;
+          translationLanguageName = selectedTranslationMeta.languageName ?? selectedTranslationMeta.translatedName?.languageName;
+        }
+      }
+    } catch {
+      translationName = undefined;
+      translationLanguageName = undefined;
+    }
 
     try {
       setExportingSurahId(chapter.id);
       setExportError(null);
-      await exportSurahWordByWordPdf({ chapter, translationId });
+      await exportSurahWordByWordPdf({
+        chapter,
+        translationId,
+        translationName,
+        translationLanguageName,
+      });
     } catch (error) {
       console.error('Failed to export word-by-word PDF:', error);
       setExportError(error instanceof Error ? error.message : 'Failed to export PDF.');
@@ -201,7 +223,7 @@ export default function ListSurahsPage() {
     : [];
 
   return (
-    <AppShell activeNav="quran">
+    <AppShell activeNav="quran" headerAccessory={<ReaderSettingsMenu />}>
       <div className="relative overflow-x-hidden">
         <img
           aria-hidden="true"

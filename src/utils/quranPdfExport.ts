@@ -6,15 +6,20 @@ import {
   type QuranReaderVerse,
 } from './quranPages';
 import { retrieveSurah, type SurahSummary } from '../services/apis';
+import { loadReaderAppearanceSettings } from './readerPreferences';
 
 interface ExportSurahWordByWordPdfParams {
   chapter: SurahSummary;
   translationId?: number;
+  translationName?: string;
+  translationLanguageName?: string;
 }
 
 interface BuildWordByWordHtmlParams {
   chapter: SurahSummary;
   pages: QuranPage[];
+  translationName?: string;
+  translationLanguageName?: string;
 }
 
 const escapeHtml = (value: string | number | null | undefined) =>
@@ -24,6 +29,30 @@ const escapeHtml = (value: string | number | null | undefined) =>
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
+
+const isRtlLanguage = (languageName?: string) => {
+  const normalizedLanguage = languageName?.toLowerCase() ?? '';
+  return [
+    'arabic',
+    'urdu',
+    'persian',
+    'dari',
+    'pashto',
+    'hebrew',
+    'sindhi',
+    'uighur',
+    'uyghur',
+    'kurdish',
+    'divehi',
+  ].some((language) => normalizedLanguage.includes(language));
+};
+
+const resolveBismillahTranslation = (languageName?: string) => {
+  const normalizedLanguage = languageName?.toLowerCase() ?? 'english';
+  return normalizedLanguage.includes('english')
+    ? 'In the Name of Allah, the Most Compassionate, Most Merciful'
+    : '';
+};
 
 const renderWord = (word: NonNullable<QuranReaderVerse['word_translations']>[number]) => `
   <span class="mushaf-word">
@@ -39,7 +68,7 @@ const renderVerse = (verse: QuranReaderVerse) => `
   </span>
 `;
 
-const renderPage = (chapter: SurahSummary, page: QuranPage) => `
+const renderPage = (chapter: SurahSummary, page: QuranPage, bismillahTranslation: string) => `
   <section class="mushaf-page">
     <header class="mushaf-page__header">
       <div class="mushaf-page__chapter">
@@ -51,7 +80,7 @@ const renderPage = (chapter: SurahSummary, page: QuranPage) => `
       </div>
       ${chapter.bismillahPre ? `
         <p class="mushaf-page__bismillah">بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ</p>
-        <p class="mushaf-page__bismillah-translation">In the Name of Allah, the Most Compassionate, Most Merciful</p>
+        ${bismillahTranslation ? `<p class="mushaf-page__bismillah-translation">${escapeHtml(bismillahTranslation)}</p>` : ''}
       ` : ''}
     </header>
     <div class="mushaf-page__flow" dir="rtl">
@@ -61,13 +90,24 @@ const renderPage = (chapter: SurahSummary, page: QuranPage) => `
   </section>
 `;
 
-const buildWordByWordHtml = ({ chapter, pages }: BuildWordByWordHtmlParams) => `
+const buildWordByWordHtml = ({
+  chapter,
+  pages,
+  translationName,
+  translationLanguageName,
+}: BuildWordByWordHtmlParams) => {
+  const appearance = loadReaderAppearanceSettings();
+  const wordTranslationDirection = isRtlLanguage(translationLanguageName) ? 'rtl' : 'ltr';
+  const bismillahTranslation = resolveBismillahTranslation(translationLanguageName);
+  const wordTranslationFontPt = Math.max(6, Math.min(13, appearance.wordTranslationFontSize * 0.67));
+
+  return `
 <!doctype html>
 <html>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>${escapeHtml(chapter.nameSimple)} Word-by-Word</title>
+    <title>${escapeHtml(chapter.nameSimple)} Word-by-Word${translationName ? ` - ${escapeHtml(translationName)}` : ''}</title>
     <style>
       @font-face {
         font-family: Quran;
@@ -86,17 +126,16 @@ const buildWordByWordHtml = ({ chapter, pages }: BuildWordByWordHtmlParams) => `
 
       body {
         margin: 0;
-        background: #fbf4e6;
+        background: ${appearance.pageBackgroundColor};
         color: #15130f;
-        font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+        font-family: ${appearance.englishFontFamily};
       }
 
       .mushaf-page {
         min-height: calc(297mm - 24mm);
         page-break-after: always;
         padding: 10mm 8mm 7mm;
-        background:
-          linear-gradient(180deg, rgba(255, 249, 238, 0.95), rgba(253, 244, 229, 0.98));
+        background: ${appearance.pageBackgroundColor};
         border: 1px solid #eadfca;
       }
 
@@ -186,10 +225,11 @@ const buildWordByWordHtml = ({ chapter, pages }: BuildWordByWordHtmlParams) => `
       .mushaf-word__translation {
         display: block;
         max-width: 24mm;
-        border-bottom: 0.35mm solid #0b7b59;
-        color: #075f46;
-        direction: ltr;
-        font-size: 7.4pt;
+        border-bottom: 0.35mm solid ${appearance.wordTranslationColor};
+        color: ${appearance.wordTranslationColor};
+        direction: ${wordTranslationDirection};
+        font-family: ${appearance.englishFontFamily}, ${appearance.arabicContentFontFamily};
+        font-size: ${wordTranslationFontPt}pt;
         font-weight: 650;
         line-height: 1.25;
         overflow-wrap: anywhere;
@@ -222,7 +262,7 @@ const buildWordByWordHtml = ({ chapter, pages }: BuildWordByWordHtmlParams) => `
     </style>
   </head>
   <body>
-    ${pages.map((page) => renderPage(chapter, page)).join('')}
+    ${pages.map((page) => renderPage(chapter, page, bismillahTranslation)).join('')}
     <script>
       window.addEventListener('load', () => {
         window.setTimeout(() => window.print(), 250);
@@ -231,10 +271,13 @@ const buildWordByWordHtml = ({ chapter, pages }: BuildWordByWordHtmlParams) => `
   </body>
 </html>
 `;
+};
 
 export async function exportSurahWordByWordPdf({
   chapter,
   translationId = DEFAULT_TRANSLATION_ID,
+  translationName,
+  translationLanguageName,
 }: ExportSurahWordByWordPdfParams) {
   const preview = window.open('', '_blank', 'width=960,height=1100');
 
@@ -258,7 +301,7 @@ export async function exportSurahWordByWordPdf({
     const response = await retrieveSurah({ surahNumber: chapter.id, translationId });
     const verses = response.map(mapRetrieveSurahVerse).sort((a, b) => a.id - b.id);
     const pages = buildQuranPages(verses, chapter.pages);
-    const html = buildWordByWordHtml({ chapter, pages });
+    const html = buildWordByWordHtml({ chapter, pages, translationName, translationLanguageName });
 
     preview.document.open();
     preview.document.write(html);

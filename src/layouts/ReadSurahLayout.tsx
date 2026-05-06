@@ -1,8 +1,9 @@
-import { lazy, memo, Suspense, useCallback, useEffect, useId, useMemo, useState } from 'react';
+import { lazy, memo, Suspense, useCallback, useEffect, useId, useMemo, useState, type CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  FiArrowLeft,
   FiBookmark,
+  FiChevronLeft,
+  FiChevronRight,
   FiCopy,
   FiEdit3,
   FiFlag,
@@ -12,7 +13,9 @@ import {
   FiX,
 } from 'react-icons/fi';
 import AudioPlayer from '../components/common/AudioPlayer';
+import LogoLandscape from '../components/common/LogoLandscape';
 import MushafWordByWordPage from '../components/common/MushafWordByWordPage';
+import ReaderSettingsMenu from '../components/common/ReaderSettingsMenu';
 import ThemeToggle from '../components/common/ThemeToggle';
 import WordByWord from '../components/common/WordByWord';
 import TajweedLearningButton from '../components/TajweedLearning/TajweedLearningButton';
@@ -42,6 +45,12 @@ import {
   findPageIndexForVerse,
   type QuranReaderVerse,
 } from '../utils/quranPages';
+import {
+  buildReaderAppearanceStyle,
+  loadReaderAppearanceSettings,
+  normalizeReaderAppearance,
+  READER_APPEARANCE_CHANGE_EVENT,
+} from '../utils/readerPreferences';
 
 const MarkdownContent = lazy(() => import('../components/common/MarkdownContent'));
 const TafsirExplainerModal = lazy(() => import('../components/common/TafsirExplainerModal'));
@@ -420,7 +429,7 @@ const ExplanationTabsPanel = memo(function ExplanationTabsPanel({
     }`;
 
   return (
-    <Panel>
+    <Panel className="reader-tafsir-panel">
       <div className="space-y-4">
         <div className="space-y-4 border-b border-border pb-4">
           <div className="grid w-full grid-cols-2 gap-1 rounded-full border border-border bg-surface-2 p-1 sm:inline-grid sm:w-auto" role="tablist" aria-label="Explanation view">
@@ -601,6 +610,9 @@ export default function ReadSurahLayout({
   const [noteDraft, setNoteDraft] = useState('');
   const [activeExplanationView, setActiveExplanationView] = useState<ExplanationView>('ai');
   const [readerMode, setReaderMode] = useState<ReaderMode>('verse');
+  const [isLeftSidebarEnabled, setIsLeftSidebarEnabled] = useState(true);
+  const [isRightSidebarEnabled, setIsRightSidebarEnabled] = useState(true);
+  const [readerAppearance, setReaderAppearance] = useState(() => loadReaderAppearanceSettings());
   const [isWordByWordEnabled, setIsWordByWordEnabled] = useState(() => {
     if (typeof window === 'undefined') return true;
     return localStorage.getItem(WORD_BY_WORD_STORAGE_KEY) !== 'false';
@@ -617,10 +629,37 @@ export default function ReadSurahLayout({
     [currentVerse?.verse_key, quranPages],
   );
   const currentPage = quranPages[currentPageIndex] ?? null;
+  const readerAppearanceStyle = useMemo(
+    () => buildReaderAppearanceStyle(readerAppearance) as CSSProperties,
+    [readerAppearance],
+  );
 
   useEffect(() => {
     localStorage.setItem(WORD_BY_WORD_STORAGE_KEY, String(isWordByWordEnabled));
   }, [isWordByWordEnabled]);
+
+  useEffect(() => {
+    const handleAppearanceChange = (event: Event) => {
+      const nextAppearance = event instanceof CustomEvent
+        ? normalizeReaderAppearance(event.detail)
+        : loadReaderAppearanceSettings();
+      setReaderAppearance(nextAppearance);
+    };
+
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === 'tadabbur_reader_appearance') {
+        setReaderAppearance(loadReaderAppearanceSettings());
+      }
+    };
+
+    window.addEventListener(READER_APPEARANCE_CHANGE_EVENT, handleAppearanceChange);
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener(READER_APPEARANCE_CHANGE_EVENT, handleAppearanceChange);
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
 
   useEffect(() => {
     if (currentVerse) {
@@ -895,6 +934,104 @@ export default function ReadSurahLayout({
     />
   );
 
+  const renderReaderActions = () => (
+    <div className="flex flex-wrap gap-2">
+      <ActionButton variant="ghost" size="sm" onClick={() => handleCopy(currentVerse, surah.name_english)}>
+        <FiCopy aria-hidden="true" />
+        {copied ? 'Copied' : 'Copy'}
+      </ActionButton>
+      <ActionButton variant="ghost" size="sm" onClick={handleBookmark} className={bookmarked ? 'text-primary' : ''}>
+        <FiBookmark aria-hidden="true" fill={bookmarked ? 'currentColor' : 'none'} />
+        {bookmarked ? 'Saved' : 'Save'}
+      </ActionButton>
+      <ActionButton variant="ghost" size="sm" onClick={() => setIsNoteEditorOpen((open) => !open)}>
+        <FiEdit3 aria-hidden="true" />
+        {noteActionLabel}
+      </ActionButton>
+      <ActionButton
+        variant="ghost"
+        size="sm"
+        disabled={!aiExplanation || !onReportModalToggle}
+        onClick={() => onReportModalToggle?.(true)}
+      >
+        <FiFlag aria-hidden="true" />
+        Report
+      </ActionButton>
+    </div>
+  );
+
+  const renderReaderModeToolbar = () => (
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <SegmentedControl
+        label="Reader mode"
+        labelHidden
+        value={readerMode}
+        items={readerModeItems}
+        onChange={setReaderMode}
+      />
+      <span className="text-xs font-semibold uppercase tracking-[0.16em] text-text-muted">
+        {readerMode === 'page' && currentPage ? `Page ${currentPage.pageNumber}` : `Ayah ${currentVerse.id}`}
+      </span>
+    </div>
+  );
+
+  const renderVerseReaderContent = () => (
+    <>
+      <div className="rounded-[28px] border border-border/80 bg-surface-2 px-5 py-6 sm:px-7 sm:py-8">
+        <p className="arabic text-[2rem] leading-[3.8rem] text-text sm:text-[2.5rem] sm:leading-[4.8rem]">
+          {currentVerse.text}
+        </p>
+      </div>
+
+      {isWordByWordEnabled && currentVerse.word_translations && currentVerse.word_translations.length > 0 ? (
+        <WordByWord words={currentVerse.word_translations} />
+      ) : null}
+    </>
+  );
+
+  const renderPageReaderContent = () => (
+    currentPage ? (
+      <div className="mushaf-page-scroll" aria-label="Page-by-page word-by-word Quran view" role="region">
+        <MushafWordByWordPage
+          page={currentPage}
+          surahId={surah.id}
+          surahNameEnglish={surah.name_english}
+          surahNameArabic={surah.name_arabic}
+          translatedName={surah.translated_name}
+          showBismillah={Boolean(surah.bismillah_pre)}
+          selectedVerseKey={currentVerse.verse_key}
+          onSelectVerse={handleSelectVerseKey}
+        />
+      </div>
+    ) : (
+      <p className="text-sm leading-7 text-text-muted">Page data is not available for this surah yet.</p>
+    )
+  );
+
+  const renderTranslationSection = (headingId = 'reader-translation-heading') => (
+    <section className="space-y-3 border-t border-border pt-4" aria-labelledby={headingId}>
+      <h2 id={headingId} className="text-sm font-semibold uppercase tracking-[0.18em] text-text-muted">
+        {readerMode === 'page' ? `Selected Ayah ${currentVerse.id} Translation` : 'Translation'}
+      </h2>
+      {currentVerse.translationHtml ? (
+        <div className="reader-translation-copy text-base leading-8 text-text" dangerouslySetInnerHTML={{ __html: currentVerse.translationHtml }} />
+      ) : (
+        <p className="reader-translation-copy text-base leading-8 text-text">{currentVerse.translation}</p>
+      )}
+    </section>
+  );
+
+  const readerGridClassName = [
+    'reader-layout-grid',
+    isLeftSidebarEnabled ? 'has-left-sidebar' : '',
+    isRightSidebarEnabled ? 'has-right-sidebar' : '',
+  ].filter(Boolean).join(' ');
+
+  const readerShellStyle: CSSProperties = {
+    ...readerAppearanceStyle,
+    ...(hasStickyAudioPlayer ? { paddingBottom: 'calc(var(--player-height) + 24px)' } : {}),
+  };
+
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-background">
       <a href="#reader-main" className="skip-link">
@@ -904,30 +1041,47 @@ export default function ReadSurahLayout({
       <PoliteLiveRegion message={statusMessage} />
 
       <header className="sticky top-0 z-sticky bg-background/70 px-4 pb-2 pt-3 backdrop-blur sm:px-6 xl:px-8">
-        <div className="mx-auto flex max-w-[1600px] items-center gap-3 rounded-[28px] bg-surface/95 px-4 py-3 shadow-[0_16px_40px_rgba(20,20,18,0.08)] backdrop-blur sm:px-5">
+        <div className="mx-auto flex max-w-[1600px] items-center gap-4 rounded-[28px] bg-surface/95 px-4 py-3 shadow-[0_16px_40px_rgba(20,20,18,0.08)] backdrop-blur sm:px-5">
           <div className="flex items-center gap-2">
             <IconButton label="Open verse list" className="lg:hidden" onClick={() => setIsVerseRailOpen(true)}>
               <FiMenu size={18} />
             </IconButton>
-            <Link to="/surahs" className={buttonClassName({ variant: 'ghost', className: 'hidden sm:inline-flex' })}>
-              <FiArrowLeft aria-hidden="true" />
+            <Link
+              to="/surahs"
+              className="inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm font-semibold text-text transition-colors hover:bg-surface-2"
+            >
+              <LogoLandscape />
+            </Link>
+          </div>
+
+          <nav className="hidden flex-1 items-center gap-2 sm:flex" aria-label="Primary">
+            <Link
+              to="/surahs"
+              aria-current="page"
+              className={buttonClassName({
+                variant: 'primary',
+                className: 'shadow-[0_12px_32px_rgba(4,120,87,0.18)]',
+              })}
+            >
               Quran
             </Link>
-            <Link to="/notes" className={buttonClassName({ variant: 'ghost', className: 'hidden sm:inline-flex' })}>
+            <Link to="/notes" className={buttonClassName({ variant: 'ghost' })}>
               Notes
             </Link>
-          </div>
-
-          <div className="min-w-0 flex-1 text-center">
-            <h1 className="truncate text-base font-semibold text-text sm:text-lg">{surah.name_english}</h1>
-            <p className="arabic-ui truncate text-sm text-text-muted">{surah.name_arabic}</p>
-          </div>
+          </nav>
 
           <div className="flex items-center gap-2">
-            <div className="hidden text-right sm:block">
-              <p className="text-sm font-semibold text-text">Ayah {currentVerse.id}</p>
-              <p className="text-xs text-text-muted">{rangeSummary}</p>
-            </div>
+            <ReaderSettingsMenu
+              selectedRecitation={selectedRecitation}
+              selectedTranslation={selectedTranslation}
+              selectedTafsir={selectedTafsir}
+              recitations={recitations}
+              translationOptions={translationOptions}
+              tafsirOptions={tafsirOptions}
+              onRecitationChange={onRecitationChange}
+              onTranslationChange={onTranslationChange}
+              onTafsirChange={onTafsirChange}
+            />
             <ThemeToggle />
           </div>
         </div>
@@ -958,99 +1112,35 @@ export default function ReadSurahLayout({
         <VerseRail verses={verses} currentVerseIndex={currentVerseIndex} onSelectVerse={handleSelectVerse} />
       </Overlay>
 
-      <div
-        className="mx-auto max-w-[1600px] px-4 py-6 sm:px-6 xl:px-8"
-        style={hasStickyAudioPlayer ? { paddingBottom: 'calc(var(--player-height) + 24px)' } : undefined}
-      >
-        <div className="grid gap-6 lg:grid-cols-[260px_minmax(0,1fr)_360px]">
-          <aside className="hidden lg:block">
-            <Panel title="Verses" description={rangeSummary} className="sticky top-[96px] max-h-[calc(100vh-120px)] overflow-y-auto">
-              <VerseRail verses={verses} currentVerseIndex={currentVerseIndex} onSelectVerse={handleSelectVerse} />
-            </Panel>
-          </aside>
+      <div className="mx-auto max-w-[1600px] px-4 py-6 sm:px-6 xl:px-8" style={readerShellStyle}>
+        <div className={readerGridClassName}>
+          <button
+            type="button"
+            className="reader-sidebar-toggle reader-sidebar-toggle--left hidden lg:inline-grid"
+            aria-label={isLeftSidebarEnabled ? 'Hide verse sidebar' : 'Show verse sidebar'}
+            aria-pressed={isLeftSidebarEnabled}
+            onClick={() => setIsLeftSidebarEnabled((enabled) => !enabled)}
+          >
+            {isLeftSidebarEnabled ? <FiChevronLeft size={18} /> : <FiChevronRight size={18} />}
+          </button>
+
+          {isLeftSidebarEnabled ? (
+            <aside className="hidden lg:block">
+              <Panel title="Verses" description={rangeSummary} className="sticky top-[96px] max-h-[calc(100vh-120px)] overflow-y-auto">
+                <VerseRail verses={verses} currentVerseIndex={currentVerseIndex} onSelectVerse={handleSelectVerse} />
+              </Panel>
+            </aside>
+          ) : null}
 
           <main id="reader-main" className="min-w-0 space-y-6">
             <Panel
               title={readerMode === 'page' && currentPage ? `Page ${currentPage.pageNumber}` : `Ayah ${currentVerse.id}`}
               description={`${surah.name_english} · ${rangeSummary}`}
-              actions={
-                <div className="flex flex-wrap gap-2">
-                  <ActionButton variant="ghost" size="sm" onClick={() => handleCopy(currentVerse, surah.name_english)}>
-                    <FiCopy aria-hidden="true" />
-                    {copied ? 'Copied' : 'Copy'}
-                  </ActionButton>
-                  <ActionButton variant="ghost" size="sm" onClick={handleBookmark} className={bookmarked ? 'text-primary' : ''}>
-                    <FiBookmark aria-hidden="true" fill={bookmarked ? 'currentColor' : 'none'} />
-                    {bookmarked ? 'Saved' : 'Save'}
-                  </ActionButton>
-                  <ActionButton variant="ghost" size="sm" onClick={() => setIsNoteEditorOpen((open) => !open)}>
-                    <FiEdit3 aria-hidden="true" />
-                    {noteActionLabel}
-                  </ActionButton>
-                  <ActionButton
-                    variant="ghost"
-                    size="sm"
-                    disabled={!aiExplanation || !onReportModalToggle}
-                    onClick={() => onReportModalToggle?.(true)}
-                  >
-                    <FiFlag aria-hidden="true" />
-                    Report
-                  </ActionButton>
-                </div>
-              }
+              actions={renderReaderActions()}
             >
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <SegmentedControl
-                  label="Reader mode"
-                  labelHidden
-                  value={readerMode}
-                  items={readerModeItems}
-                  onChange={setReaderMode}
-                />
-                <span className="text-xs font-semibold uppercase tracking-[0.16em] text-text-muted">
-                  {readerMode === 'page' && currentPage ? `Page ${currentPage.pageNumber}` : `Ayah ${currentVerse.id}`}
-                </span>
-              </div>
-
-              {readerMode === 'verse' ? (
-                <>
-                  <div className="rounded-[28px] border border-border/80 bg-surface-2 px-5 py-6 sm:px-7 sm:py-8">
-                    <p className="arabic text-[2rem] leading-[3.8rem] text-text sm:text-[2.5rem] sm:leading-[4.8rem]">
-                      {currentVerse.text}
-                    </p>
-                  </div>
-
-                  {isWordByWordEnabled && currentVerse.word_translations && currentVerse.word_translations.length > 0 ? (
-                    <WordByWord words={currentVerse.word_translations} />
-                  ) : null}
-                </>
-              ) : currentPage ? (
-                <div className="mushaf-page-scroll" aria-label="Page-by-page word-by-word Quran view" role="region">
-                  <MushafWordByWordPage
-                    page={currentPage}
-                    surahId={surah.id}
-                    surahNameEnglish={surah.name_english}
-                    surahNameArabic={surah.name_arabic}
-                    translatedName={surah.translated_name}
-                    showBismillah={Boolean(surah.bismillah_pre)}
-                    selectedVerseKey={currentVerse.verse_key}
-                    onSelectVerse={handleSelectVerseKey}
-                  />
-                </div>
-              ) : (
-                <p className="text-sm leading-7 text-text-muted">Page data is not available for this surah yet.</p>
-              )}
-
-              <section className="space-y-3 border-t border-border pt-4" aria-labelledby="reader-translation-heading">
-                <h2 id="reader-translation-heading" className="text-sm font-semibold uppercase tracking-[0.18em] text-text-muted">
-                  {readerMode === 'page' ? `Selected Ayah ${currentVerse.id} Translation` : 'Translation'}
-                </h2>
-                {currentVerse.translationHtml ? (
-                  <div className="text-base leading-8 text-text" dangerouslySetInnerHTML={{ __html: currentVerse.translationHtml }} />
-                ) : (
-                  <p className="text-base leading-8 text-text">{currentVerse.translation}</p>
-                )}
-              </section>
+              {renderReaderModeToolbar()}
+              {readerMode === 'verse' ? renderVerseReaderContent() : renderPageReaderContent()}
+              {renderTranslationSection('reader-translation-heading')}
             </Panel>
 
             {explanationTabsPanel}
@@ -1063,14 +1153,26 @@ export default function ReadSurahLayout({
             </div>
           </main>
 
-          <aside className="hidden lg:block">
-            <div className="sticky top-[96px] space-y-6">
-              {secondaryModesPanel}
-              {sourcesPanel}
-              {listeningPanel}
-              {notesPanel}
-            </div>
-          </aside>
+          {isRightSidebarEnabled ? (
+            <aside className="hidden lg:block">
+              <div className="sticky top-[96px] space-y-6">
+                {secondaryModesPanel}
+                {sourcesPanel}
+                {listeningPanel}
+                {notesPanel}
+              </div>
+            </aside>
+          ) : null}
+
+          <button
+            type="button"
+            className="reader-sidebar-toggle reader-sidebar-toggle--right hidden lg:inline-grid"
+            aria-label={isRightSidebarEnabled ? 'Hide reading settings sidebar' : 'Show reading settings sidebar'}
+            aria-pressed={isRightSidebarEnabled}
+            onClick={() => setIsRightSidebarEnabled((enabled) => !enabled)}
+          >
+            {isRightSidebarEnabled ? <FiChevronRight size={18} /> : <FiChevronLeft size={18} />}
+          </button>
         </div>
       </div>
 
