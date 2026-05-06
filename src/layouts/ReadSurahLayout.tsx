@@ -3,8 +3,6 @@ import { Link } from 'react-router-dom';
 import {
   FiArrowLeft,
   FiBookmark,
-  FiChevronLeft,
-  FiChevronRight,
   FiCopy,
   FiEdit3,
   FiFlag,
@@ -1009,26 +1007,9 @@ export default function ReadSurahLayout({
                   items={readerModeItems}
                   onChange={setReaderMode}
                 />
-
-                <div className="flex items-center gap-2 self-end sm:self-auto">
-                  <span className="text-xs font-semibold uppercase tracking-[0.16em] text-text-muted">
-                    {readerMode === 'page' && currentPage ? `Page ${currentPage.pageNumber}` : `Ayah ${currentVerse.id}`}
-                  </span>
-                  <IconButton
-                    label="Previous ayah"
-                    onClick={goToPreviousVerse}
-                    disabled={disablePrevAyah ?? currentVerseIndex === 0}
-                  >
-                    <FiChevronLeft size={18} />
-                  </IconButton>
-                  <IconButton
-                    label="Next ayah"
-                    onClick={goToNextVerse}
-                    disabled={disableNextAyah ?? currentVerseIndex === verses.length - 1}
-                  >
-                    <FiChevronRight size={18} />
-                  </IconButton>
-                </div>
+                <span className="text-xs font-semibold uppercase tracking-[0.16em] text-text-muted">
+                  {readerMode === 'page' && currentPage ? `Page ${currentPage.pageNumber}` : `Ayah ${currentVerse.id}`}
+                </span>
               </div>
 
               {readerMode === 'verse' ? (

@@ -169,8 +169,9 @@ const buildWordByWordHtml = ({ chapter, pages }: BuildWordByWordHtmlParams) => `
         flex-direction: column;
         align-items: center;
         justify-content: flex-start;
+        gap: 1.8mm;
         min-width: 15mm;
-        margin: 0 1.8mm 2.2mm;
+        margin: 0 1.8mm 3.4mm;
         vertical-align: top;
         break-inside: avoid;
       }
