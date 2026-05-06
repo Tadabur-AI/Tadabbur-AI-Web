@@ -10,7 +10,6 @@ import {
   FiMenu,
   FiMessageSquare,
   FiSave,
-  FiSettings,
   FiX,
 } from 'react-icons/fi';
 import AudioPlayer from '../components/common/AudioPlayer';
@@ -1068,16 +1067,12 @@ export default function ReadSurahLayout({
             <Link to="/notes" className={buttonClassName({ variant: 'ghost' })}>
               Notes
             </Link>
+            <Link to="/settings" className={buttonClassName({ variant: 'ghost' })}>
+              Settings
+            </Link>
           </nav>
 
           <div className="flex items-center gap-2">
-            <Link
-              to="/settings"
-              className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full border border-border bg-surface px-3 text-text transition-colors hover:bg-surface-2 hover:border-primary/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-              title="Open Settings"
-            >
-              <FiSettings size={18} />
-            </Link>
             <ThemeToggle />
           </div>
         </div>
