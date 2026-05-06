@@ -7,10 +7,20 @@ export interface ReaderAppearanceSettings {
   translationFontSize: number;
   tafsirFontSize: number;
   wordTranslationFontSize: number;
-  translationColor: string;
-  tafsirColor: string;
-  wordTranslationColor: string;
-  pageBackgroundColor: string;
+  colors: {
+    light: {
+      translationColor: string;
+      tafsirColor: string;
+      wordTranslationColor: string;
+      pageBackgroundColor: string;
+    };
+    dark: {
+      translationColor: string;
+      tafsirColor: string;
+      wordTranslationColor: string;
+      pageBackgroundColor: string;
+    };
+  };
 }
 
 export const ENGLISH_FONT_OPTIONS = [
@@ -34,10 +44,20 @@ export const DEFAULT_READER_APPEARANCE: ReaderAppearanceSettings = {
   translationFontSize: 16,
   tafsirFontSize: 15,
   wordTranslationFontSize: 11,
-  translationColor: '#141412',
-  tafsirColor: '#141412',
-  wordTranslationColor: '#075f46',
-  pageBackgroundColor: '#fbf4e6',
+  colors: {
+    light: {
+      translationColor: '#141412',
+      tafsirColor: '#141412',
+      wordTranslationColor: '#075f46',
+      pageBackgroundColor: '#fbf4e6',
+    },
+    dark: {
+      translationColor: '#F2F0EA',
+      tafsirColor: '#F2F0EA',
+      wordTranslationColor: '#34D399',
+      pageBackgroundColor: '#14100b',
+    },
+  },
 };
 
 const clampNumber = (value: unknown, min: number, max: number, fallback: number) => {
@@ -62,6 +82,38 @@ const normalizeOption = (
   }
 
   return options.some((option) => option.value === value) ? value : fallback;
+};
+
+// Helper function to migrate legacy color settings to new structure
+const migrateLegacyColors = (source: any): ReaderAppearanceSettings['colors'] => {
+  // Check if we already have the new structure
+  if (source.colors && typeof source.colors === 'object' && source.colors.light && source.colors.dark) {
+    return {
+      light: {
+        translationColor: normalizeColor(source.colors.light.translationColor, DEFAULT_READER_APPEARANCE.colors.light.translationColor),
+        tafsirColor: normalizeColor(source.colors.light.tafsirColor, DEFAULT_READER_APPEARANCE.colors.light.tafsirColor),
+        wordTranslationColor: normalizeColor(source.colors.light.wordTranslationColor, DEFAULT_READER_APPEARANCE.colors.light.wordTranslationColor),
+        pageBackgroundColor: normalizeColor(source.colors.light.pageBackgroundColor, DEFAULT_READER_APPEARANCE.colors.light.pageBackgroundColor),
+      },
+      dark: {
+        translationColor: normalizeColor(source.colors.dark.translationColor, DEFAULT_READER_APPEARANCE.colors.dark.translationColor),
+        tafsirColor: normalizeColor(source.colors.dark.tafsirColor, DEFAULT_READER_APPEARANCE.colors.dark.tafsirColor),
+        wordTranslationColor: normalizeColor(source.colors.dark.wordTranslationColor, DEFAULT_READER_APPEARANCE.colors.dark.wordTranslationColor),
+        pageBackgroundColor: normalizeColor(source.colors.dark.pageBackgroundColor, DEFAULT_READER_APPEARANCE.colors.dark.pageBackgroundColor),
+      },
+    };
+  }
+
+  // Migrate legacy structure (single color values) to new structure
+  return {
+    light: {
+      translationColor: normalizeColor(source.translationColor, DEFAULT_READER_APPEARANCE.colors.light.translationColor),
+      tafsirColor: normalizeColor(source.tafsirColor, DEFAULT_READER_APPEARANCE.colors.light.tafsirColor),
+      wordTranslationColor: normalizeColor(source.wordTranslationColor, DEFAULT_READER_APPEARANCE.colors.light.wordTranslationColor),
+      pageBackgroundColor: normalizeColor(source.pageBackgroundColor, DEFAULT_READER_APPEARANCE.colors.light.pageBackgroundColor),
+    },
+    dark: DEFAULT_READER_APPEARANCE.colors.dark, // Use defaults for dark theme
+  };
 };
 
 export const normalizeReaderAppearance = (value: unknown): ReaderAppearanceSettings => {
@@ -91,10 +143,7 @@ export const normalizeReaderAppearance = (value: unknown): ReaderAppearanceSetti
       18,
       DEFAULT_READER_APPEARANCE.wordTranslationFontSize,
     ),
-    translationColor: normalizeColor(source.translationColor, DEFAULT_READER_APPEARANCE.translationColor),
-    tafsirColor: normalizeColor(source.tafsirColor, DEFAULT_READER_APPEARANCE.tafsirColor),
-    wordTranslationColor: normalizeColor(source.wordTranslationColor, DEFAULT_READER_APPEARANCE.wordTranslationColor),
-    pageBackgroundColor: normalizeColor(source.pageBackgroundColor, DEFAULT_READER_APPEARANCE.pageBackgroundColor),
+    colors: migrateLegacyColors(source),
   };
 };
 
@@ -125,14 +174,18 @@ export const saveReaderAppearanceSettings = (settings: ReaderAppearanceSettings)
   window.dispatchEvent(new CustomEvent(READER_APPEARANCE_CHANGE_EVENT, { detail: normalizedSettings }));
 };
 
-export const buildReaderAppearanceStyle = (settings: ReaderAppearanceSettings): Record<string, string> => ({
-  '--reader-english-font-family': settings.englishFontFamily,
-  '--reader-arabic-content-font-family': settings.arabicContentFontFamily,
-  '--reader-translation-font-size': `${settings.translationFontSize}px`,
-  '--reader-tafsir-font-size': `${settings.tafsirFontSize}px`,
-  '--reader-word-translation-font-size': `${settings.wordTranslationFontSize}px`,
-  '--reader-translation-color': settings.translationColor,
-  '--reader-tafsir-color': settings.tafsirColor,
-  '--reader-word-translation-color': settings.wordTranslationColor,
-  '--reader-page-background': settings.pageBackgroundColor,
-});
+export const buildReaderAppearanceStyle = (settings: ReaderAppearanceSettings, theme: 'light' | 'dark'): Record<string, string> => {
+  const themeColors = theme === 'dark' ? settings.colors.dark : settings.colors.light;
+  
+  return {
+    '--reader-english-font-family': settings.englishFontFamily,
+    '--reader-arabic-content-font-family': settings.arabicContentFontFamily,
+    '--reader-translation-font-size': `${settings.translationFontSize}px`,
+    '--reader-tafsir-font-size': `${settings.tafsirFontSize}px`,
+    '--reader-word-translation-font-size': `${settings.wordTranslationFontSize}px`,
+    '--reader-translation-color': themeColors.translationColor,
+    '--reader-tafsir-color': themeColors.tafsirColor,
+    '--reader-word-translation-color': themeColors.wordTranslationColor,
+    '--reader-page-background': themeColors.pageBackgroundColor,
+  };
+};

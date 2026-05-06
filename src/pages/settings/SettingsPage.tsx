@@ -10,6 +10,7 @@ import {
   PoliteLiveRegion,
   usePoliteStatus,
 } from '../../components/ui/primitives';
+import { useTheme } from '../../hooks/useTheme';
 import { fetchRecitations, type Recitation } from '../../services/quranResourcesService';
 import {
   listTafseers,
@@ -91,6 +92,7 @@ const toRecitationOptions = (items: Recitation[]) => [
 ];
 
 export default function SettingsPage() {
+  const { resolvedTheme } = useTheme();
   const [loadedRecitations, setLoadedRecitations] = useState<Recitation[]>([]);
   const [loadedTranslations, setLoadedTranslations] = useState<ResourceOption[]>([]);
   const [loadedTafsirs, setLoadedTafsirs] = useState<ResourceOption[]>([]);
@@ -100,6 +102,9 @@ export default function SettingsPage() {
   const [localTafsir, setLocalTafsir] = useState<number | null>(() => readNumberSetting('tadabbur_tafsir'));
   const [appearance, setAppearance] = useState<ReaderAppearanceSettings>(() => loadReaderAppearanceSettings());
   const { message: statusMessage, announce } = usePoliteStatus();
+
+  // Get current theme colors
+  const currentThemeColors = resolvedTheme === 'dark' ? appearance.colors.dark : appearance.colors.light;
 
   const recitationValue = localRecitation ?? '';
   const translationValue = localTranslation ?? '';
@@ -187,6 +192,19 @@ export default function SettingsPage() {
     setAppearance(nextAppearance);
     saveReaderAppearanceSettings(nextAppearance);
     announce('Appearance settings updated.');
+  };
+
+  const updateThemeColor = (colorType: keyof ReaderAppearanceSettings['colors']['light'], value: string) => {
+    const nextAppearance = { ...appearance };
+    if (resolvedTheme === 'dark') {
+      nextAppearance.colors.dark[colorType] = value;
+    } else {
+      nextAppearance.colors.light[colorType] = value;
+    }
+    const normalizedAppearance = normalizeReaderAppearance(nextAppearance);
+    setAppearance(normalizedAppearance);
+    saveReaderAppearanceSettings(normalizedAppearance);
+    announce(`${resolvedTheme === 'dark' ? 'Dark' : 'Light'} theme ${colorType} updated.`);
   };
 
   const resetAppearance = () => {
@@ -301,37 +319,37 @@ export default function SettingsPage() {
               </div>
             </Panel>
 
-            <Panel title="Colors" description="Customize colors for different text elements and background.">
+            <Panel title={`Colors (${resolvedTheme === 'dark' ? 'Dark' : 'Light'} Theme)`} description={`Customize colors for ${resolvedTheme === 'dark' ? 'dark' : 'light'} theme text elements and background.`}>
               <div className="grid gap-4 md:grid-cols-2">
                 <Field label="Translation color">
                   <input
                     type="color"
-                    value={appearance.translationColor}
-                    onChange={(event) => updateAppearance({ translationColor: event.target.value })}
+                    value={currentThemeColors.translationColor}
+                    onChange={(event) => updateThemeColor('translationColor', event.target.value)}
                     className="field-control h-12 p-1"
                   />
                 </Field>
                 <Field label="Tafsir color">
                   <input
                     type="color"
-                    value={appearance.tafsirColor}
-                    onChange={(event) => updateAppearance({ tafsirColor: event.target.value })}
+                    value={currentThemeColors.tafsirColor}
+                    onChange={(event) => updateThemeColor('tafsirColor', event.target.value)}
                     className="field-control h-12 p-1"
                   />
                 </Field>
                 <Field label="Word translation color">
                   <input
                     type="color"
-                    value={appearance.wordTranslationColor}
-                    onChange={(event) => updateAppearance({ wordTranslationColor: event.target.value })}
+                    value={currentThemeColors.wordTranslationColor}
+                    onChange={(event) => updateThemeColor('wordTranslationColor', event.target.value)}
                     className="field-control h-12 p-1"
                   />
                 </Field>
                 <Field label="Page background">
                   <input
                     type="color"
-                    value={appearance.pageBackgroundColor}
-                    onChange={(event) => updateAppearance({ pageBackgroundColor: event.target.value })}
+                    value={currentThemeColors.pageBackgroundColor}
+                    onChange={(event) => updateThemeColor('pageBackgroundColor', event.target.value)}
                     className="field-control h-12 p-1"
                   />
                 </Field>

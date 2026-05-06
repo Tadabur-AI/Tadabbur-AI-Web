@@ -26,12 +26,13 @@ import {
   IconButton,
   Panel,
   PoliteLiveRegion,
-  SegmentedControl,
   SelectField,
+  SegmentedControl,
   TextAreaField,
   usePoliteStatus,
 } from '../components/ui/primitives';
 import { buttonClassName } from '../components/ui/buttonClassName';
+import { useTheme } from '../hooks/useTheme';
 import { formatDate } from '../utils/formatting';
 import { isBookmarked, toggleBookmark } from '../utils/quranLocalStorage';
 import { type VerseStudyNote } from '../utils/studyNotes';
@@ -601,6 +602,7 @@ export default function ReadSurahLayout({
   disablePrevAyah,
   disableNextAyah,
 }: Props) {
+  const { resolvedTheme } = useTheme();
   const { startExperience, isLoading: isPleasantlyLoading, isActive: isPleasantlyActive } = usePlayPleasantly();
   const [isVerseRailOpen, setIsVerseRailOpen] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -629,8 +631,8 @@ export default function ReadSurahLayout({
   );
   const currentPage = quranPages[currentPageIndex] ?? null;
   const readerAppearanceStyle = useMemo(
-    () => buildReaderAppearanceStyle(readerAppearance) as CSSProperties,
-    [readerAppearance],
+    () => buildReaderAppearanceStyle(readerAppearance, resolvedTheme) as CSSProperties,
+    [readerAppearance, resolvedTheme],
   );
 
   useEffect(() => {
