@@ -1,5 +1,6 @@
 import { useEffect, useId, useMemo, useState } from 'react';
 import { FiRefreshCw, FiSettings, FiX } from 'react-icons/fi';
+import { useTheme } from '../../hooks/useTheme';
 import Overlay from '../ui/Overlay';
 import {
   ActionButton,
@@ -111,6 +112,7 @@ export default function ReaderSettingsMenu({
   onTranslationChange,
   onTafsirChange,
 }: ReaderSettingsMenuProps) {
+  const { resolvedTheme } = useTheme();
   const titleId = useId();
   const descriptionId = useId();
   const [isOpen, setIsOpen] = useState(false);
@@ -128,6 +130,9 @@ export default function ReaderSettingsMenu({
     ? translationOptions
     : loadedTranslations;
   const effectiveTafsirs = tafsirOptions && tafsirOptions.length > 0 ? tafsirOptions : loadedTafsirs;
+
+  // Get current theme colors
+  const currentThemeColors = resolvedTheme === 'dark' ? appearance.colors.dark : appearance.colors.light;
 
   const recitationValue = selectedRecitation ?? localRecitation ?? '';
   const translationValue = selectedTranslation ?? localTranslation ?? '';
@@ -224,6 +229,18 @@ export default function ReaderSettingsMenu({
     const nextAppearance = normalizeReaderAppearance({ ...appearance, ...patch });
     setAppearance(nextAppearance);
     saveReaderAppearanceSettings(nextAppearance);
+  };
+
+  const updateThemeColor = (colorType: keyof ReaderAppearanceSettings['colors']['light'], value: string) => {
+    const nextAppearance = { ...appearance };
+    if (resolvedTheme === 'dark') {
+      nextAppearance.colors.dark[colorType] = value;
+    } else {
+      nextAppearance.colors.light[colorType] = value;
+    }
+    const normalizedAppearance = normalizeReaderAppearance(nextAppearance);
+    setAppearance(normalizedAppearance);
+    saveReaderAppearanceSettings(normalizedAppearance);
   };
 
   const resetAppearance = () => {
@@ -348,37 +365,37 @@ export default function ReaderSettingsMenu({
             </div>
           </ContentGroup>
 
-          <ContentGroup label="Colors">
+          <ContentGroup label={`Colors (${resolvedTheme === 'dark' ? 'Dark' : 'Light'} Theme)`}>
             <div className="grid gap-4 md:grid-cols-2">
               <Field label="Translation color">
                 <input
                   type="color"
-                  value={appearance.translationColor}
-                  onChange={(event) => updateAppearance({ translationColor: event.target.value })}
+                  value={currentThemeColors.translationColor}
+                  onChange={(event) => updateThemeColor('translationColor', event.target.value)}
                   className="field-control h-12 p-1"
                 />
               </Field>
               <Field label="Tafsir color">
                 <input
                   type="color"
-                  value={appearance.tafsirColor}
-                  onChange={(event) => updateAppearance({ tafsirColor: event.target.value })}
+                  value={currentThemeColors.tafsirColor}
+                  onChange={(event) => updateThemeColor('tafsirColor', event.target.value)}
                   className="field-control h-12 p-1"
                 />
               </Field>
               <Field label="Word translation color">
                 <input
                   type="color"
-                  value={appearance.wordTranslationColor}
-                  onChange={(event) => updateAppearance({ wordTranslationColor: event.target.value })}
+                  value={currentThemeColors.wordTranslationColor}
+                  onChange={(event) => updateThemeColor('wordTranslationColor', event.target.value)}
                   className="field-control h-12 p-1"
                 />
               </Field>
               <Field label="Page background">
                 <input
                   type="color"
-                  value={appearance.pageBackgroundColor}
-                  onChange={(event) => updateAppearance({ pageBackgroundColor: event.target.value })}
+                  value={currentThemeColors.pageBackgroundColor}
+                  onChange={(event) => updateThemeColor('pageBackgroundColor', event.target.value)}
                   className="field-control h-12 p-1"
                 />
               </Field>

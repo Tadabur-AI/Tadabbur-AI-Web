@@ -126,7 +126,7 @@ const buildWordByWordHtml = ({
 
       body {
         margin: 0;
-        background: ${appearance.pageBackgroundColor};
+        background: ${appearance.colors.light.pageBackgroundColor};
         color: #15130f;
         font-family: ${appearance.englishFontFamily};
       }
@@ -135,7 +135,7 @@ const buildWordByWordHtml = ({
         min-height: calc(297mm - 24mm);
         page-break-after: always;
         padding: 10mm 8mm 7mm;
-        background: ${appearance.pageBackgroundColor};
+        background: ${appearance.colors.light.pageBackgroundColor};
         border: 1px solid #eadfca;
       }
 
@@ -225,8 +225,8 @@ const buildWordByWordHtml = ({
       .mushaf-word__translation {
         display: block;
         max-width: 24mm;
-        border-bottom: 0.35mm solid ${appearance.wordTranslationColor};
-        color: ${appearance.wordTranslationColor};
+        border-bottom: 0.35mm solid ${appearance.colors.light.wordTranslationColor};
+        color: ${appearance.colors.light.wordTranslationColor};
         direction: ${wordTranslationDirection};
         font-family: ${appearance.englishFontFamily}, ${appearance.arabicContentFontFamily};
         font-size: ${wordTranslationFontPt}pt;
