@@ -108,7 +108,7 @@ type ReaderMode = 'verse' | 'page';
 
 const readerModeItems: Array<{ value: ReaderMode; label: string }> = [
   { value: 'verse', label: 'Verse by Verse' },
-  { value: 'page', label: 'Page by Page' },
+  { value: 'page', label: 'Multiple Verses' },
 ];
 
 const MarkdownFallback = ({ label }: { label: string }) => (
