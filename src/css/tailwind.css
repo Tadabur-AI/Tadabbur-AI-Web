@@ -360,8 +360,9 @@
   }
 
   .segmented-control {
-    display: inline-flex;
-    flex-wrap: wrap;
+    display: flex;
+    width: 100%;
+    flex-wrap: nowrap;
     gap: 0.25rem;
     border: 1px solid var(--color-border);
     border-radius: 999px;
@@ -371,7 +372,9 @@
 
   .segmented-control__option {
     position: relative;
-    display: inline-flex;
+    display: flex;
+    min-width: 0;
+    flex: 1 1 0;
   }
 
   .segmented-control__input {
@@ -385,12 +388,14 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    width: 100%;
     min-height: 44px;
     border-radius: 999px;
-    padding: 0.65rem 1rem;
+    padding: 0.65rem 0.75rem;
     color: var(--color-text-muted);
     font-size: 0.875rem;
     font-weight: 600;
+    white-space: nowrap;
     cursor: pointer;
     transition:
       background-color 0.15s ease,
