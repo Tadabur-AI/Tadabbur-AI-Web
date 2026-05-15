@@ -1,15 +1,18 @@
-import { lazy, memo, Suspense, useCallback, useEffect, useId, useMemo, useState, type CSSProperties } from 'react';
+import { lazy, memo, Suspense, useCallback, useEffect, useId, useMemo, useState, type CSSProperties, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import {
   FiBookmark,
   FiChevronLeft,
   FiChevronRight,
+  FiChevronDown,
   FiCopy,
   FiEdit3,
   FiFlag,
+  FiFileText,
   FiMenu,
   FiMessageSquare,
   FiSave,
+  FiSettings,
   FiX,
 } from 'react-icons/fi';
 import AudioPlayer from '../components/common/AudioPlayer';
@@ -107,13 +110,36 @@ type ExplanationView = 'ai' | 'original';
 type ReaderMode = 'verse' | 'page';
 
 const readerModeItems: Array<{ value: ReaderMode; label: string }> = [
-  { value: 'verse', label: 'Verse by Verse' },
-  { value: 'page', label: 'Page by Page' },
+  { value: 'verse', label: 'Verse' },
+  { value: 'page', label: 'Page' },
 ];
 
 const MarkdownFallback = ({ label }: { label: string }) => (
   <p className="text-sm leading-7 text-text-muted">{label}</p>
 );
+
+interface MobileAccordionSectionProps {
+  title: string;
+  description: string;
+  children: ReactNode;
+}
+
+function MobileAccordionSection({ title, description, children }: MobileAccordionSectionProps) {
+  return (
+    <details className="rounded-[28px] border border-border bg-surface/95 shadow-[0_16px_40px_rgba(20,20,18,0.05)]">
+      <summary className="flex cursor-pointer list-none items-start justify-between gap-4 rounded-[28px] px-4 py-4 text-left transition-colors hover:bg-surface-2/60">
+        <span className="min-w-0 space-y-1">
+          <span className="block text-base font-semibold text-text">{title}</span>
+          <span className="block text-sm leading-6 text-text-muted">{description}</span>
+        </span>
+        <FiChevronDown className="mt-0.5 shrink-0 text-text-muted" aria-hidden="true" />
+      </summary>
+      <div className="px-4 pb-4 pt-0">
+        {children}
+      </div>
+    </details>
+  );
+}
 
 interface VerseRailProps {
   verses: Verse[];
@@ -421,6 +447,29 @@ const ExplanationTabsPanel = memo(function ExplanationTabsPanel({
   const isVerseChatFallback = aiExplanation?.fallbackMode === 'verse_chat';
   const fallbackPrompt = aiExplanation?.suggestedPrompt?.trim() || 'What does this verse say?';
 
+  const renderAiActions = (className: string) => (
+    <div className={className}>
+      {isVerseChatFallback && onAskVerseChatFallback ? (
+        <ActionButton variant="secondary" size="sm" onClick={() => onAskVerseChatFallback(fallbackPrompt)}>
+          <FiMessageSquare aria-hidden="true" />
+          Ask in Verse Chat
+        </ActionButton>
+      ) : null}
+      {selectedTafsir && onExplainerToggle && !isVerseChatFallback ? (
+        <ActionButton variant="ghost" size="sm" onClick={onExplainerToggle}>
+          <FiMessageSquare aria-hidden="true" />
+          Open Explainer
+        </ActionButton>
+      ) : null}
+      {aiExplanation && !isExplanationLoading && onSaveAiToNotes && !isVerseChatFallback ? (
+        <ActionButton variant="secondary" size="sm" onClick={onSaveAiToNotes} disabled={isCurrentAiSaved}>
+          <FiSave aria-hidden="true" />
+          {aiSaveLabel}
+        </ActionButton>
+      ) : null}
+    </div>
+  );
+
   const tabButtonClassName = (isActive: boolean) =>
     `inline-flex min-h-[44px] items-center justify-center rounded-full px-4 py-2 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
       isActive
@@ -468,28 +517,7 @@ const ExplanationTabsPanel = memo(function ExplanationTabsPanel({
                   : 'Original source text for the current ayah.'}
             </p>
 
-            {activeView === 'ai' ? (
-              <div className="flex flex-wrap gap-2">
-                {isVerseChatFallback && onAskVerseChatFallback ? (
-                  <ActionButton variant="secondary" size="sm" onClick={() => onAskVerseChatFallback(fallbackPrompt)}>
-                    <FiMessageSquare aria-hidden="true" />
-                    Ask in Verse Chat
-                  </ActionButton>
-                ) : null}
-                {selectedTafsir && onExplainerToggle && !isVerseChatFallback ? (
-                  <ActionButton variant="ghost" size="sm" onClick={onExplainerToggle}>
-                    <FiMessageSquare aria-hidden="true" />
-                    Open Explainer
-                  </ActionButton>
-                ) : null}
-                {aiExplanation && !isExplanationLoading && onSaveAiToNotes && !isVerseChatFallback ? (
-                  <ActionButton variant="secondary" size="sm" onClick={onSaveAiToNotes} disabled={isCurrentAiSaved}>
-                    <FiSave aria-hidden="true" />
-                    {aiSaveLabel}
-                  </ActionButton>
-                ) : null}
-              </div>
-            ) : null}
+            {activeView === 'ai' ? renderAiActions('hidden flex-wrap gap-2 sm:flex') : null}
           </div>
         </div>
         <div
@@ -561,10 +589,11 @@ const ExplanationTabsPanel = memo(function ExplanationTabsPanel({
               <div className="skeleton h-4 w-3/4" />
             </div>
           ) : tafsirText ? (
-            <div className="prose prose-sm max-w-none overflow-x-auto break-words text-sm leading-7 text-text" dangerouslySetInnerHTML={{ __html: tafsirText }} />
+            <div className="prose prose-sm max-w-none overflow-x-auto wrap-break-word text-sm leading-7 text-text" dangerouslySetInnerHTML={{ __html: tafsirText }} />
           ) : (
             <p className="text-sm leading-7 text-text-muted">Tafsir text is not available for this ayah.</p>
           )}
+          {activeView === 'ai' ? renderAiActions('flex flex-wrap gap-2 sm:hidden') : null}
         </div>
       </div>
     </Panel>
@@ -936,18 +965,18 @@ export default function ReadSurahLayout({
   );
 
   const renderReaderActions = () => (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap gap-1.5 sm:gap-2">
       <ActionButton variant="ghost" size="sm" onClick={() => handleCopy(currentVerse, surah.name_english)}>
         <FiCopy aria-hidden="true" />
-        {copied ? 'Copied' : 'Copy'}
+        <span className="sr-only sm:not-sr-only">{copied ? 'Copied' : 'Copy'}</span>
       </ActionButton>
       <ActionButton variant="ghost" size="sm" onClick={handleBookmark} className={bookmarked ? 'text-primary' : ''}>
         <FiBookmark aria-hidden="true" fill={bookmarked ? 'currentColor' : 'none'} />
-        {bookmarked ? 'Saved' : 'Save'}
+        <span className="sr-only sm:not-sr-only">{bookmarked ? 'Saved' : 'Save'}</span>
       </ActionButton>
       <ActionButton variant="ghost" size="sm" onClick={() => setIsNoteEditorOpen((open) => !open)}>
         <FiEdit3 aria-hidden="true" />
-        {noteActionLabel}
+        <span className="sr-only sm:not-sr-only">{noteActionLabel}</span>
       </ActionButton>
       <ActionButton
         variant="ghost"
@@ -956,13 +985,13 @@ export default function ReadSurahLayout({
         onClick={() => onReportModalToggle?.(true)}
       >
         <FiFlag aria-hidden="true" />
-        Report
+        <span className="sr-only sm:not-sr-only">Report</span>
       </ActionButton>
     </div>
   );
 
   const renderReaderModeToolbar = () => (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex items-center justify-between gap-2">
       <SegmentedControl
         label="Reader mode"
         labelHidden
@@ -979,7 +1008,7 @@ export default function ReadSurahLayout({
   const renderVerseReaderContent = () => (
     <>
       <div className="rounded-[28px] border border-border/80 bg-surface-2 px-5 py-6 sm:px-7 sm:py-8">
-        <p className="arabic text-[2rem] leading-[3.8rem] text-text sm:text-[2.5rem] sm:leading-[4.8rem]">
+        <p className="arabic text-[1.65rem] leading-[3.2rem] text-text sm:text-[2rem] sm:leading-[3.8rem] md:text-[2.5rem] md:leading-[4.8rem]">
           {currentVerse.text}
         </p>
       </div>
@@ -1030,7 +1059,7 @@ export default function ReadSurahLayout({
 
   const readerShellStyle: CSSProperties = {
     ...readerAppearanceStyle,
-    ...(hasStickyAudioPlayer ? { paddingBottom: 'calc(var(--player-height) + 24px)' } : {}),
+    paddingBottom: hasStickyAudioPlayer ? 'calc(var(--player-height) + 24px)' : '80px',
   };
 
   return (
@@ -1075,6 +1104,24 @@ export default function ReadSurahLayout({
           </nav>
 
           <div className="flex items-center gap-2">
+            <nav className="flex items-center gap-1 sm:hidden" aria-label="Mobile navigation">
+              <Link
+                to="/notes"
+                aria-label="Notes"
+                title="Notes"
+                className={buttonClassName({ variant: 'ghost', size: 'icon' })}
+              >
+                <FiFileText aria-hidden="true" />
+              </Link>
+              <Link
+                to="/settings"
+                aria-label="Settings"
+                title="Settings"
+                className={buttonClassName({ variant: 'ghost', size: 'icon' })}
+              >
+                <FiSettings aria-hidden="true" />
+              </Link>
+            </nav>
             <ThemeToggle />
           </div>
         </div>
@@ -1119,7 +1166,7 @@ export default function ReadSurahLayout({
 
           {isLeftSidebarEnabled ? (
             <aside className="hidden lg:block">
-              <Panel title="Verses" description={rangeSummary} className="sticky top-[96px] max-h-[calc(100vh-120px)] overflow-y-auto">
+              <Panel title="Verses" description={rangeSummary} className="sticky top-24 max-h-[calc(100vh-120px)] overflow-y-auto">
                 <VerseRail verses={verses} currentVerseIndex={currentVerseIndex} onSelectVerse={handleSelectVerse} />
               </Panel>
             </aside>
@@ -1139,16 +1186,24 @@ export default function ReadSurahLayout({
             {explanationTabsPanel}
 
             <div className="space-y-6 lg:hidden">
-              {secondaryModesPanel}
-              {sourcesPanel}
-              {listeningPanel}
-              {notesPanel}
+              <MobileAccordionSection title="Secondary Modes" description="Switch to immersive reading experiences.">
+                {secondaryModesPanel}
+              </MobileAccordionSection>
+              <MobileAccordionSection title="Sources" description="Choose translation, tafsir, and word-by-word layers.">
+                {sourcesPanel}
+              </MobileAccordionSection>
+              <MobileAccordionSection title="Listening" description="Use recitation without leaving the current ayah.">
+                {listeningPanel}
+              </MobileAccordionSection>
+              <MobileAccordionSection title="Study Notes" description="Keep your reflection separate from AI notes.">
+                {notesPanel}
+              </MobileAccordionSection>
             </div>
           </main>
 
           {isRightSidebarEnabled ? (
             <aside className="hidden lg:block">
-              <div className="sticky top-[96px] space-y-6">
+              <div className="sticky top-24 space-y-6">
                 {secondaryModesPanel}
                 {sourcesPanel}
                 {listeningPanel}

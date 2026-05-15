@@ -627,7 +627,7 @@ export default function VerseChatBubble({
           </div>
         )}
 
-        <div className="rounded-[20px] border border-border bg-surface-2 px-2.5 py-2.5 shadow-inner max-[360px]:rounded-[18px] max-[360px]:px-2 max-[360px]:py-2 max-[300px]:px-1.5 max-[300px]:py-1.5 md:rounded-[24px] md:px-3 md:py-3">
+        <div className="rounded-[20px] border border-border bg-surface-2 px-2.5 py-2.5 shadow-inner max-[360px]:rounded-[18px] max-[360px]:px-2 max-[360px]:py-2 max-[300px]:px-1.5 max-[300px]:py-1.5 md:rounded-3xl md:px-3 md:py-3">
           <textarea
             ref={composerRef}
             value={draft}
@@ -639,7 +639,7 @@ export default function VerseChatBubble({
               }
             }}
             rows={1}
-            className="max-h-28 min-h-[40px] w-full resize-none border-0 bg-transparent px-0 py-0 text-[13px] leading-6 text-text shadow-none focus:shadow-none max-[360px]:max-h-24 max-[360px]:min-h-[34px] max-[360px]:text-xs max-[360px]:leading-5 max-[300px]:min-h-[30px] max-[300px]:text-[11px] md:max-h-32 md:min-h-[48px] md:text-sm md:leading-7"
+            className="max-h-28 min-h-10 w-full resize-none border-0 bg-transparent px-0 py-0 text-[13px] leading-6 text-text shadow-none focus:shadow-none max-[360px]:max-h-24 max-[360px]:min-h-[34px] max-[360px]:text-xs max-[360px]:leading-5 max-[300px]:min-h-[30px] max-[300px]:text-[11px] md:max-h-32 md:min-h-12 md:text-sm md:leading-7"
             placeholder={
               isReady
                 ? 'Ask about this ayah, its wording, or how it connects here…'
@@ -692,7 +692,7 @@ export default function VerseChatBubble({
           tabIndex={-1}
           className="fixed inset-0 z-modal"
         >
-          <div className="verse-chat-panel flex h-[100dvh] w-screen max-w-none flex-col overflow-hidden rounded-none border-0">
+          <div className="verse-chat-panel flex h-dvh w-screen max-w-none flex-col overflow-hidden rounded-none border-0">
             {renderPanelContent()}
           </div>
         </div>
@@ -710,12 +710,12 @@ export default function VerseChatBubble({
             aria-labelledby={panelLabelId}
             aria-describedby={panelDescriptionId}
             tabIndex={-1}
-            className="relative mb-4 flex w-[400px] max-w-[calc(100vw-2rem)] flex-col rounded-[24px]"
+            className="relative mb-4 flex w-[400px] max-w-[calc(100vw-2rem)] flex-col rounded-3xl"
             style={{
               maxHeight: `min(72vh, calc(100vh - ${hasAudioPlayer ? 'calc(var(--player-height) + 56px)' : '56px'}))`,
             }}
           >
-            <div className="verse-chat-panel relative flex h-full flex-col overflow-hidden rounded-[24px] border border-border">
+            <div className="verse-chat-panel relative flex h-full flex-col overflow-hidden rounded-3xl border border-border">
               {renderPanelContent()}
             </div>
           </div>
@@ -726,10 +726,10 @@ export default function VerseChatBubble({
             ref={launcherRef}
             type="button"
             aria-label={`Open verse chat for ayah ${verseContext.verseKey}`}
-            className="verse-chat-launcher flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary p-0 text-on-primary transition-colors hover:bg-primary-hover max-[300px]:h-11 max-[300px]:w-11 md:h-14 md:w-14"
+            className="verse-chat-launcher flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary p-0 text-on-primary transition-colors hover:bg-primary-hover max-[300px]:h-9 max-[300px]:w-9 md:h-14 md:w-14"
             onClick={() => setIsOpen((open) => !open)}
           >
-            <FiMessageCircle size={isMobile ? 19 : 22} />
+            <FiMessageCircle size={isMobile ? 17 : 22} />
           </button>
         )}
       </div>

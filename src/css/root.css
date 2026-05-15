@@ -27,7 +27,7 @@
   --radius-md: 12px;
   --radius-lg: 16px;
   
-  font-size: clamp(10px, 1.6vw + 6px, 16px);
+  font-size: clamp(13px, 1.2vw + 10px, 16px);
 }
 
 html, body, #root {
