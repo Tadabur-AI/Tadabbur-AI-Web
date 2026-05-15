@@ -201,6 +201,8 @@ const buildWordByWordHtml = ({
 
       .mushaf-verse {
         display: inline;
+        direction: rtl;
+        unicode-bidi: isolate;
       }
 
       .mushaf-word {

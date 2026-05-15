@@ -1008,7 +1008,7 @@ export default function ReadSurahLayout({
   const renderVerseReaderContent = () => (
     <>
       <div className="rounded-[28px] border border-border/80 bg-surface-2 px-5 py-6 sm:px-7 sm:py-8">
-        <div className="flex flex-wrap items-end justify-between gap-3">
+        <div className="flex flex-row-reverse flex-wrap items-end gap-3">
           <p className="arabic min-w-0 flex-1 text-[1.65rem] leading-[3.2rem] text-text sm:text-[2rem] sm:leading-[3.8rem] md:text-[2.5rem] md:leading-[4.8rem]">
             {currentVerse.text}
           </p>
