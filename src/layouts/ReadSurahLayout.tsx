@@ -1008,9 +1008,14 @@ export default function ReadSurahLayout({
   const renderVerseReaderContent = () => (
     <>
       <div className="rounded-[28px] border border-border/80 bg-surface-2 px-5 py-6 sm:px-7 sm:py-8">
-        <p className="arabic text-[1.65rem] leading-[3.2rem] text-text sm:text-[2rem] sm:leading-[3.8rem] md:text-[2.5rem] md:leading-[4.8rem]">
-          {currentVerse.text}
-        </p>
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <p className="arabic min-w-0 flex-1 text-[1.65rem] leading-[3.2rem] text-text sm:text-[2rem] sm:leading-[3.8rem] md:text-[2.5rem] md:leading-[4.8rem]">
+            {currentVerse.text}
+          </p>
+          <span className="surah-wheel-badge mushaf-ayah-marker mt-2 shrink-0" aria-hidden="true">
+            {currentVerse.id}
+          </span>
+        </div>
       </div>
 
       {isWordByWordEnabled && currentVerse.word_translations && currentVerse.word_translations.length > 0 ? (
@@ -1028,7 +1033,6 @@ export default function ReadSurahLayout({
           surahNameEnglish={surah.name_english}
           surahNameArabic={surah.name_arabic}
           translatedName={surah.translated_name}
-          showBismillah={Boolean(surah.bismillah_pre)}
           selectedVerseKey={currentVerse.verse_key}
           onSelectVerse={handleSelectVerseKey}
         />

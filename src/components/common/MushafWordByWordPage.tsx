@@ -7,7 +7,6 @@ interface MushafWordByWordPageProps {
   surahNameEnglish: string;
   surahNameArabic: string;
   translatedName?: string;
-  showBismillah?: boolean;
   selectedVerseKey?: string;
   onSelectVerse: (verseKey: string) => void;
 }
@@ -46,7 +45,6 @@ const MushafWordByWordPage = memo(function MushafWordByWordPage({
   surahNameEnglish,
   surahNameArabic,
   translatedName,
-  showBismillah = true,
   selectedVerseKey,
   onSelectVerse,
 }: MushafWordByWordPageProps) {
@@ -63,14 +61,6 @@ const MushafWordByWordPage = memo(function MushafWordByWordPage({
           </div>
         </div>
 
-        {showBismillah ? (
-          <div className="mushaf-page__bismillah-block">
-            <p className="mushaf-page__bismillah">بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ</p>
-            <p className="mushaf-page__bismillah-translation">
-              In the Name of Allah, the Most Compassionate, Most Merciful
-            </p>
-          </div>
-        ) : null}
       </header>
 
       <div className="mushaf-page__flow" dir="rtl">
