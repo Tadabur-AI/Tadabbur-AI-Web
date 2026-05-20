@@ -5,6 +5,7 @@ import {
   FiChevronLeft,
   FiChevronRight,
   FiChevronDown,
+  FiCompass,
   FiCopy,
   FiEdit3,
   FiFlag,
@@ -22,6 +23,7 @@ import ThemeToggle from '../components/common/ThemeToggle';
 import WordByWord from '../components/common/WordByWord';
 import TajweedLearningButton from '../components/TajweedLearning/TajweedLearningButton';
 import { usePlayPleasantly } from '../components/PleasentPlay/PlayPleasantlyProvider';
+import { useVisualJourney } from '../components/VisualJourney/useVisualJourney';
 import Overlay from '../components/ui/Overlay';
 import {
   ActionButton,
@@ -277,8 +279,11 @@ const ListeningPanel = memo(function ListeningPanel({
 
 interface SecondaryModesPanelProps {
   onStartPleasantly: () => void;
+  onStartVisualJourney: () => void;
   isPleasantlyLoading: boolean;
   isPleasantlyActive: boolean;
+  isVisualJourneyLoading: boolean;
+  isVisualJourneyActive: boolean;
   surah: Surah;
   firstVerseId?: number;
   lastVerseId?: number;
@@ -286,17 +291,28 @@ interface SecondaryModesPanelProps {
 
 const SecondaryModesPanel = memo(function SecondaryModesPanel({
   onStartPleasantly,
+  onStartVisualJourney,
   isPleasantlyLoading,
   isPleasantlyActive,
+  isVisualJourneyLoading,
+  isVisualJourneyActive,
   surah,
   firstVerseId,
   lastVerseId,
 }: SecondaryModesPanelProps) {
   return (
-    <Panel title="More Mods" description="Launch immersive modes without changing the current theme or source settings.">
+    <Panel title="More Modes" description="Launch immersive modes without changing the current theme or source settings.">
       <div className="flex flex-wrap gap-3">
         <ActionButton onClick={onStartPleasantly} disabled={isPleasantlyLoading || isPleasantlyActive}>
           Play Pleasantly
+        </ActionButton>
+        <ActionButton
+          variant="secondary"
+          onClick={onStartVisualJourney}
+          disabled={isVisualJourneyLoading || isVisualJourneyActive}
+        >
+          <FiCompass aria-hidden="true" />
+          Visual Journey
         </ActionButton>
         <TajweedLearningButton
           surahId={surah.id}
@@ -633,6 +649,7 @@ export default function ReadSurahLayout({
 }: Props) {
   const { resolvedTheme } = useTheme();
   const { startExperience, isLoading: isPleasantlyLoading, isActive: isPleasantlyActive } = usePlayPleasantly();
+  const { startJourney, isLoading: isVisualJourneyLoading, isActive: isVisualJourneyActive } = useVisualJourney();
   const [isVerseRailOpen, setIsVerseRailOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
@@ -956,8 +973,21 @@ export default function ReadSurahLayout({
           ],
         });
       }}
+      onStartVisualJourney={() => {
+        startJourney({
+          surahId: surah.id,
+          surahName: surah.name_english,
+          surahNameArabic: surah.name_arabic,
+          translatedName: surah.translated_name,
+          versesCount: surah.verses_count,
+          startAyah: firstVerseId,
+          endAyah: lastVerseId,
+        });
+      }}
       isPleasantlyLoading={isPleasantlyLoading}
       isPleasantlyActive={isPleasantlyActive}
+      isVisualJourneyLoading={isVisualJourneyLoading}
+      isVisualJourneyActive={isVisualJourneyActive}
       surah={surah}
       firstVerseId={firstVerseId}
       lastVerseId={lastVerseId}

@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import ReadSurahPage from '../../pages/surahs/ReadSurahPage';
 import { PlayPleasantlyProvider } from '../../components/PleasentPlay/PlayPleasantlyProvider';
 import { TajweedLearningProvider } from '../../components/TajweedLearning/TajweedLearningProvider';
+import { VisualJourneyProvider } from '../../components/VisualJourney/VisualJourneyProvider';
 
 export default function ReadSurahRoute() {
   useEffect(() => {
@@ -23,9 +24,11 @@ export default function ReadSurahRoute() {
 
   return (
     <PlayPleasantlyProvider>
-      <TajweedLearningProvider>
-        <ReadSurahPage />
-      </TajweedLearningProvider>
+      <VisualJourneyProvider>
+        <TajweedLearningProvider>
+          <ReadSurahPage />
+        </TajweedLearningProvider>
+      </VisualJourneyProvider>
     </PlayPleasantlyProvider>
   );
 }

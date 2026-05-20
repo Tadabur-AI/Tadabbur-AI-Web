@@ -1,4 +1,5 @@
 import { buildApiUrl } from '../utils/apiBaseUrl';
+import { listReciters, type ReciterSummary } from './apis';
 
 export interface Chapter {
   id: number;
@@ -25,6 +26,16 @@ export interface Recitation {
     language_name: string;
   };
 }
+
+const mapReciterSummaryToRecitation = (item: ReciterSummary): Recitation => ({
+  id: item.id,
+  reciter_name: item.reciterName,
+  style: item.style ?? 'Default',
+  translated_name: {
+    name: item.translatedName?.name ?? item.reciterName,
+    language_name: item.translatedName?.languageName ?? 'unknown',
+  },
+});
 
 export interface Translation {
   id: number;
@@ -75,14 +86,8 @@ export async function fetchChapter(chapterId: number): Promise<Chapter> {
  */
 export async function fetchRecitations(): Promise<Recitation[]> {
   try {
-    const response = await fetch(buildApiUrl('/api/recitations'), {
-      headers: defaultHeaders,
-    });
-    if (!response.ok) {
-      throw new Error(`Failed to fetch recitations: ${response.statusText}`);
-    }
-    const data = await response.json();
-    return data.recitations || [];
+    const reciters = await listReciters();
+    return reciters.map(mapReciterSummaryToRecitation);
   } catch (error) {
     console.error('Error fetching recitations:', error);
     throw error;

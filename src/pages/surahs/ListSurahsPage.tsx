@@ -1,6 +1,6 @@
 import { useCallback, useDeferredValue, useEffect, useId, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { FiBookmark, FiBookOpen, FiClock, FiDownload, FiHeadphones, FiSearch } from 'react-icons/fi';
+import { FiBookmark, FiBookOpen, FiClock, FiCompass, FiDownload, FiHeadphones, FiSearch } from 'react-icons/fi';
 import AppShell from '../../layouts/AppShell';
 import {
   ActionButton,
@@ -14,6 +14,7 @@ import { buttonClassName } from '../../components/ui/buttonClassName';
 import { listSurahs, type SurahSummary } from '../../services/apis';
 import { JUZ_METADATA } from '../../data/juz';
 import { usePlayPleasantly } from '../../components/PleasentPlay/PlayPleasantlyProvider';
+import { useVisualJourney } from '../../components/VisualJourney/useVisualJourney';
 import { DEFAULT_TRANSLATION_ID } from '../../utils/quranPages';
 import { exportSurahWordByWordPdf } from '../../utils/quranPdfExport';
 import {
@@ -69,6 +70,7 @@ export default function ListSurahsPage() {
   const [exportingSurahId, setExportingSurahId] = useState<number | null>(null);
   const [exportError, setExportError] = useState<string | null>(null);
   const { startExperience, isLoading: isPleasantlyLoading, isActive: isPleasantlyActive } = usePlayPleasantly();
+  const { startJourney, isLoading: isVisualJourneyLoading, isActive: isVisualJourneyActive } = useVisualJourney();
   const deferredSearchQuery = useDeferredValue(searchQuery);
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTabParam = searchParams.get('tab');
@@ -465,6 +467,22 @@ export default function ListSurahsPage() {
                             className="inline-flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center border-l border-border bg-surface px-3 text-text transition-colors hover:bg-surface-2 focus-visible:relative focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-50"
                           >
                             <FiHeadphones size={16} aria-hidden="true" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => startJourney({
+                              surahId: chapter.id,
+                              surahName: chapter.nameSimple,
+                              surahNameArabic: chapter.nameArabic,
+                              translatedName: chapter.translatedName.name,
+                              versesCount: chapter.versesCount,
+                            })}
+                            disabled={isVisualJourneyLoading || isVisualJourneyActive}
+                            aria-label={`Start visual journey for ${chapter.nameSimple}`}
+                            title={`Start visual journey for ${chapter.nameSimple}`}
+                            className="inline-flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center border-l border-border bg-surface px-3 text-text transition-colors hover:bg-surface-2 focus-visible:relative focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            <FiCompass size={16} aria-hidden="true" />
                           </button>
                           <button
                             type="button"

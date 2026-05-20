@@ -8,9 +8,12 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "npx tsx --test tests/*.test.ts"
+    "test": "tsx --test tests/*.test.ts",
+    "generate:visual-journey-backgrounds": "tsx scripts/generate-visual-journey-backgrounds.ts"
   },
   "dependencies": {
+    "@hugeicons/core-free-icons": "^4.1.4",
+    "@hugeicons/react": "^1.1.6",
     "@huggingface/inference": "^4.11.1",
     "@huggingface/transformers": "^3.7.5",
     "@langchain/community": "^0.3.57",
@@ -44,6 +47,7 @@
     "globals": "^16.3.0",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.16",
+    "tsx": "^4.22.3",
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.35.1",
     "vite": "^7.0.4"
